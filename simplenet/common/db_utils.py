@@ -17,15 +17,13 @@
 
 import logging
 
-LOG = logging.getLogger(__name__)
-
 from sqlalchemy import create_engine
 from sqlalchemy.exc import DisconnectionError
-from sqlalchemy.orm import sessionmaker, exc
+
+LOG = logging.getLogger(__name__)
 
 _engine = None
 _maker = None
-base =
 
 def get_database_session(autocommit=True, expire_on_commit=False):
     global _maker, _engine
@@ -36,7 +34,7 @@ def get_database_session(autocommit=True, expire_on_commit=False):
                               expire_on_commit=expire_on_commit)
     return _maker()
 
-def unregister_database_models():
+def unregister_database_models(base):
     global _engine
     assert _engine
     base.metadata.drop_all(_engine)

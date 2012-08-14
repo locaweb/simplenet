@@ -15,10 +15,15 @@
 #
 # @author: Juliano Martinez (ncode), Locaweb.
 
+import logging
+
 from simplenet.exceptions import FeatureNotImplemented
 from simplenet.views.format_view import FormatView
 
 from simplenet.network_appliance.base import SimpleNet
+
+LOG = logging.getLogger(__name__)
+
 
 class Net(SimpleNet):
 
