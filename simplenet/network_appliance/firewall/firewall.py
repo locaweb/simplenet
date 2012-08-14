@@ -18,16 +18,9 @@
 from simplenet.exceptions import FeatureNotImplemented
 from simplenet.views.format_view import FormatView
 
+from simplenet.network_appliance.base import SimpleNet
 
-class SimpleNet(object):
-
-    def __init__(self):
-        self.connection = False
-        self.format_for = FormatView()
-        self.__setup__()
-
-    def __setup__(self):
-        pass
+class Net(SimpleNet):
 
     def neighborhood_list(*args, **kawrgs):
         raise FeatureNotImplemented()
