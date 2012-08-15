@@ -198,19 +198,53 @@ class SimpleNet(object):
         return True
 
     def ip_list(self, *args, **kawrgs):
-        raise FeatureNotImplemented()
+        ss = session.query(models.Ip).all()
+        ips = []
+        for ip in ss:
+            ips.append(
+                self.format_for.ip(
+                    ip.id,
+                    ip.cidr,
+                    ip.subnet_id
+                )
+            )
+        return ips
 
-    def ip_create(self, *args, **kawrgs):
-        raise FeatureNotImplemented()
+    def ip_create(self, subnet_id, data):
+        if not 'ip' in data:
+            raise Exception('Missing ip on request')
+        session.begin(subtransactions=True)
+        try:
+            session.add(models.Ip(ip=data['ip'], subnet_id=subnet_id))
+            session.commit()
+        except IntegrityError:
+            session.rollback()
+            forbidden_msg = "%s already exists" % data['ip']
+            raise OperationNotPermited('Ip', forbidden_msg)
+        except Exception, e:
+            session.rollback()
+            raise Exception(e)
+        return self.ip_info_by_ip(data['ip'])
 
     def ip_info(self, *args, **kawrgs):
-        raise FeatureNotImplemented()
+        ss = session.query(models.Ip).get(id)
+        if not ss:
+            raise EntityNotFound('Ip', id)
+        return self.format_for.ip(ss.id, ss.ip, ss.subnet_id)
 
     def ip_update(self, *args, **kawrgs):
         raise FeatureNotImplemented()
 
-    def ip_delete(self, *args, **kawrgs):
-        raise FeatureNotImplemented()
+    def ip_delete(self, id):
+        ss = session.query(models.Ip).get(id)
+        session.begin(subtransactions=True)
+        try:
+            session.delete(ss)
+            session.commit()
+        except Exception, e:
+            session.rollback()
+            raise Exception(e)
+        return True
 
     def policy_list(self, *args, **kawrgs):
         raise FeatureNotImplemented()

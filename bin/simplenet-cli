@@ -88,4 +88,29 @@ def subnet(action, cidr, vlan_id=None):
         r = requests.get(url)
     print r.json if hasattr(r, 'json') else r.text
 
+@baker.command(
+    params={ "action": "<list all|create|delete|rename>",
+             "ip": "ip ip"}
+)
+def ip(action, ip, vlan_id=None):
+    base_url = '%s/ips' % (server)
+    action_list = { 'list':  base_url,
+                    'create': '%s/vlans/%s/ips' % (
+                        server, vlan_id
+                    ),
+                    'delete': '%s/%s' % (base_url, ip),
+                    'info': '%s/by-ip/%s' % (base_url, ip) }
+
+    url = action_list[action]
+    r = None
+    if action == 'list':
+        r = requests.get(url)
+    elif action == 'create':
+        r = requests.post(url, data=json.dumps({'ip': ip}))
+    elif action == 'delete':
+        r = requests.delete(url)
+    elif action == 'info':
+        r = requests.get(url)
+    print r.json if hasattr(r, 'json') else r.text
+
 baker.run()

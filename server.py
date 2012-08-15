@@ -229,6 +229,27 @@ def vlan_delete(vlan_id):
     return json.dumps(manager.vlan_delete(vlan_id))
 
 
+@post('/subnets/:subnet_id/ips')
+def subnet_ip_create(subnet_id):
+    """
+    ::
+
+      POST /subnet/:subnet_id/ips
+
+    Create a new ip in subnet
+    """
+    response.content_type = "application/json"
+    manager = create_manager('base')
+    data = request.body.readline()
+    if not data:
+        abort(400, 'No data received')
+    data = json.loads(data)
+    ip = manager.ip_create(subnet_id, data)
+    location = "ips/%s" % (ip['id'])
+    response.set_header("Location", location)
+    return json.dumps(ip)
+
+
 @get('/subnets/:subnet_id')
 def subnet_info(subnet_id):
     """
@@ -283,6 +304,63 @@ def subnet_delete(subnet_id):
     response.content_type = "application/json"
     manager = create_manager('base')
     return json.dumps(manager.subnet_delete(subnet_id))
+
+
+@get('/ips/:ip_id')
+def ip_info(ip_id):
+    """
+    ::
+
+      GET /ips/:ip_id
+
+    Get ip informations
+    """
+    response.content_type = "application/json"
+    manager = create_manager('base')
+    return json.dumps(manager.ip_info(ip_id))
+
+
+@get('/ips/by-ip/:ip_ip')
+def ip_info_by_ip(ip_ip):
+    """
+    ::
+
+      GET /ips/by-ip/:ip_ip
+
+    Get ip informations
+    """
+    response.content_type = "application/json"
+    manager = create_manager('base')
+    return json.dumps(manager.ip_info_by_ip('%s/%s' % (ip_ip, ip_mask)))
+
+
+@get('/ips')
+def ip_list():
+    """
+    ::
+
+      GET /ips
+
+    Get ips for a given pool
+    """
+    response.content_type = "application/json"
+    manager = create_manager('base')
+    return json.dumps(manager.ip_list())
+
+
+@delete('/ips/:ip_id')
+def ip_delete(ip_id):
+    """
+    ::
+
+      DELETE /ips/:ip_id
+
+    Deletes ip
+    """
+    response.content_type = "application/json"
+    manager = create_manager('base')
+    return json.dumps(manager.ip_delete(ip_id))
+
 
 def create_manager(network_appliance):
 #    network_appliance_token = request.headers.get("x-simplenet-network_appliance-token")
