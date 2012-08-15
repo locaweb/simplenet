@@ -18,11 +18,11 @@
 import logging
 
 from sqlalchemy import create_engine
-from sqlalchemy.exc import DisconnectionError
+from sqlalchemy.orm import sessionmaker
 
 LOG = logging.getLogger(__name__)
 
-_engine = None
+_engine = create_engine('sqlite://')
 _maker = None
 
 def get_database_session(autocommit=True, expire_on_commit=False):

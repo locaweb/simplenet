@@ -33,7 +33,7 @@ from bottle import delete, put, get, post, error, redirect, run, debug
 from bottle import abort, request, ServerAdapter, response, static_file
 from bottle import error, HTTPError
 
-from common.config import config, set_logger
+from simplenet.common.config import config, set_logger
 
 app = bottle.app()
 LOG = logging.getLogger('simplenet.server')
@@ -130,11 +130,7 @@ def create_manager(network_appliance):
     module = __import__("simplenet.network_appliances.%s" % network_appliance)
     module = getattr(module.network_appliances, network_appliance)
 
-    return module.Stack({
-        "api_server": host,
-        "username": username,
-        "password": password
-    })
+    return module.Net
 
 
 def main():

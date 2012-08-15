@@ -15,89 +15,91 @@
 #
 # @author: Juliano Martinez (ncode), Locaweb.
 
-import logging
-
 from simplenet.exceptions import FeatureNotImplemented
 from simplenet.views.format_view import FormatView
 
-from simplenet.network_appliance.base import SimpleNet
 
-LOG = logging.getLogger(__name__)
+class SimpleNet(object):
 
+    def __init__(self):
+        self.connection = False
+        self.format_for = FormatView()
+        self.__setup__()
 
-class Net(SimpleNet):
+    def __setup__(self):
+        pass
 
-    def neighborhood_list(*args, **kawrgs):
+    def neighborhood_list(self, *args, **kawrgs):
         raise FeatureNotImplemented()
 
-    def neighborhood_create(*args, **kawrgs):
+    def neighborhood_create(self, *args, **kawrgs):
         raise FeatureNotImplemented()
 
-    def neighborhood_info(*args, **kawrgs):
+    def neighborhood_info(self, *args, **kawrgs):
         raise FeatureNotImplemented()
 
-    def neighborhood_update(*args, **kawrgs):
+    def neighborhood_update(self, *args, **kawrgs):
         raise FeatureNotImplemented()
 
-    def neighborhood_delete(*args, **kawrgs):
+    def neighborhood_delete(self, *args, **kawrgs):
         raise FeatureNotImplemented()
 
-    def vlan_list(*args, **kawrgs):
+    def vlan_list(self, *args, **kawrgs):
         raise FeatureNotImplemented()
 
-    def vlan_create(*args, **kawrgs):
+    def vlan_create(self, *args, **kawrgs):
         raise FeatureNotImplemented()
 
-    def vlan_info(*args, **kawrgs):
+    def vlan_info(self, *args, **kawrgs):
         raise FeatureNotImplemented()
 
-    def vlan_update(*args, **kawrgs):
+    def vlan_update(self, *args, **kawrgs):
         raise FeatureNotImplemented()
 
-    def vlan_delete(*args, **kawrgs):
+    def vlan_delete(self, *args, **kawrgs):
         raise FeatureNotImplemented()
 
-    def subnet_list(*args, **kawrgs):
+    def subnet_list(self, *args, **kawrgs):
         raise FeatureNotImplemented()
 
-    def subnet_create(*args, **kawrgs):
+    def subnet_create(self, *args, **kawrgs):
         raise FeatureNotImplemented()
 
-    def subnet_info(*args, **kawrgs):
+    def subnet_info(self, *args, **kawrgs):
         raise FeatureNotImplemented()
 
-    def subnet_update(*args, **kawrgs):
+    def subnet_update(self, *args, **kawrgs):
         raise FeatureNotImplemented()
 
-    def subnet_delete(*args, **kawrgs):
+    def subnet_delete(self, *args, **kawrgs):
         raise FeatureNotImplemented()
 
-    def ip_list(*args, **kawrgs):
+    def ip_list(self, *args, **kawrgs):
         raise FeatureNotImplemented()
 
-    def ip_create(*args, **kawrgs):
+    def ip_create(self, *args, **kawrgs):
         raise FeatureNotImplemented()
 
-    def ip_info(*args, **kawrgs):
+    def ip_info(self, *args, **kawrgs):
         raise FeatureNotImplemented()
 
-    def ip_update(*args, **kawrgs):
+    def ip_update(self, *args, **kawrgs):
         raise FeatureNotImplemented()
 
-    def ip_delete(*args, **kawrgs):
+    def ip_delete(self, *args, **kawrgs):
         raise FeatureNotImplemented()
 
-    def policy_list(*args, **kawrgs):
+    def policy_list(self, *args, **kawrgs):
         raise FeatureNotImplemented()
 
-    def policy_create(*args, **kawrgs):
+    def policy_create(self, *args, **kawrgs):
         raise FeatureNotImplemented()
 
-    def policy_info(*args, **kawrgs):
+    def policy_info(self, *args, **kawrgs):
         raise FeatureNotImplemented()
 
-    def policy_update(*args, **kawrgs):
+    def policy_update(self, *args, **kawrgs):
         raise FeatureNotImplemented()
 
-    def policy_delete(*args, **kawrgs):
+    def policy_delete(self, *args, **kawrgs):
         raise FeatureNotImplemented()

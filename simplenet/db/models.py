@@ -1,9 +1,13 @@
 #!/usr/bin/python
 
 import uuid
-from sqlalchemy import Column, String
+from sqlalchemy import Column, String, create_engine
+from sqlalchemy.ext.declarative import declarative_base
+
+Base = declarative_base()
 
 class Neighborhood(Base):
+
     __tablename__ = 'neighborhoods'
 
     id = Column(String(255), primary_key=True)
@@ -16,3 +20,6 @@ class Neighborhood(Base):
 
     def __repr__(self):
        return "<Neighborhood('%s','%s')>" % (self.id, self.name)
+
+engine = create_engine('sqlite://')
+Base.metadata.create_all(engine)
