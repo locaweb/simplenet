@@ -154,6 +154,52 @@ def neighborhood_delete(network_appliance, neighborhood_id):
     manager = create_manager(network_appliance)
     return json.dumps(manager.neighborhood_delete(neighborhood_id))
 
+@post('/:network_appliance/vlans/:vlan_id/subnets')
+def vlan_subnet_create(network_appliance, vlan_id):
+    """
+    ::
+
+      POST /:network_appliance/vlan/:vlan_id/subnets
+
+    Create a new subnet in vlan
+    """
+    response.content_type = "application/json"
+    manager = create_manager(network_appliance)
+    data = request.body.readline()
+    if not data:
+        abort(400, 'No data received')
+    data = json.loads(data)
+    vlan = manager.subnet_create(vlan_id, data)
+    location = "/%s/subnets/%s" % (network_appliance, subnet['id'])
+    response.set_header("Location", location)
+    return json.dumps(vlan)
+
+@get('/:network_appliance/vlans/:vlan_id')
+def vlan_info(network_appliance, vlan_id):
+    """
+    ::
+
+      GET /:network_appliance/vlans/:vlan_id
+
+    Get vlan informations
+    """
+    response.content_type = "application/json"
+    manager = create_manager(network_appliance)
+    return json.dumps(manager.vlan_info(vlan_id))
+
+
+@get('/:network_appliance/vlans-by-name/:vlan_name')
+def vlan_info_by_name(network_appliance, vlan_name):
+    """
+    ::
+
+      GET /:network_appliance/vlans-by-name/:vlan_name
+
+    Get vlan informations
+    """
+    response.content_type = "application/json"
+    manager = create_manager(network_appliance)
+    return json.dumps(manager.vlan_info_by_name(vlan_name))
 
 @get('/:network_appliance/vlans')
 def vlan_list(network_appliance):
@@ -182,6 +228,61 @@ def vlan_delete(network_appliance, vlan_id):
     manager = create_manager(network_appliance)
     return json.dumps(manager.vlan_delete(vlan_id))
 
+
+@get('/:network_appliance/subnets/:subnet_id')
+def subnet_info(network_appliance, subnet_id):
+    """
+    ::
+
+      GET /:network_appliance/subnets/:subnet_id
+
+    Get subnet informations
+    """
+    response.content_type = "application/json"
+    manager = create_manager(network_appliance)
+    return json.dumps(manager.subnet_info(subnet_id))
+
+
+@get('/:network_appliance/subnets-by-name/:subnet_name')
+def subnet_info_by_name(network_appliance, subnet_name):
+    """
+    ::
+
+      GET /:network_appliance/subnets-by-name/:subnet_name
+
+    Get subnet informations
+    """
+    response.content_type = "application/json"
+    manager = create_manager(network_appliance)
+    return json.dumps(manager.subnet_info_by_name(subnet_name))
+
+
+@get('/:network_appliance/subnets')
+def subnet_list(network_appliance):
+    """
+    ::
+
+      GET /:network_appliance/subnets
+
+    Get subnets for a given pool
+    """
+    response.content_type = "application/json"
+    manager = create_manager(network_appliance)
+    return json.dumps(manager.subnet_list())
+
+
+@delete('/:network_appliance/subnets/:subnet_id')
+def subnet_delete(network_appliance, subnet_id):
+    """
+    ::
+
+      DELETE /:network_appliance/subnets/:subnet_id
+
+    Deletes subnet
+    """
+    response.content_type = "application/json"
+    manager = create_manager(network_appliance)
+    return json.dumps(manager.subnet_delete(subnet_id))
 
 def create_manager(network_appliance):
 #    network_appliance_token = request.headers.get("x-simplenet-network_appliance-token")

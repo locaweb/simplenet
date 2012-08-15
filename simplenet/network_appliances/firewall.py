@@ -131,14 +131,46 @@ class Net(SimpleNet):
             raise Exception(e)
         return True
 
-    def subnet_list(self, *args, **kwargs):
-        raise FeatureNotImplemented()
+    def subnet_list(self):
+        ss = session.query(models.Neighborhood).all()
+        subnets = []
+        for subnet in ss:
+            subnets.append(
+                self.format_for.subnet(
+                    subnet.id,
+                    subnet.name,
+                    subnt.vlan_id
+                )
+            )
+        return subnets
 
-    def subnet_create(self, *args, **kwargs):
-        raise FeatureNotImplemented()
+    def subnet_create(self, vlan_id, data):
+        if not 'name' in data:
+            raise Exception('Missing cidr on request')
+        session.begin(subtransactions=True)
+        try:
+            session.add(models.Subnet(name=data['cidr'], vlan_id=vlan_id))
+            session.commit()
+        except IntegrityError:
+            session.rollback()
+            forbidden_msg = "%s already exists" % data['cidr']
+            raise OperationNotPermited('Subnet', forbidden_msg)
+        except Exception, e:
+            session.rollback()
+            raise Exception(e)
+        return self.subnet_info_by_name(data['cidr'])
 
-    def subnet_info(self, *args, **kwargs):
-        raise FeatureNotImplemented()
+    def subnet_info(self, id):
+        ss = session.query(models.Subnet).get(id)
+        if not ss:
+            raise EntityNotFound('Subnet', id)
+        return self.format_for.subnet(ss.id, ss.name, ss.vlan_id)
+
+    def subnet_info_by_cidr(self, cidr):
+        ss = session.query(models.Subnet).filter_by(cidr=cidr).first()
+        if not ss:
+            raise EntityNotFound('Subnet', name)
+        return self.format_for.subnet(ss.id, ss.name, ss.vlan_id)
 
     def subnet_update(self, *args, **kwargs):
         raise FeatureNotImplemented()
