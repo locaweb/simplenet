@@ -48,7 +48,7 @@ class Subnet(Base):
     id = Column(String(255), primary_key=True)
     cidr = Column(String(255), unique=True)
     description = Column(String(255))
-    neighborhood_id = Column(String(255), ForeignKey('vlans.id'))
+    vlan_id = Column(String(255), ForeignKey('vlans.id'))
 
     def __init__(self, cidr, vlan_id, description=""):
         self.id = str(uuid.uuid4())

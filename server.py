@@ -89,10 +89,10 @@ def neighborhood_vlan_create(network_appliance, neighborhood_id):
     if not data:
         abort(400, 'No data received')
     data = json.loads(data)
-    neighborhood = manager.vlan_create(neighborhood_id, data)
+    vlan = manager.vlan_create(neighborhood_id, data)
     location = "/%s/vlans/%s" % (network_appliance, vlan['id'])
     response.set_header("Location", location)
-    return json.dumps(neighborhood)
+    return json.dumps(vlan)
 
 
 @get('/:network_appliance/neighborhoods/:neighborhood_id')
@@ -169,10 +169,10 @@ def vlan_subnet_create(network_appliance, vlan_id):
     if not data:
         abort(400, 'No data received')
     data = json.loads(data)
-    vlan = manager.subnet_create(vlan_id, data)
+    subnet = manager.subnet_create(vlan_id, data)
     location = "/%s/subnets/%s" % (network_appliance, subnet['id'])
     response.set_header("Location", location)
-    return json.dumps(vlan)
+    return json.dumps(subnet)
 
 @get('/:network_appliance/vlans/:vlan_id')
 def vlan_info(network_appliance, vlan_id):
@@ -243,18 +243,18 @@ def subnet_info(network_appliance, subnet_id):
     return json.dumps(manager.subnet_info(subnet_id))
 
 
-@get('/:network_appliance/subnets-by-name/:subnet_name')
-def subnet_info_by_name(network_appliance, subnet_name):
+@get('/:network_appliance/subnets-by-cidr/:subnet_ip/:subnet_mask')
+def subnet_info_by_cidr(network_appliance, subnet_ip, subnet_mask):
     """
     ::
 
-      GET /:network_appliance/subnets-by-name/:subnet_name
+      GET /:network_appliance/subnets-by-cidr/:subnet_ip/:subnet_mask
 
     Get subnet informations
     """
     response.content_type = "application/json"
     manager = create_manager(network_appliance)
-    return json.dumps(manager.subnet_info_by_name(subnet_name))
+    return json.dumps(manager.subnet_info_by_cidr('%s/%s' % (subnet_ip, subnet_mask)))
 
 
 @get('/:network_appliance/subnets')

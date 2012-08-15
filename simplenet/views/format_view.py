@@ -31,3 +31,10 @@ class FormatView(object):
             'name': name,
             'neighborhood_id': neighborhood_id
         }
+
+    def subnet(self, id, cidr, vlan_id):
+        return {
+            'id': id,
+            'cidr': cidr,
+            'vlan_id': vlan_id
+        }
