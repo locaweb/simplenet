@@ -38,3 +38,11 @@ class FormatView(object):
             'cidr': cidr,
             'vlan_id': vlan_id
         }
+
+    def ip(self, id, ip, subnet_id):
+        return {
+            'id': id,
+            'ip': ip,
+            'subnet_id': subnet_id
+        }
+

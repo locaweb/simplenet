@@ -320,18 +320,18 @@ def ip_info(ip_id):
     return json.dumps(manager.ip_info(ip_id))
 
 
-@get('/ips/by-ip/:ip_ip')
-def ip_info_by_ip(ip_ip):
+@get('/ips/by-ip/:ip')
+def ip_info_by_ip(ip):
     """
     ::
 
-      GET /ips/by-ip/:ip_ip
+      GET /ips/by-ip/:ip
 
     Get ip informations
     """
     response.content_type = "application/json"
     manager = create_manager('base')
-    return json.dumps(manager.ip_info_by_ip('%s/%s' % (ip_ip, ip_mask)))
+    return json.dumps(manager.ip_info_by_ip(ip))
 
 
 @get('/ips')

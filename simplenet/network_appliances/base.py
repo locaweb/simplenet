@@ -204,7 +204,7 @@ class SimpleNet(object):
             ips.append(
                 self.format_for.ip(
                     ip.id,
-                    ip.cidr,
+                    ip.ip,
                     ip.subnet_id
                 )
             )
@@ -231,6 +231,12 @@ class SimpleNet(object):
         if not ss:
             raise EntityNotFound('Ip', id)
         return self.format_for.ip(ss.id, ss.ip, ss.subnet_id)
+
+    def ip_info_by_ip(self, ip):
+        ss = session.query(models.Ip).filter_by(ip=ip).first()
+        if not ss:
+            raise EntityNotFound('Ip', ip)
+        return self.format_for.subnet(ss.id, ss.ip, ss.subnet_id)
 
     def ip_update(self, *args, **kawrgs):
         raise FeatureNotImplemented()

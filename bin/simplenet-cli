@@ -90,13 +90,13 @@ def subnet(action, cidr, vlan_id=None):
 
 @baker.command(
     params={ "action": "<list all|create|delete|rename>",
-             "ip": "ip ip"}
+             "ip": "ip address"}
 )
-def ip(action, ip, vlan_id=None):
+def ip(action, ip, subnet_id=None):
     base_url = '%s/ips' % (server)
     action_list = { 'list':  base_url,
-                    'create': '%s/vlans/%s/ips' % (
-                        server, vlan_id
+                    'create': '%s/subnets/%s/ips' % (
+                        server, subnet_id
                     ),
                     'delete': '%s/%s' % (base_url, ip),
                     'info': '%s/by-ip/%s' % (base_url, ip) }

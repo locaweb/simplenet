@@ -4,7 +4,7 @@ import uuid
 
 from ipaddr import IPv4Network, IPv4Address
 
-from sqlalchemy import Column, String, create_engine, ForeignKey, Table
+from sqlalchemy import event, Column, String, create_engine, ForeignKey, Table
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, backref
 
@@ -33,7 +33,8 @@ class Device(Base):
     name = Column(String(255), unique=True)
     description = Column(String(255))
     neighborhood_id = Column(String(255), ForeignKey('neighborhoods.id'))
-    vlans_to_devices = relationship("Vlans_to_Device")
+    #vlans_to_devices = relationship("Vlans_to_Device", backref="vlans", cascade="all, delete, delete-orphan")
+    vlans_to_devices = relationship("Vlans_to_Device", backref="vlans")
 
     def __init__(self, name, neighborhood_id, description=""):
         self.id = str(uuid.uuid4())
@@ -61,11 +62,13 @@ class Vlan(Base):
        return "<Vlan('%s','%s')>" % (self.id, self.name)
 
 class Vlans_to_Device(Base):
+
     __tablename__ = 'vlans_to_devices'
+
     vlan_id = Column(String(255), ForeignKey('vlans.id'), primary_key=True)
     device_id = Column(String(255), ForeignKey('devices.id'), primary_key=True)
     description = Column(String(255))
-    child = relationship("Vlan")
+    child = relationship("Vlan", backref="devices")
 
 class Subnet(Base):
 
@@ -99,7 +102,7 @@ class Ip(Base):
     description = Column(String(255))
     subnet_id = Column(String(255), ForeignKey('subnets.id'))
 
-    def __init__(self, cidr, vlan_id, description=""):
+    def __init__(self, ip, subnet_id, description=""):
         self.id = str(uuid.uuid4())
         self.ip = ip
         self.subnet_id = subnet_id
@@ -107,5 +110,10 @@ class Ip(Base):
     def __repr__(self):
        return "<Ip('%s','%s')>" % (self.id, self.ip)
 
+
+def _fk_pragma_on_connect(dbapi_con, con_record):
+    dbapi_con.execute('pragma foreign_keys=ON')
+
 engine = create_engine('sqlite:////tmp/meh.db')
+event.listen(engine, 'connect', _fk_pragma_on_connect)
 Base.metadata.create_all(engine)
