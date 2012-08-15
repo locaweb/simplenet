@@ -24,3 +24,10 @@ class FormatView(object):
             'id': id,
             'name': name,
         }
+
+    def vlan(self, id, name, neighborhood_id):
+        return {
+            'id': id,
+            'name': name,
+            'neighborhood_id': neighborhood_id
+        }

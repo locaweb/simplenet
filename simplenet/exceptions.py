@@ -33,23 +33,31 @@ class SimpleNetError(HTTPError):
 
 class FeatureNotAvailable(SimpleNetError):
     def __init__(self):
-        simplestack_error = super(FeatureNotAvailable, self)
-        simplestack_error.__init__(
+        simplenet_error = super(FeatureNotAvailable, self)
+        simplenet_error.__init__(
             501, "The selected hypervisor doesn't implement this feature"
         )
 
 
 class FeatureNotImplemented(SimpleNetError):
     def __init__(self):
-        simplestack_error = super(FeatureNotImplemented, self)
-        simplestack_error.__init__(
+        simplenet_error = super(FeatureNotImplemented, self)
+        simplenet_error.__init__(
             501, "Feature not implemented for the selected hypervisor yet"
         )
 
 
 class EntityNotFound(SimpleNetError):
     def __init__(self, entity_type, entity_id):
-        simplestack_error = super(EntityNotFound, self)
-        simplestack_error.__init__(
+        simplenet_error = super(EntityNotFound, self)
+        simplenet_error.__init__(
             404, "%s:%s not found" % (entity_type, entity_id)
         )
+
+class OperationNotPermited(SimpleNetError):
+    def __init__(self, forbidden_type, forbidden_id):
+        simplenet_error = super(OperationNotPermited, self)
+        simplenet_error.__init__(
+            403, "%s:%s Forbidden" % (forbidden_type, forbidden_id)
+        )
+

@@ -16,15 +16,40 @@ server = 'http://127.0.0.1:8081'
 network_appliance = 'firewall'
 
 @baker.command(
-    params={ "action": "Valid actions <list all|create|delete|rename>",
-             "name": "Your neighborhood name"}
+    params={ "action": "<list all|create|delete|rename>",
+             "name": "neighborhood name"}
 )
 def neighborhood(action, name):
     base_url = '%s/%s/neighborhoods' % (server, network_appliance)
     action_list = { 'list':  base_url,
                     'create': base_url,
                     'delete': '%s/%s' % (base_url, name),
-                    'info': '%s/%s' % (base_url, name) }
+                    'info': '%s-by-name/%s' % (base_url, name) }
+
+    url = action_list[action]
+    r = None
+    if action == 'list':
+        r = requests.get(url)
+    elif action == 'create':
+        r = requests.post(url, data=json.dumps({'name': name}))
+    elif action == 'delete':
+        r = requests.delete(url)
+    elif action == 'info':
+        r = requests.get(url)
+    print r.json if hasattr(r, 'json') else r.text
+
+@baker.command(
+    params={ "action": "<list all|create|delete|rename>",
+             "name": "vlan name"}
+)
+def vlan(action, name, neighborhood_id=None):
+    base_url = '%s/%s/vlans' % (server, network_appliance)
+    action_list = { 'list':  base_url,
+                    'create': '%s/%s/neighborhoods/%s/vlans' % (
+                        server, network_appliance, neighborhood_id
+                    ),
+                    'delete': '%s/%s' % (base_url, name),
+                    'info': '%s-by-name/%s' % (base_url, name) }
 
     url = action_list[action]
     r = None

@@ -74,6 +74,27 @@ def neighborhood_create(network_appliance):
     return json.dumps(neighborhood)
 
 
+@post('/:network_appliance/neighborhoods/:neighborhood_id/vlans')
+def neighborhood_vlan_create(network_appliance, neighborhood_id):
+    """
+    ::
+
+      POST /:network_appliance/neighborhood/:neighborhood_id/vlans
+
+    Create a new vlan in neighborhood
+    """
+    response.content_type = "application/json"
+    manager = create_manager(network_appliance)
+    data = request.body.readline()
+    if not data:
+        abort(400, 'No data received')
+    data = json.loads(data)
+    neighborhood = manager.vlan_create(neighborhood_id, data)
+    location = "/%s/vlans/%s" % (network_appliance, vlan['id'])
+    response.set_header("Location", location)
+    return json.dumps(neighborhood)
+
+
 @get('/:network_appliance/neighborhoods/:neighborhood_id')
 def neighborhood_info(network_appliance, neighborhood_id):
     """
@@ -86,6 +107,20 @@ def neighborhood_info(network_appliance, neighborhood_id):
     response.content_type = "application/json"
     manager = create_manager(network_appliance)
     return json.dumps(manager.neighborhood_info(neighborhood_id))
+
+
+@get('/:network_appliance/neighborhoods-by-name/:neighborhood_name')
+def neighborhood_info_by_name(network_appliance, neighborhood_name):
+    """
+    ::
+
+      GET /:network_appliance/neighborhoods-by-name/:neighborhood_name
+
+    Get neighborhood informations
+    """
+    response.content_type = "application/json"
+    manager = create_manager(network_appliance)
+    return json.dumps(manager.neighborhood_info_by_name(neighborhood_name))
 
 
 @put('/:network_appliance/neighborhoods/:neighborhood_id')
@@ -118,6 +153,34 @@ def neighborhood_delete(network_appliance, neighborhood_id):
     response.content_type = "application/json"
     manager = create_manager(network_appliance)
     return json.dumps(manager.neighborhood_delete(neighborhood_id))
+
+
+@get('/:network_appliance/vlans')
+def vlan_list(network_appliance):
+    """
+    ::
+
+      GET /:network_appliance/vlans
+
+    Get vlans for a given pool
+    """
+    response.content_type = "application/json"
+    manager = create_manager(network_appliance)
+    return json.dumps(manager.vlan_list())
+
+
+@delete('/:network_appliance/vlans/:vlan_id')
+def vlan_delete(network_appliance, vlan_id):
+    """
+    ::
+
+      DELETE /:network_appliance/vlans/:vlan_id
+
+    Deletes vlan
+    """
+    response.content_type = "application/json"
+    manager = create_manager(network_appliance)
+    return json.dumps(manager.vlan_delete(vlan_id))
 
 
 def create_manager(network_appliance):
