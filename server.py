@@ -69,7 +69,7 @@ def neighborhood_create(network_appliance):
         abort(400, 'No data received')
     data = json.loads(data)
     neighborhood = manager.neighborhood_create(data)
-    location = "/%s/neighborhoods/%s" % (network_appliance, neighborhood["id"])
+    location = "/%s/neighborhoods/%s" % (network_appliance, neighborhood['id'])
     response.set_header("Location", location)
     return json.dumps(neighborhood)
 
@@ -130,7 +130,7 @@ def create_manager(network_appliance):
     module = __import__("simplenet.network_appliances.%s" % network_appliance)
     module = getattr(module.network_appliances, network_appliance)
 
-    return module.Net
+    return module.Net()
 
 
 def main():

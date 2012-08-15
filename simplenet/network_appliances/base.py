@@ -24,10 +24,6 @@ class SimpleNet(object):
     def __init__(self):
         self.connection = False
         self.format_for = FormatView()
-        self.__setup__()
-
-    def __setup__(self):
-        pass
 
     def neighborhood_list(self, *args, **kawrgs):
         raise FeatureNotImplemented()

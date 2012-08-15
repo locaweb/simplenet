@@ -15,41 +15,12 @@
 #
 # @author: Thiago Morello (morellon), Locaweb.
 # @author: Willian Molinari (PotHix), Locaweb.
-
+# @author: Juliano Martinez (ncode), Locaweb.
 
 class FormatView(object):
 
-    def guest(self, vm_id, name, cpus, memory, hdd, tools, state):
+    def neighborhood(self, id, name):
         return {
-            'id': vm_id,
+            'id': id,
             'name': name,
-            'cpus': int(cpus),
-            'memory': int(memory),
-            'hdd': hdd,
-            'tools_up_to_date': tools,
-            'state': state
-        }
-
-    def snapshot(self, snap_id, name, state=None, path=None, created=None):
-        return {
-            'id': snap_id,
-            'name': name,
-            'state': state,
-            'path': path,
-            'created': created
-
-        }
-
-    def network(self, device, mac, name_label):
-        return {
-            'id': device,
-            'mac': mac,
-            'network': name_label
-        }
-
-    def pool(self, used_memory, total_memory, master):
-        return {
-            "used_memory": used_memory,
-            "total_memory": total_memory,
-            "master": master
         }

@@ -28,28 +28,55 @@ session = db_utils.get_database_session()
 class Net(SimpleNet):
 
     def neighborhood_list(self):
-        ss = session.query(models.Neighborhood).get()
-        return ss
+        ss = session.query(models.Neighborhood).all()
+        neighborhoods = []
+        for neighborhood in ss:
+            neighborhoods.append(
+                self.format_for.neighborhood(
+                    neighborhood.id,
+                    neighborhood.name
+                )
+            )
+        return neighborhoods
 
     def neighborhood_create(self, data):
         if not 'name' in data:
-            raise EntityNotFound()
+            raise Exception('Missing value name')
         session.begin(subtransactions=True)
         try:
             session.add(models.Neighborhood(name=data['name']))
             session.commit()
-        except:
+        except Exception, e:
             session.rollback()
-            raise Exception('meh')
+            raise Exception(e)
+        return self._neighborhood_info_by_name(data['name'])
 
-    def neighborhood_info(self, *args, **kwargs):
-        raise FeatureNotImplemented()
+    def neighborhood_info(self, id):
+        ss = session.query(models.Neighborhood).get(id)
+        if not ss:
+            raise EntityNotFound('Neighborhood', id)
+        return self.format_for.neighborhood(ss.id, ss.name)
+
+    def _neighborhood_info_by_name(self, name):
+        ss = session.query(models.Neighborhood).filter_by(name=name).first()
+        return self.format_for.neighborhood(
+            id = ss.id,
+            name = ss.name
+        )
 
     def neighborhood_update(self, *args, **kwargs):
         raise FeatureNotImplemented()
 
-    def neighborhood_delete(self, *args, **kwargs):
-        raise FeatureNotImplemented()
+    def neighborhood_delete(self, id):
+        ss = session.query(models.Neighborhood).get(id)
+        session.begin(subtransactions=True)
+        try:
+            session.delete(ss)
+            session.commit()
+        except Exception, e:
+            session.rollback()
+            raise Exception(e)
+        return True
 
     def vlan_list(self, *args, **kwargs):
         raise FeatureNotImplemented()

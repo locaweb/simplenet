@@ -17,12 +17,12 @@
 
 import logging
 
-from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+from simplenet.db import models
 
 LOG = logging.getLogger(__name__)
 
-_engine = create_engine('sqlite://')
+_engine = models.engine
 _maker = None
 
 def get_database_session(autocommit=True, expire_on_commit=False):

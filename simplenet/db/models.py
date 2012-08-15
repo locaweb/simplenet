@@ -21,5 +21,5 @@ class Neighborhood(Base):
     def __repr__(self):
        return "<Neighborhood('%s','%s')>" % (self.id, self.name)
 
-engine = create_engine('sqlite://')
+engine = create_engine('sqlite:////tmp/meh.db')
 Base.metadata.create_all(engine)

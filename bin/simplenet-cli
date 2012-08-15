@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
 import os
+import json
 import baker
 import requests
 import ConfigParser
@@ -22,16 +23,19 @@ def neighborhood(action, name):
     base_url = '%s/%s/neighborhoods' % (server, network_appliance)
     action_list = { 'list':  base_url,
                     'create': base_url,
-                    'delete': '%s/%s' % (base_url, name) }
+                    'delete': '%s/%s' % (base_url, name),
+                    'info': '%s/%s' % (base_url, name) }
 
     url = action_list[action]
     r = None
     if action == 'list':
         r = requests.get(url)
     elif action == 'create':
-        r = requests.post(url, data={'name': name})
+        r = requests.post(url, data=json.dumps({'name': name}))
     elif action == 'delete':
         r = requests.delete(url)
+    elif action == 'info':
+        r = requests.get(url)
     print r.json if hasattr(r, 'json') else r.text
 
 baker.run()
