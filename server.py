@@ -39,101 +39,101 @@ app = bottle.app()
 LOG = logging.getLogger('simplenet.server')
 
 
-@get('/:network_appliance/neighborhoods')
-def neighborhood_list(network_appliance):
+@get('/neighborhoods')
+def neighborhood_list():
     """
     ::
 
-      GET /:network_appliance/neighborhoods
+      GET /neighborhoods
 
     Get neighborhoods for a given pool
     """
     response.content_type = "application/json"
-    manager = create_manager(network_appliance)
+    manager = create_manager('base')
     return json.dumps(manager.neighborhood_list())
 
 
-@post('/:network_appliance/neighborhoods')
-def neighborhood_create(network_appliance):
+@post('/neighborhoods')
+def neighborhood_create():
     """
     ::
 
-      POST /:network_appliance/neighborhood
+      POST /neighborhood
 
     Create a new neighborhood
     """
     response.content_type = "application/json"
-    manager = create_manager(network_appliance)
+    manager = create_manager('base')
     data = request.body.readline()
     if not data:
         abort(400, 'No data received')
     data = json.loads(data)
     neighborhood = manager.neighborhood_create(data)
-    location = "/%s/neighborhoods/%s" % (network_appliance, neighborhood['id'])
+    location = "neighborhoods/%s" % (neighborhood['id'])
     response.set_header("Location", location)
     return json.dumps(neighborhood)
 
 
-@post('/:network_appliance/neighborhoods/:neighborhood_id/vlans')
-def neighborhood_vlan_create(network_appliance, neighborhood_id):
+@post('/neighborhoods/:neighborhood_id/vlans')
+def neighborhood_vlan_create(neighborhood_id):
     """
     ::
 
-      POST /:network_appliance/neighborhood/:neighborhood_id/vlans
+      POST /neighborhood/:neighborhood_id/vlans
 
     Create a new vlan in neighborhood
     """
     response.content_type = "application/json"
-    manager = create_manager(network_appliance)
+    manager = create_manager('base')
     data = request.body.readline()
     if not data:
         abort(400, 'No data received')
     data = json.loads(data)
     vlan = manager.vlan_create(neighborhood_id, data)
-    location = "/%s/vlans/%s" % (network_appliance, vlan['id'])
+    location = "vlans/%s" % (vlan['id'])
     response.set_header("Location", location)
     return json.dumps(vlan)
 
 
-@get('/:network_appliance/neighborhoods/:neighborhood_id')
-def neighborhood_info(network_appliance, neighborhood_id):
+@get('/neighborhoods/:neighborhood_id')
+def neighborhood_info(neighborhood_id):
     """
     ::
 
-      GET /:network_appliance/neighborhoods/:neighborhood_id
+      GET /neighborhoods/:neighborhood_id
 
     Get neighborhood informations
     """
     response.content_type = "application/json"
-    manager = create_manager(network_appliance)
+    manager = create_manager('base')
     return json.dumps(manager.neighborhood_info(neighborhood_id))
 
 
-@get('/:network_appliance/neighborhoods-by-name/:neighborhood_name')
-def neighborhood_info_by_name(network_appliance, neighborhood_name):
+@get('/neighborhoods/by-name/:neighborhood_name')
+def neighborhood_info_by_name(neighborhood_name):
     """
     ::
 
-      GET /:network_appliance/neighborhoods-by-name/:neighborhood_name
+      GET /neighborhoods/by-name/:neighborhood_name
 
     Get neighborhood informations
     """
     response.content_type = "application/json"
-    manager = create_manager(network_appliance)
+    manager = create_manager('base')
     return json.dumps(manager.neighborhood_info_by_name(neighborhood_name))
 
 
-@put('/:network_appliance/neighborhoods/:neighborhood_id')
-def neighborhood_update(network_appliance, neighborhood_id):
+@put('/neighborhoods/:neighborhood_id')
+def neighborhood_update(neighborhood_id):
     """
     ::
 
-      PUT /:network_appliance/:id
+      PUT /:id
 
     Update neighborhood informations
     """
     response.content_type = "application/json"
-    manager = create_manager(network_appliance)
+    manager = create_manager('base')
     data = request.body.readline()
     if not data:
         abort(400, 'No data received')
@@ -141,147 +141,147 @@ def neighborhood_update(network_appliance, neighborhood_id):
     return json.dumps(manager.neighborhood_update(neighborhood_data))
 
 
-@delete('/:network_appliance/neighborhoods/:neighborhood_id')
-def neighborhood_delete(network_appliance, neighborhood_id):
+@delete('/neighborhoods/:neighborhood_id')
+def neighborhood_delete(neighborhood_id):
     """
     ::
 
-      DELETE /:network_appliance/neighborhoods/:neighborhood_id
+      DELETE /neighborhoods/:neighborhood_id
 
     Deletes neighborhood
     """
     response.content_type = "application/json"
-    manager = create_manager(network_appliance)
+    manager = create_manager('base')
     return json.dumps(manager.neighborhood_delete(neighborhood_id))
 
-@post('/:network_appliance/vlans/:vlan_id/subnets')
-def vlan_subnet_create(network_appliance, vlan_id):
+@post('/vlans/:vlan_id/subnets')
+def vlan_subnet_create(vlan_id):
     """
     ::
 
-      POST /:network_appliance/vlan/:vlan_id/subnets
+      POST /vlan/:vlan_id/subnets
 
     Create a new subnet in vlan
     """
     response.content_type = "application/json"
-    manager = create_manager(network_appliance)
+    manager = create_manager('base')
     data = request.body.readline()
     if not data:
         abort(400, 'No data received')
     data = json.loads(data)
     subnet = manager.subnet_create(vlan_id, data)
-    location = "/%s/subnets/%s" % (network_appliance, subnet['id'])
+    location = "subnets/%s" % (subnet['id'])
     response.set_header("Location", location)
     return json.dumps(subnet)
 
-@get('/:network_appliance/vlans/:vlan_id')
-def vlan_info(network_appliance, vlan_id):
+@get('/vlans/:vlan_id')
+def vlan_info(vlan_id):
     """
     ::
 
-      GET /:network_appliance/vlans/:vlan_id
+      GET /vlans/:vlan_id
 
     Get vlan informations
     """
     response.content_type = "application/json"
-    manager = create_manager(network_appliance)
+    manager = create_manager('base')
     return json.dumps(manager.vlan_info(vlan_id))
 
 
-@get('/:network_appliance/vlans-by-name/:vlan_name')
-def vlan_info_by_name(network_appliance, vlan_name):
+@get('/vlans/by-name/:vlan_name')
+def vlan_info_by_name(vlan_name):
     """
     ::
 
-      GET /:network_appliance/vlans-by-name/:vlan_name
+      GET /vlans/by-name/:vlan_name
 
     Get vlan informations
     """
     response.content_type = "application/json"
-    manager = create_manager(network_appliance)
+    manager = create_manager('base')
     return json.dumps(manager.vlan_info_by_name(vlan_name))
 
-@get('/:network_appliance/vlans')
-def vlan_list(network_appliance):
+@get('/vlans')
+def vlan_list():
     """
     ::
 
-      GET /:network_appliance/vlans
+      GET /vlans
 
     Get vlans for a given pool
     """
     response.content_type = "application/json"
-    manager = create_manager(network_appliance)
+    manager = create_manager('base')
     return json.dumps(manager.vlan_list())
 
 
-@delete('/:network_appliance/vlans/:vlan_id')
-def vlan_delete(network_appliance, vlan_id):
+@delete('/vlans/:vlan_id')
+def vlan_delete(vlan_id):
     """
     ::
 
-      DELETE /:network_appliance/vlans/:vlan_id
+      DELETE /vlans/:vlan_id
 
     Deletes vlan
     """
     response.content_type = "application/json"
-    manager = create_manager(network_appliance)
+    manager = create_manager('base')
     return json.dumps(manager.vlan_delete(vlan_id))
 
 
-@get('/:network_appliance/subnets/:subnet_id')
-def subnet_info(network_appliance, subnet_id):
+@get('/subnets/:subnet_id')
+def subnet_info(subnet_id):
     """
     ::
 
-      GET /:network_appliance/subnets/:subnet_id
+      GET /subnets/:subnet_id
 
     Get subnet informations
     """
     response.content_type = "application/json"
-    manager = create_manager(network_appliance)
+    manager = create_manager('base')
     return json.dumps(manager.subnet_info(subnet_id))
 
 
-@get('/:network_appliance/subnets-by-cidr/:subnet_ip/:subnet_mask')
-def subnet_info_by_cidr(network_appliance, subnet_ip, subnet_mask):
+@get('/subnets/by-cidr/:subnet_ip/:subnet_mask')
+def subnet_info_by_cidr(subnet_ip, subnet_mask):
     """
     ::
 
-      GET /:network_appliance/subnets-by-cidr/:subnet_ip/:subnet_mask
+      GET /subnets/by-cidr/:subnet_ip/:subnet_mask
 
     Get subnet informations
     """
     response.content_type = "application/json"
-    manager = create_manager(network_appliance)
+    manager = create_manager('base')
     return json.dumps(manager.subnet_info_by_cidr('%s/%s' % (subnet_ip, subnet_mask)))
 
 
-@get('/:network_appliance/subnets')
-def subnet_list(network_appliance):
+@get('/subnets')
+def subnet_list():
     """
     ::
 
-      GET /:network_appliance/subnets
+      GET /subnets
 
     Get subnets for a given pool
     """
     response.content_type = "application/json"
-    manager = create_manager(network_appliance)
+    manager = create_manager('base')
     return json.dumps(manager.subnet_list())
 
 
-@delete('/:network_appliance/subnets/:subnet_id')
-def subnet_delete(network_appliance, subnet_id):
+@delete('/subnets/:subnet_id')
+def subnet_delete(subnet_id):
     """
     ::
 
-      DELETE /:network_appliance/subnets/:subnet_id
+      DELETE /subnets/:subnet_id
 
     Deletes subnet
     """
     response.content_type = "application/json"
-    manager = create_manager(network_appliance)
+    manager = create_manager('base')
     return json.dumps(manager.subnet_delete(subnet_id))
 
 def create_manager(network_appliance):
