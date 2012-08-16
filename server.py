@@ -74,6 +74,27 @@ def neighborhood_create():
     return json.dumps(neighborhood)
 
 
+@post('/neighborhoods/:neighborhood_id/devices')
+def neighborhood_device_create(neighborhood_id):
+    """
+    ::
+
+      POST /neighborhood/:neighborhood_id/devices
+
+    Create a new device in neighborhood
+    """
+    response.content_type = "application/json"
+    manager = create_manager('base')
+    data = request.body.readline()
+    if not data:
+        abort(400, 'No data received')
+    data = json.loads(data)
+    device = manager.device_create(neighborhood_id, data)
+    location = "devices/%s" % (device['id'])
+    response.set_header("Location", location)
+    return json.dumps(device)
+
+
 @post('/neighborhoods/:neighborhood_id/vlans')
 def neighborhood_vlan_create(neighborhood_id):
     """
@@ -128,7 +149,7 @@ def neighborhood_update(neighborhood_id):
     """
     ::
 
-      PUT /:id
+      PUT /neighborhoods/:neighborhood_id
 
     Update neighborhood informations
     """
@@ -153,6 +174,123 @@ def neighborhood_delete(neighborhood_id):
     response.content_type = "application/json"
     manager = create_manager('base')
     return json.dumps(manager.neighborhood_delete(neighborhood_id))
+
+
+@get('/devices')
+def device_list():
+    """
+    ::
+
+      GET /devices
+
+    Get devices for a given pool
+    """
+    response.content_type = "application/json"
+    manager = create_manager('base')
+    return json.dumps(manager.device_list())
+
+
+@get('/devices/:device_id')
+def device_info(device_id):
+    """
+    ::
+
+      GET /devices/:device_id
+
+    Get device informations
+    """
+    response.content_type = "application/json"
+    manager = create_manager('base')
+    return json.dumps(manager.device_info(device_id))
+
+
+@post('/devices/:device_id/vlans')
+def device_add_vlan(device_id):
+    """
+    ::
+
+      POST /devices/:device_id/vlans
+
+    Attach vlan to device
+    """
+    response.content_type = "application/json"
+    manager = create_manager('base')
+    data = request.body.readline()
+    if not data:
+        abort(400, 'No data received')
+    data = json.loads(data)
+    device = manager.device_add_vlan(device_id, data)
+    location = "devices/relationship/%s" % (device['id'])
+    response.set_header("Location", location)
+    return json.dumps(device)
+
+
+@delete('/devices/:device_id/vlans/:vlan_id')
+def device_add_vlan(device_id):
+    """
+    ::
+
+      POST /devices/:device_id/vlans
+
+    Attach vlan to device
+    """
+    response.content_type = "application/json"
+    manager = create_manager('base')
+    data = request.body.readline()
+    if not data:
+        abort(400, 'No data received')
+    data = json.loads(data)
+    device = manager.device_remove_vlan(device_id, vlan_id)
+    location = "devices/relationship/%s" % (device['id'])
+    response.set_header("Location", location)
+    return json.dumps(device)
+
+
+@get('/devices/by-name/:device_name')
+def device_info_by_name(device_name):
+    """
+    ::
+
+      GET /devices/by-name/:device_name
+
+    Get device informations
+    """
+    response.content_type = "application/json"
+    manager = create_manager('base')
+    return json.dumps(manager.device_info_by_name(device_name))
+
+
+@put('/devices/:device_id')
+def device_update(device_id):
+    """
+    ::
+
+      PUT /devices/:device_id
+
+    Update device informations
+    """
+    response.content_type = "application/json"
+    manager = create_manager('base')
+    data = request.body.readline()
+    if not data:
+        abort(400, 'No data received')
+    data = json.loads(data)
+    return json.dumps(manager.device_update(device_data))
+
+
+@delete('/devices/:device_id')
+def device_delete(device_id):
+    """
+    ::
+
+      DELETE /devices/:device_id
+
+    Deletes device
+    """
+    response.content_type = "application/json"
+    manager = create_manager('base')
+    return json.dumps(manager.device_delete(device_id))
+
 
 @post('/vlans/:vlan_id/subnets')
 def vlan_subnet_create(vlan_id):

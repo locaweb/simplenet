@@ -33,7 +33,6 @@ class Device(Base):
     name = Column(String(255), unique=True)
     description = Column(String(255))
     neighborhood_id = Column(String(255), ForeignKey('neighborhoods.id'))
-    #vlans_to_devices = relationship("Vlans_to_Device", backref="vlans", cascade="all, delete, delete-orphan")
     vlans_to_devices = relationship("Vlans_to_Device", backref="vlans")
 
     def __init__(self, name, neighborhood_id, description=""):

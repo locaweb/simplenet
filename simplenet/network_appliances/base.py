@@ -87,6 +87,87 @@ class SimpleNet(object):
             raise Exception(e)
         return True
 
+    def device_list(self):
+        ss = session.query(models.Device).all()
+        devices = []
+        for device in ss:
+            devices.append(
+                self.format_for.device(
+                    device.id,
+                    device.name,
+                    device.neighborhood_id
+                )
+            )
+        return devices
+
+    def device_create(self, neighborhood_id, data):
+        if not 'name' in data:
+            raise Exception('Missing name on request')
+        session.begin(subtransactions=True)
+        try:
+            session.add(models.Device(name=data['name'], neighborhood_id=neighborhood_id))
+            session.commit()
+        except IntegrityError:
+            session.rollback()
+            forbidden_msg = "%s already exists" % data['name']
+            raise OperationNotPermited('Device', forbidden_msg)
+        except Exception, e:
+            session.rollback()
+            raise Exception(e)
+        return self.device_info_by_name(data['name'])
+
+    def device_add_vlan(self, device_id):
+        if not 'vlan_id' in data:
+            raise Exception('Missing name on request')
+        session.begin(subtransactions=True)
+        try:
+            device = session.query(models.Device).get(device_id)
+            vlan = session.query(models.vlan).get(data['vlan_id'])
+            device.vlans_to_devices.add(vlan)
+            session.commit()
+        except Exception, e:
+            session.rollback()
+            raise Exception(e)
+        return True
+
+    def device_remove_vlan(self, vlan_id, device_id):
+        session.begin(subtransactions=True)
+        try:
+            device = session.query(models.Device).get(device_id)
+            vlan = session.query(models.vlan).get(vlan_id)
+            device.vlans_to_devices.remove(vlan)
+            session.commit()
+        except Exception, e:
+            session.rollback()
+            raise Exception(e)
+        return True
+
+    def device_info(self, id):
+        ss = session.query(models.Device).get(id)
+        if not ss:
+            raise EntityNotFound('Device', id)
+        return self.format_for.device(ss.id, ss.name)
+
+    def device_info_by_name(self, name):
+        ss = session.query(models.Device).filter_by(name=name).first()
+        if not ss:
+            raise EntityNotFound('Device', name)
+        return self.format_for.device(ss.id, ss.name, ss.neighborhood_id)
+
+    def device_update(self, *args, **kawrgs):
+        raise FeatureNotImplemented()
+
+    def device_delete(self, id):
+        ss = session.query(models.Device).get(id)
+        session.begin(subtransactions=True)
+        try:
+            session.delete(ss)
+            session.commit()
+        except Exception, e:
+            session.rollback()
+            raise Exception(e)
+        return True
+
     def vlan_list(self):
         ss = session.query(models.Vlan).all()
         vlans = []
