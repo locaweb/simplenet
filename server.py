@@ -220,8 +220,8 @@ def device_add_vlan(device_id):
         abort(400, 'No data received')
     data = json.loads(data)
     device = manager.device_add_vlan(device_id, data)
-    #location = "devices/relationship/%s" % (device['id'])
-    #response.set_header("Location", location)
+    location = "devices/relationship/%s" % (device['id'])
+    response.set_header("Location", location)
     return json.dumps(device)
 
 

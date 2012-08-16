@@ -15,6 +15,12 @@ config.read(config_file)
 
 server = 'http://127.0.0.1:8081'
 
+def pretty_output(data):
+    try:
+        print json.dumps(json.loads(data), sort_keys=True, indent=4)
+    except ValueError:
+        print data
+
 @baker.command(
     params={ "action": "<list all|create|delete|rename>",
              "name": "neighborhood name"}
@@ -36,7 +42,7 @@ def neighborhood(action, name):
         r = requests.delete(url)
     elif action == 'info':
         r = requests.get(url)
-    print r.json if hasattr(r, 'json') else r.text
+    pretty_output(r.text)
 
 
 @baker.command(
@@ -66,8 +72,7 @@ def vlan(action, name, neighborhood_id=None):
         r = requests.delete(url)
     elif action == 'info':
         r = requests.get(url)
-    print r.json if hasattr(r, 'json') else r.text
-
+    pretty_output(r.text)
 
 @baker.command(
     params={ "action": "<list all|create|delete|rename>",
@@ -96,7 +101,7 @@ def subnet(action, cidr, vlan_id=None):
         r = requests.delete(url)
     elif action == 'info':
         r = requests.get(url)
-    print r.json if hasattr(r, 'json') else r.text
+    pretty_output(r.text)
 
 
 @baker.command(
@@ -126,8 +131,7 @@ def ip(action, ip, subnet_id=None):
         r = requests.delete(url)
     elif action == 'info':
         r = requests.get(url)
-    print r.json if hasattr(r, 'json') else r.text
-
+    pretty_output(r.text)
 
 @baker.command(
     params={ "action": "<list all|attach|create|delete|rename>",
@@ -166,6 +170,6 @@ def device(action, name, neighborhood_id=None, vlan_id=None):
         r = requests.post(url, data=json.dumps({'vlan_id': vlan_id}))
     elif action == 'detach':
         r = requests.delete(url)
-    print r.json if hasattr(r, 'json') else r.text
+    pretty_output(r.text)
 
 baker.run()

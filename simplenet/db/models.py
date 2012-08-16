@@ -119,7 +119,7 @@ class BasePolicy(Base):
 
     __tablename__ = 'base_policies'
 
-    uuid = Column(String(255), primary_key=True)
+    id = Column(String(255), primary_key=True)
     proto = Column(String(255), nullable=False)
     src = Column(String(255), nullable=False)
     src_port = Column(String(255), nullable=True)
@@ -128,9 +128,11 @@ class BasePolicy(Base):
     table = Column(String(255), nullable=False)
     policy = Column(String(255), nullable=False)
     description = Column(String(255))
+    owner_id = Column(String(255), nullable=False)
+    __mapper_args__ = {'polymorphic_on': owner_id}
 
-    def __init__(self, parent_id, proto, src, src_port, dst, dst_port, table, policy):
-        self.uuid = str(uuid.uuid4())
+    def __init__(self, owner_id, proto, src, src_port, dst, dst_port, table, policy):
+        self.id = str(uuid.uuid4())
         self.proto = proto
         self.src = src
         self.src_port = src_port
@@ -139,10 +141,10 @@ class BasePolicy(Base):
         self.direction = direction
         self.table = table
         self.policy = policy
-        self.parent_id = parent_id
+        self.parent_id = owner_id
 
     def to_dict(self):
-        return {'id': self.uuid,
+        return {'id': self.id,
                 'parent_id': parent_id,
                 'proto': self.proto,
                 'src': self.src,
@@ -156,29 +158,29 @@ class BasePolicy(Base):
 class NeighborhoodPolicy(BasePolicy):
 
     __tablename__ = 'neighborhood_policies'
-
-    parent_id = Column(String(255), ForeignKey('neighborhood.id'))
+    __mapper_args__ = {'polymorphic_identity': ForeignKey('neighborhood.id')}
+    parent_id = Column(None, ForeignKey('base_policies.id'), primary_key=True)
 
 
 class VlanPolicy(BasePolicy):
 
     __tablename__ = 'vlan_policies'
-
-    parent_id = Column(String(255), ForeignKey('vlans.id'))
+    __mapper_args__ = {'polymorphic_identity': ForeignKey('vlans.id')}
+    parent_id = Column(None, ForeignKey('base_policies.id'), primary_key=True)
 
 
 class SubnetPolicy(BasePolicy):
 
     __tablename__ = 'subnet_policies'
-
-    parent_id = Column(String(255), ForeignKey('subnet.id'))
+    __mapper_args__ = {'polymorphic_identity': ForeignKey('subnet.id')}
+    parent_id = Column(None, ForeignKey('base_policies.id'), primary_key=True)
 
 
 class IpPolicy(BasePolicy):
 
     __tablename__ = 'ip_policies'
-
-    parent_id = Column(String(255), ForeignKey('ip.id'))
+    __mapper_args__ = {'polymorphic_identity': ForeignKey('ip.id')}
+    parent_id = Column(None, ForeignKey('base_policies.id'), primary_key=True)
 
 
 def _fk_pragma_on_connect(dbapi_con, con_record):

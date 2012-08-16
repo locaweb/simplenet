@@ -1,44 +1,74 @@
-#!/bin/bash -x
+#!/bin/bash
 
-echo "Creating"
-ngid=$(./simplenet-cli neighborhood create ita01 | sed 's/,\|"//g' | awk '{ print $2 }')
-vid=$(./simplenet-cli vlan create vlan01 --neighborhood_id $ngid | sed 's/,\|"//g' | awk '{ print $4 }')
-sid=$(./simplenet-cli subnet create 192.168.0.0/24 --vlan_id $vid | sed 's/,\|"//g' | awk '{ print $4 }')
-iid=$(./simplenet-cli ip create 192.168.0.1 --subnet_id $sid | sed 's/,\|"//g' | awk '{ print $4 }' )
-dic=$(./simplenet-cli device create firewall01 --neighborhood_id $ngid | sed 's/,\|"//g' | awk '{ print $4 }' )
+echo "Creating Neighborhood"
+./simplenet-cli neighborhood create ita01 | sed 's/,\|"//g' | ccze -A
+nid=$(./simplenet-cli neighborhood info ita01 | awk '/"id": / {gsub(/"|,/,"",$2) ; print $2}')
 echo
 
-echo "Devices"
-./simplenet-cli device info firewall01
-./simplenet-cli device list all
-./simplenet-cli device attach $dic --vlan_id $vid
+echo "Creating Vlan"
+./simplenet-cli vlan create vlan01 --neighborhood_id $nid | ccze -A
+vid=$(./simplenet-cli vlan info vlan01 | awk '/"id": / {gsub(/"|,/,"",$2) ; print $2}')
 echo
 
-echo "Neighborhood"
-./simplenet-cli neighborhood info ita01
-./simplenet-cli neighborhood list all
+echo "Creating Subnet"
+./simplenet-cli subnet create 192.168.0.0/24 --vlan_id $vid | ccze -A
+sid=$(./simplenet-cli subnet info 192.168.0.0/24 | awk '/"id": / {gsub(/"|,/,"",$2) ; print $2}')
 echo
 
-echo "Vlan"
-./simplenet-cli vlan info vlan01
-./simplenet-cli vlan list all
+echo "Creating Ip"
+./simplenet-cli ip create 192.168.0.1 --subnet_id $sid | ccze -A
+iid=$(./simplenet-cli ip info 192.168.0.1 | awk '/"id": / {gsub(/"|,/,"",$2) ; print $2}')
 echo
 
-echo "Subnet"
-./simplenet-cli subnet info 192.168.0.0/24
-./simplenet-cli subnet list all
+echo "Creating Device"
+./simplenet-cli device create firewall01 --neighborhood_id $nid | ccze -A
+dic=$(./simplenet-cli device info firewall01 | awk '/"id": / {gsub(/"|,/,"",$2) ; print $2}')
 echo
 
-echo "Ip"
-./simplenet-cli ip info 192.168.0.1
-./simplenet-cli ip list all
+echo "Attaching Vlan to Device"
+./simplenet-cli device attach $dic --vlan_id $vid | ccze -A
 echo
 
-echo "Removing"
+echo "Listing Devices"
+./simplenet-cli device list all | ccze -A
+echo
+
+echo "Listing Neighborhoods"
+./simplenet-cli neighborhood list all | ccze -A
+echo
+
+echo "Listing Vlans"
+./simplenet-cli vlan list all | ccze -A
+echo
+
+echo "Listing Subnets"
+./simplenet-cli subnet list all | ccze -A
+echo
+
+echo "Listing Ip"
+./simplenet-cli ip list all | ccze -A
+echo
+
+echo "Detaching Device"
 ./simplenet-cli device detach $dic --vlan_id $vid
+echo
+
+echo "Deleting Ip"
 ./simplenet-cli ip delete $iid
+echo
+
+echo "Deleting Subnet"
 ./simplenet-cli subnet delete $sid
+echo
+
+echo "Deleting Device"
 ./simplenet-cli device delete $dic
+echo
+
+echo "Deleting Vlan"
 ./simplenet-cli vlan delete $vid
-./simplenet-cli neighborhood delete $ngid
+echo
+
+echo "Deleting Neighborhood"
+./simplenet-cli neighborhood delete $nid
 echo

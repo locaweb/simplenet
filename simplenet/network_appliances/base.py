@@ -130,7 +130,7 @@ class SimpleNet(object):
         except Exception, e:
             session.rollback()
             raise Exception(e)
-        return True
+        return self.format_for.device(device.id, device.name, device.neighborhood_id)
 
     def device_remove_vlan(self, device_id, vlan_id):
         session.begin(subtransactions=True)
