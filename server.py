@@ -312,6 +312,7 @@ def vlan_subnet_create(vlan_id):
     response.set_header("Location", location)
     return json.dumps(subnet)
 
+
 @get('/vlans/:vlan_id')
 def vlan_info(vlan_id):
     """

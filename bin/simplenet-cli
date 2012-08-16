@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
 import os
+import sys
 import json
 import baker
 import requests
@@ -37,6 +38,7 @@ def neighborhood(action, name):
         r = requests.get(url)
     print r.json if hasattr(r, 'json') else r.text
 
+
 @baker.command(
     params={ "action": "<list all|create|delete|rename>",
              "name": "vlan name"}
@@ -55,6 +57,9 @@ def vlan(action, name, neighborhood_id=None):
     if action == 'list':
         r = requests.get(url)
     elif action == 'create':
+        if not neighborhood_id:
+            print "Missing neighborhood_id to create"
+            sys.exit(1)
         r = requests.post(url, data=json.dumps({'name': name}))
     elif action == 'delete':
         r = requests.delete(url)
@@ -81,12 +86,16 @@ def subnet(action, cidr, vlan_id=None):
     if action == 'list':
         r = requests.get(url)
     elif action == 'create':
+        if not vlan_id:
+            print "Missing vlan_id to create"
+            sys.exit(1)
         r = requests.post(url, data=json.dumps({'cidr': cidr}))
     elif action == 'delete':
         r = requests.delete(url)
     elif action == 'info':
         r = requests.get(url)
     print r.json if hasattr(r, 'json') else r.text
+
 
 @baker.command(
     params={ "action": "<list all|create|delete|rename>",
@@ -106,11 +115,49 @@ def ip(action, ip, subnet_id=None):
     if action == 'list':
         r = requests.get(url)
     elif action == 'create':
+        if not vlan_id:
+            print "Missing vlan_id to create"
+            sys.exit(1)
         r = requests.post(url, data=json.dumps({'ip': ip}))
     elif action == 'delete':
         r = requests.delete(url)
     elif action == 'info':
         r = requests.get(url)
+    print r.json if hasattr(r, 'json') else r.text
+
+
+@baker.command(
+    params={ "action": "<list all|create|delete|rename>",
+             "name": "device name"}
+)
+def device(action, name, neighborhood_id=None, vlan_id=None):
+    base_url = '%s/devices' % (server)
+    action_list = { 'list':  base_url,
+                    'create': '%s/neighborhoods/%s/devices' % (
+                        server, neighborhood_id
+                    ),
+                    'delete': '%s/%s' % (base_url, name),
+                    'attach': '%s/%s/vlans' % (base_url, name),
+                    'info': '%s/by-name/%s' % (base_url, name) }
+
+    url = action_list[action]
+    r = None
+    if action == 'list':
+        r = requests.get(url)
+    elif action == 'create':
+        if not neighborhood_id:
+            print "Missing neighborhood_id to create"
+            sys.exit(1)
+        r = requests.post(url, data=json.dumps({'name': name}))
+    elif action == 'delete':
+        r = requests.delete(url)
+    elif action == 'info':
+        r = requests.get(url)
+    elif action == 'attach':
+        if not vlan_id:
+            print "Missing vlan_id to create"
+            sys.exit(1)
+        r = requests.post(url, data=json.dumps({'vlan_id': vland_id}))
     print r.json if hasattr(r, 'json') else r.text
 
 baker.run()
