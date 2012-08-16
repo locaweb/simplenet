@@ -46,3 +46,9 @@ class FormatView(object):
             'subnet_id': subnet_id
         }
 
+    def device(self, id, name, neighborhood_id):
+        return {
+            'id': id,
+            'name': name,
+            'neighborhood_id': neighborhood_id
+        }

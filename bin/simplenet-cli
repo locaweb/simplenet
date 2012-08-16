@@ -41,7 +41,8 @@ def neighborhood(action, name):
 
 @baker.command(
     params={ "action": "<list all|create|delete|rename>",
-             "name": "vlan name"}
+             "name": "vlan name",
+             "neighborhood_id": "neighborhood_id to create a new vlan"}
 )
 def vlan(action, name, neighborhood_id=None):
     base_url = '%s/vlans' % (server)
@@ -70,7 +71,8 @@ def vlan(action, name, neighborhood_id=None):
 
 @baker.command(
     params={ "action": "<list all|create|delete|rename>",
-             "cidr": "subnet cidr"}
+             "cidr": "subnet cidr",
+             "vlan_id": "vlan_id to create a new subnet" }
 )
 def subnet(action, cidr, vlan_id=None):
     base_url = '%s/subnets' % (server)
@@ -99,7 +101,8 @@ def subnet(action, cidr, vlan_id=None):
 
 @baker.command(
     params={ "action": "<list all|create|delete|rename>",
-             "ip": "ip address"}
+             "ip": "ip address",
+             "subnet_id": "subnet_id to create a new vlan" }
 )
 def ip(action, ip, subnet_id=None):
     base_url = '%s/ips' % (server)
@@ -115,8 +118,8 @@ def ip(action, ip, subnet_id=None):
     if action == 'list':
         r = requests.get(url)
     elif action == 'create':
-        if not vlan_id:
-            print "Missing vlan_id to create"
+        if not subnet_id:
+            print "Missing subnet_id to create"
             sys.exit(1)
         r = requests.post(url, data=json.dumps({'ip': ip}))
     elif action == 'delete':
@@ -127,8 +130,10 @@ def ip(action, ip, subnet_id=None):
 
 
 @baker.command(
-    params={ "action": "<list all|create|delete|rename>",
-             "name": "device name"}
+    params={ "action": "<list all|attach|create|delete|rename>",
+             "name": "device name",
+             "neighborhood_id": "neighborhood_id to create a new device",
+             "vlan_id": "vlan_id to attach vlans to devices" }
 )
 def device(action, name, neighborhood_id=None, vlan_id=None):
     base_url = '%s/devices' % (server)
@@ -138,6 +143,7 @@ def device(action, name, neighborhood_id=None, vlan_id=None):
                     ),
                     'delete': '%s/%s' % (base_url, name),
                     'attach': '%s/%s/vlans' % (base_url, name),
+                    'detach': '%s/%s/vlans/%s' % (base_url, name, vlan_id),
                     'info': '%s/by-name/%s' % (base_url, name) }
 
     url = action_list[action]
@@ -157,7 +163,9 @@ def device(action, name, neighborhood_id=None, vlan_id=None):
         if not vlan_id:
             print "Missing vlan_id to create"
             sys.exit(1)
-        r = requests.post(url, data=json.dumps({'vlan_id': vland_id}))
+        r = requests.post(url, data=json.dumps({'vlan_id': vlan_id}))
+    elif action == 'detach':
+        r = requests.delete(url)
     print r.json if hasattr(r, 'json') else r.text
 
 baker.run()

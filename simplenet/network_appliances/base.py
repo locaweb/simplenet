@@ -116,30 +116,30 @@ class SimpleNet(object):
             raise Exception(e)
         return self.device_info_by_name(data['name'])
 
-    def device_add_vlan(self, device_id):
+    def device_add_vlan(self, device_id, data):
         if not 'vlan_id' in data:
             raise Exception('Missing name on request')
         session.begin(subtransactions=True)
         try:
             device = session.query(models.Device).get(device_id)
-            vlan = session.query(models.vlan).get(data['vlan_id'])
-            device.vlans_to_devices.add(vlan)
+            vlan = session.query(models.Vlan).get(data['vlan_id'])
+            relationship = models.Vlans_to_Device()
+            relationship.vlan = vlan
+            device.vlans_to_devices.append(relationship)
             session.commit()
         except Exception, e:
             session.rollback()
             raise Exception(e)
         return True
 
-    def device_remove_vlan(self, vlan_id, device_id):
+    def device_remove_vlan(self, device_id, vlan_id):
         session.begin(subtransactions=True)
         try:
-            device = session.query(models.Device).get(device_id)
-            vlan = session.query(models.vlan).get(vlan_id)
-            device.vlans_to_devices.remove(vlan)
+            session.query(models.Vlans_to_Device).filter_by(vlan_id=vlan_id, device_id=device_id).delete()
             session.commit()
         except Exception, e:
             session.rollback()
-            raise Exception(e)
+            raise Exception(e.__str__())
         return True
 
     def device_info(self, id):

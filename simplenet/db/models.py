@@ -4,7 +4,7 @@ import uuid
 
 from ipaddr import IPv4Network, IPv4Address
 
-from sqlalchemy import event, Column, String, create_engine, ForeignKey, Table
+from sqlalchemy import event, Column, String, create_engine, ForeignKey, Table, Integer, Enum
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, backref
 
@@ -25,6 +25,7 @@ class Neighborhood(Base):
     def __repr__(self):
        return "<Neighborhood('%s','%s')>" % (self.id, self.name)
 
+
 class Device(Base):
 
     __tablename__ = 'devices'
@@ -33,7 +34,7 @@ class Device(Base):
     name = Column(String(255), unique=True)
     description = Column(String(255))
     neighborhood_id = Column(String(255), ForeignKey('neighborhoods.id'))
-    vlans_to_devices = relationship("Vlans_to_Device", backref="vlans")
+    vlans_to_devices = relationship("Vlans_to_Device", cascade='all, delete-orphan')
 
     def __init__(self, name, neighborhood_id, description=""):
         self.id = str(uuid.uuid4())
@@ -42,6 +43,7 @@ class Device(Base):
 
     def __repr__(self):
        return "<Device('%s','%s')>" % (self.id, self.name)
+
 
 class Vlan(Base):
 
@@ -60,6 +62,7 @@ class Vlan(Base):
     def __repr__(self):
        return "<Vlan('%s','%s')>" % (self.id, self.name)
 
+
 class Vlans_to_Device(Base):
 
     __tablename__ = 'vlans_to_devices'
@@ -67,7 +70,8 @@ class Vlans_to_Device(Base):
     vlan_id = Column(String(255), ForeignKey('vlans.id'), primary_key=True)
     device_id = Column(String(255), ForeignKey('devices.id'), primary_key=True)
     description = Column(String(255))
-    child = relationship("Vlan", backref="devices")
+    vlan = relationship("Vlan")
+
 
 class Subnet(Base):
 
@@ -92,6 +96,7 @@ class Subnet(Base):
     def __repr__(self):
        return "<Subnet('%s','%s')>" % (self.id, self.cidr)
 
+
 class Ip(Base):
 
     __tablename__ = 'ips'
@@ -108,6 +113,72 @@ class Ip(Base):
 
     def __repr__(self):
        return "<Ip('%s','%s')>" % (self.id, self.ip)
+
+
+class BasePolicy(Base):
+
+    __tablename__ = 'base_policies'
+
+    uuid = Column(String(255), primary_key=True)
+    proto = Column(String(255), nullable=False)
+    src = Column(String(255), nullable=False)
+    src_port = Column(String(255), nullable=True)
+    dst = Column(String(255), nullable=False)
+    dst_port = Column(String(255), nullable=True)
+    table = Column(String(255), nullable=False)
+    policy = Column(String(255), nullable=False)
+    description = Column(String(255))
+
+    def __init__(self, parent_id, proto, src, src_port, dst, dst_port, table, policy):
+        self.uuid = str(uuid.uuid4())
+        self.proto = proto
+        self.src = src
+        self.src_port = src_port
+        self.dst = dst
+        self.dst_port = dst_port
+        self.direction = direction
+        self.table = table
+        self.policy = policy
+        self.parent_id = parent_id
+
+    def to_dict(self):
+        return {'id': self.uuid,
+                'parent_id': parent_id,
+                'proto': self.proto,
+                'src': self.src,
+                'src_port': self.src_port,
+                'dst': self.dst,
+                'dst_port': self.dst_port,
+                'table': self.table,
+                'policy': self.policy }
+
+
+class NeighborhoodPolicy(BasePolicy):
+
+    __tablename__ = 'neighborhood_policies'
+
+    parent_id = Column(String(255), ForeignKey('neighborhood.id'))
+
+
+class VlanPolicy(BasePolicy):
+
+    __tablename__ = 'vlan_policies'
+
+    parent_id = Column(String(255), ForeignKey('vlans.id'))
+
+
+class SubnetPolicy(BasePolicy):
+
+    __tablename__ = 'subnet_policies'
+
+    parent_id = Column(String(255), ForeignKey('subnet.id'))
+
+
+class IpPolicy(BasePolicy):
+
+    __tablename__ = 'ip_policies'
+
+    parent_id = Column(String(255), ForeignKey('ip.id'))
 
 
 def _fk_pragma_on_connect(dbapi_con, con_record):

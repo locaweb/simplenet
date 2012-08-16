@@ -220,13 +220,13 @@ def device_add_vlan(device_id):
         abort(400, 'No data received')
     data = json.loads(data)
     device = manager.device_add_vlan(device_id, data)
-    location = "devices/relationship/%s" % (device['id'])
-    response.set_header("Location", location)
+    #location = "devices/relationship/%s" % (device['id'])
+    #response.set_header("Location", location)
     return json.dumps(device)
 
 
 @delete('/devices/:device_id/vlans/:vlan_id')
-def device_add_vlan(device_id):
+def device_remove_vlan(device_id, vlan_id):
     """
     ::
 
@@ -236,13 +236,7 @@ def device_add_vlan(device_id):
     """
     response.content_type = "application/json"
     manager = create_manager('base')
-    data = request.body.readline()
-    if not data:
-        abort(400, 'No data received')
-    data = json.loads(data)
     device = manager.device_remove_vlan(device_id, vlan_id)
-    location = "devices/relationship/%s" % (device['id'])
-    response.set_header("Location", location)
     return json.dumps(device)
 
 
