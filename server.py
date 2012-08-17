@@ -529,13 +529,13 @@ def ip_delete(ip_id):
     return manager.ip_delete(ip_id)
 
 
-@post('/:network_appliance/policy/:owner_id')
+@post('/:network_appliance/policy/:owner_type/:owner_id')
 @reply_json
-def policy_create(network_appliance, owner_id):
+def policy_create(network_appliance, owner_type, owner_id):
     """
     ::
 
-      POST /:network_appliance/policy/:owner_id
+      POST /:network_appliance/policy/:owner_type/:owner_id
 
     Create a new policy
     """
@@ -546,49 +546,49 @@ def policy_create(network_appliance, owner_id):
         abort(400, 'No data received')
     data = json.loads(data)
     print owner_id
-    policy = manager.policy_create(owner_id, data)
-    location = "%s/policy/%s" % (network_appliance, policy['id'])
+    policy = manager.policy_create(owner_type, owner_id, data)
+    location = "%s/policy/%s/%s" % (network_appliance, owner_type, policy['id'])
     response.set_header("Location", location)
     return policy
 
 
-@delete('/:network_appliance/policy/:policy_id')
+@delete('/:network_appliance/policy/:owner_type/:policy_id')
 @reply_json
-def policy_delete(network_appliance, policy_id):
+def policy_delete(network_appliance, owner_type, policy_id):
     """
     ::
 
-      DELETE /:network_appliance/policy/:policy_id
+      DELETE /:network_appliance/policy/:owner_type/:policy_id
 
     Deletes policy
     """
     response.content_type = "application/json"
     manager = create_manager(network_appliance)
-    return manager.policy_delete(policy_id)
+    return manager.policy_delete(policy_id, owner_type)
 
 
-@get('/:network_appliance/policy/:policy_id')
+@get('/:network_appliance/policy/:owner_type/:policy_id')
 @reply_json
-def policy_info(policy_id):
+def policy_info(:owner_type, policy_id):
     """
     ::
 
-      GET /:network_appliance/policy/:policy_id
+      GET /:network_appliance/policy/:owner_type/:policy_id
 
     Get policy informations
     """
     response.content_type = "application/json"
     manager = create_manager(network_appliance)
-    return manager.policy_info(policy_id)
+    return manager.policy_info(policy_id, owner_type)
 
 
 @get('/:network_appliance/policy')
 @reply_json
-def policy_list_by_owner(network_appliance):
+def policy_list(network_appliance):
     """
     ::
 
-      GET /policy
+      GET /:network_appliance/policy
 
     Get all policy
     """
@@ -597,9 +597,9 @@ def policy_list_by_owner(network_appliance):
     return manager.policy_list()
 
 
-@get('/:network_appliance/policy/by-owner/:owner_name/:owner_id')
+@get('/:network_appliance/policy/by-owner/:owner_type/:owner_id')
 @reply_json
-def policy_list_by_owner(network_appliance, owner_name, owner_id=None):
+def policy_list_by_owner(network_appliance, owner_type, owner_id=None):
     """
     ::
 
@@ -609,7 +609,7 @@ def policy_list_by_owner(network_appliance, owner_name, owner_id=None):
     """
     response.content_type = "application/json"
     manager = create_manager(network_appliance)
-    return manager.policy_list_by_owner(owner_name)
+    return manager.policy_list_by_owner(owner_type, owner_id)
 
 
 @error(400)

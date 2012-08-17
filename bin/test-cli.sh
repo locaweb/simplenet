@@ -49,6 +49,22 @@ echo "Listing Ip"
 ./simplenet-cli ip list all | ccze -A
 echo
 
+echo "Creating policy to neighborhood"
+./simplenet-cli policy create neighborhood $nid --src 192.168.0.1 --proto tcp --table INPUT --policy ACCEPT
+echo
+
+echo "Creating policy to vlan"
+./simplenet-cli policy create vlan $vid --dst_port 53 --proto udp --table INPUT --policy ACCEPT
+echo
+
+echo "Creating policy to subnet"
+./simplenet-cli policy create subnet $sid --dst 192.168.0.2 --proto tcp --table OUTPUT --policy DROP
+echo
+
+echo "Creating policy to vlan"
+./simplenet-cli policy create ip $iid --src 192.168.0.2 --proto udp --table FORWARD --policy REJECT
+echo
+
 echo "Detaching Device"
 ./simplenet-cli device detach $dic --vlan_id $vid
 echo

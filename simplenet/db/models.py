@@ -143,7 +143,7 @@ class BasePolicy(Base):
 
     def to_dict(self):
         return { 'id': self.id,
-                 'parent_id': parent_id,
+                 'owner_id': self.owner_id,
                  'proto': self.proto,
                  'src': self.src,
                  'src_port': self.src_port,

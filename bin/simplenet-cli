@@ -188,13 +188,13 @@ def device(action, name, neighborhood_id=None, vlan_id=None):
 )
 def policy(action, name, owner_id, dst=None, src=None, dst_port=None,
            src_port=None, proto=None, table=None, policy=None):
-    base_url = '%s/policys' % (server)
+    base_url = '%s/firewall/policy' % server
     action_list = { 'list':  base_url,
-                    'create': '%s/firewall/policy/%s' % (
-                        server, owner_id
+                    'create': '%s/%s/%s' % (
+                        base_url, name, owner_id
                     ),
-                    'delete': '%s/%s' % (base_url, name),
-                    'info': '%s/by-name/%s' % (base_url, name) }
+                    'delete': '%s/%s/%s' % (base_url, name, owner_id),
+                    'info': '%s/%s/%s' % (base_url, name, owner_id) }
 
     url = action_list[action]
     r = None
@@ -204,17 +204,17 @@ def policy(action, name, owner_id, dst=None, src=None, dst_port=None,
         if not owner_id:
             print "Missing owner_id to create"
             sys.exit(1)
-        data = {'owner_type': name}
+        data = {}
         for key in ['policy', 'dst', 'src', 'dst_port',
                     'src_port', 'proto', 'table']:
             value = vars()[key]
             if key != None:
                 data.update({key: value})
-        print data
         r = requests.post(url, data=json.dumps(data))
     elif action == 'delete':
         r = requests.delete(url)
     elif action == 'info':
         r = requests.get(url)
+    pretty_output(r.text)
 
 baker.run()

@@ -29,7 +29,7 @@ session = db_utils.get_database_session()
 class Net(SimpleNet):
 
     def policy_list(self):
-        ss = session.query(models.Policy).all()
+        ss = session.query(models.BasePolicy).all()
         policies = []
         for policy in ss:
             policies.append(
@@ -39,13 +39,10 @@ class Net(SimpleNet):
             )
         return policies
 
-    def policy_create(self, owner_id, data):
-        if not 'owner_type' in data:
-            raise Exception('Missing owner_type on request')
+    def policy_create(self, owner_type, owner_id, data):
         data.update({'owner_id': owner_id})
-        owner_type = data.pop('owner_type')
-        model = getattr(models, "%sPolicy" % owner_type.capitalize())
-        policy = model(**data)
+        _model = getattr(models, "%sPolicy" % owner_type.capitalize())
+        policy = _model(**data)
         session.begin(subtransactions=True)
         try:
             session.add(policy)
@@ -53,20 +50,21 @@ class Net(SimpleNet):
         except Exception, e:
             session.rollback()
             raise Exception(e)
-            print policy.id
-        return self.policy_info(policy.id)
+        return self.policy_info(owner_type, policy.id)
 
-    def policy_info(self, id):
-        ss = session.query(models.Policy).get(id)
+    def policy_info(self, owner_type, id):
+        _model = getattr(models, "%sPolicy" % owner_type.capitalize())
+        ss = session.query(_model).get(id)
         if not ss:
             raise EntityNotFound('Policy', id)
-        return self.format_for.ip(ss.id, ss.ip, ss.subnet_id)
+        return self.format_for.policy(ss)
 
     def policy_update(self, *args, **kwargs):
         raise FeatureNotImplemented()
 
-    def policy_delete(self, id):
-        ss = session.query(models.Policy).get(id)
+    def policy_delete(self, owner_type, id):
+        _model = getattr(models, "%sPolicy" % owner_type.capitalize())
+        ss = session.query(_model).get(id)
         session.begin(subtransactions=True)
         try:
             session.delete(ss)
