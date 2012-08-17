@@ -40,18 +40,21 @@ class Net(SimpleNet):
         return policies
 
     def policy_create(self, owner_id, data):
-        if 'owner_type' in data:
-            raise Exception('Missing ip on request')
+        if not 'owner_type' in data:
+            raise Exception('Missing owner_type on request')
+        data.update({'owner_id': owner_id})
         owner_type = data.pop('owner_type')
-        model = getattr(models, "%sPolicy" % owner_type.Capitalize())
+        model = getattr(models, "%sPolicy" % owner_type.capitalize())
+        policy = model(**data)
         session.begin(subtransactions=True)
         try:
-            session.add(model(data, owner_id=owner_id))
+            session.add(policy)
             session.commit()
         except Exception, e:
             session.rollback()
             raise Exception(e)
-        return self.policy_info(data)
+            print policy.id
+        return self.policy_info(policy.id)
 
     def policy_info(self, id):
         ss = session.query(models.Policy).get(id)

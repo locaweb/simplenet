@@ -545,6 +545,7 @@ def policy_create(network_appliance, owner_id):
     if not data:
         abort(400, 'No data received')
     data = json.loads(data)
+    print owner_id
     policy = manager.policy_create(owner_id, data)
     location = "%s/policy/%s" % (network_appliance, policy['id'])
     response.set_header("Location", location)
