@@ -528,15 +528,16 @@ def ip_delete(ip_id):
     manager = create_manager('base')
     return manager.ip_delete(ip_id)
 
+
 @post('/:network_appliance/policy/:owner_id')
 @reply_json
-def policy_rule_add(owner_id):
+def policy_create(network_appliance, owner_id):
     """
     ::
 
-      POST /subnet/:subnet_id/ips
+      POST /:network_appliance/policy/:owner_id
 
-    Create a new ip in subnet
+    Create a new policy
     """
     response.content_type = "application/json"
     manager = create_manager(network_appliance)
@@ -544,10 +545,70 @@ def policy_rule_add(owner_id):
     if not data:
         abort(400, 'No data received')
     data = json.loads(data)
-    ip = manager.ip_create(subnet_id, data)
-    location = "ips/%s" % (ip['id'])
+    policy = manager.policy_create(owner_id, data)
+    location = "%s/policy/%s" % (network_appliance, policy['id'])
     response.set_header("Location", location)
-    return ip
+    return policy
+
+
+@delete('/:network_appliance/policy/:policy_id')
+@reply_json
+def policy_delete(network_appliance, policy_id):
+    """
+    ::
+
+      DELETE /:network_appliance/policy/:policy_id
+
+    Deletes policy
+    """
+    response.content_type = "application/json"
+    manager = create_manager(network_appliance)
+    return manager.policy_delete(policy_id)
+
+
+@get('/:network_appliance/policy/:policy_id')
+@reply_json
+def policy_info(policy_id):
+    """
+    ::
+
+      GET /:network_appliance/policy/:policy_id
+
+    Get policy informations
+    """
+    response.content_type = "application/json"
+    manager = create_manager(network_appliance)
+    return manager.policy_info(policy_id)
+
+
+@get('/:network_appliance/policy')
+@reply_json
+def policy_list_by_owner(network_appliance):
+    """
+    ::
+
+      GET /policy
+
+    Get all policy
+    """
+    response.content_type = "application/json"
+    manager = create_manager(network_appliance)
+    return manager.policy_list()
+
+
+@get('/:network_appliance/policy/by-owner/:owner_name/:owner_id')
+@reply_json
+def policy_list_by_owner(network_appliance, owner_name, owner_id=None):
+    """
+    ::
+
+      GET /policys
+
+    Get policys for a given pool
+    """
+    response.content_type = "application/json"
+    manager = create_manager(network_appliance)
+    return manager.policy_list_by_owner(owner_name)
 
 
 @error(400)
@@ -555,30 +616,36 @@ def policy_rule_add(owner_id):
 def error400(err):
     return {"status": err.status, "message": err.output}
 
+
 @error(403)
 @reply_json
 def error403(err):
     return {"status": err.status, "message": err.output}
+
 
 @error(404)
 @reply_json
 def error404(err):
     return {"status": err.status, "message": err.output}
 
+
 @error(405)
 @reply_json
 def error405(err):
     return {"status": err.status, "message": err.output}
+
 
 @error(500)
 @reply_json
 def error500(err):
     return {"status": err.status, "message": err.exception.__repr__()}
 
+
 @error(501)
 @reply_json
 def error501(err):
     return {"status": err.status, "message": err.output}
+
 
 def create_manager(network_appliance):
 #    network_appliance_token = request.headers.get("x-simplenet-network_appliance-token")

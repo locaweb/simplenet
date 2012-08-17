@@ -172,4 +172,48 @@ def device(action, name, neighborhood_id=None, vlan_id=None):
         r = requests.delete(url)
     pretty_output(r.text)
 
+
+@baker.command(
+    params={ "action": "<list all|attach|create|delete|rename>",
+             "owner_type": "type of ownder <neighborhood|vlan|subnet|ip>",
+             "name": "policy name",
+             "owner_id": "policy owner id",
+             "src": "source ip or subnet",
+             "src_port": "source port",
+             "dst": "destination ip or subnet",
+             "dst_port": "destination port",
+             "proto": "protocol name or number",
+             "table": "table to apply the policy <INPUT|FORWARD|OUTPUT>",
+             "policy": "policy to use <ACCEPT|REJECT|DROP>" }
+)
+def policy(action, owner_type, owner_id, dst=None, src=None, dst_port=None,
+           src_port=None, proto=None, table=None, policy=None):
+    base_url = '%s/policys' % (server)
+    action_list = { 'list':  base_url,
+                    'create': '%s/firewall/policy/%s' % (
+                        server, owner_id
+                    ),
+                    'delete': '%s/%s' % (base_url, name),
+                    'info': '%s/by-name/%s' % (base_url, name) }
+
+    url = action_list[action]
+    r = None
+    if action == 'list':
+        r = requests.get(url)
+    elif action == 'create':
+        if not owner_id:
+            print "Missing owner_id to create"
+            sys.exit(1)
+        data = {}
+        for key in ['owner_type', 'dst', 'src', 'dst_port',
+                    'src_port', 'proto', 'table', 'policy']:
+            value = vars()[key]
+            if key != None:
+                data.update{key: value}
+        r = requests.post(url, data=json.dumps({data}))
+    elif action == 'delete':
+        r = requests.delete(url)
+    elif action == 'info':
+        r = requests.get(url)
+
 baker.run()
