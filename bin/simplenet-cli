@@ -201,8 +201,11 @@ def policy(action, name, owner_id, dst=None, src=None, dst_port=None,
     if action == 'list':
         r = requests.get(url)
     elif action == 'create':
-        if not owner_id:
-            print "Missing owner_id to create"
+        if not table:
+            print "Missing table to create"
+            sys.exit(1)
+        elif not policy:
+            print "Missing policy to create"
             sys.exit(1)
         data = {}
         for key in ['policy', 'dst', 'src', 'dst_port',
@@ -210,6 +213,7 @@ def policy(action, name, owner_id, dst=None, src=None, dst_port=None,
             value = vars()[key]
             if key != None:
                 data.update({key: value})
+        print url
         r = requests.post(url, data=json.dumps(data))
     elif action == 'delete':
         r = requests.delete(url)

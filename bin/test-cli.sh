@@ -25,6 +25,26 @@ echo "Creating Device"
 dic=$(./simplenet-cli device info firewall01 | awk '/"id": / {gsub(/"|,/,"",$2) ; print $2}')
 echo
 
+echo "Creating policy to neighborhood"
+pnid=$(./simplenet-cli policy create neighborhood $nid --src 192.168.0.1 --proto tcp --table INPUT --policy ACCEPT | awk '/"id": / {gsub(/"|,/,"",$2) ; print $2}')
+./simplenet-cli policy info neighborhood $pnid | ccze -A
+echo
+
+echo "Creating policy to vlan"
+pvid=$(./simplenet-cli policy create vlan $vid --dst_port 53 --proto udp --table INPUT --policy ACCEPT | awk '/"id": / {gsub(/"|,/,"",$2) ; print $2}')
+./simplenet-cli policy info vlan $pvid | ccze -A
+echo
+
+echo "Creating policy to subnet"
+psid=$(./simplenet-cli policy create subnet $sid --dst 192.168.0.2 --proto tcp --table OUTPUT --policy DROP | awk '/"id": / {gsub(/"|,/,"",$2) ; print $2}')
+./simplenet-cli policy info subnet $psid | ccze -A
+echo
+
+echo "Creating policy to ip"
+piid=$(./simplenet-cli policy create ip $iid --src 192.168.0.2 --proto udp --table FORWARD --policy REJECT | awk '/"id": / {gsub(/"|,/,"",$2) ; print $2}')
+./simplenet-cli policy info ip $piid | ccze -A
+echo
+
 echo "Attaching Vlan to Device"
 ./simplenet-cli device attach $dic --vlan_id $vid | ccze -A
 echo
@@ -49,20 +69,20 @@ echo "Listing Ip"
 ./simplenet-cli ip list all | ccze -A
 echo
 
-echo "Creating policy to neighborhood"
-./simplenet-cli policy create neighborhood $nid --src 192.168.0.1 --proto tcp --table INPUT --policy ACCEPT
+echo "Delete vlan Neighborhood"
+./simplenet-cli policy delete neighborhood $pnid
 echo
 
-echo "Creating policy to vlan"
-./simplenet-cli policy create vlan $vid --dst_port 53 --proto udp --table INPUT --policy ACCEPT
+echo "Delete vlan policy"
+./simplenet-cli policy delete vlan $pvid
 echo
 
-echo "Creating policy to subnet"
-./simplenet-cli policy create subnet $sid --dst 192.168.0.2 --proto tcp --table OUTPUT --policy DROP
+echo "Delete subnet policy"
+./simplenet-cli policy delete subnet $psid
 echo
 
-echo "Creating policy to vlan"
-./simplenet-cli policy create ip $iid --src 192.168.0.2 --proto udp --table FORWARD --policy REJECT
+echo "Delete ip policy"
+./simplenet-cli policy delete ip $piid
 echo
 
 echo "Detaching Device"

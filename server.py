@@ -528,7 +528,7 @@ def ip_delete(ip_id):
     manager = create_manager('base')
     return manager.ip_delete(ip_id)
 
-
+#/firewall/policy/neighborhood/68f69731-e1c5-4a31-bbf5-d8f9aa603c29
 @post('/:network_appliance/policy/:owner_type/:owner_id')
 @reply_json
 def policy_create(network_appliance, owner_type, owner_id):
@@ -569,7 +569,7 @@ def policy_delete(network_appliance, owner_type, policy_id):
 
 @get('/:network_appliance/policy/:owner_type/:policy_id')
 @reply_json
-def policy_info(:owner_type, policy_id):
+def policy_info(owner_type, policy_id):
     """
     ::
 
