@@ -52,3 +52,6 @@ class FormatView(object):
             'name': name,
             'neighborhood_id': neighborhood_id
         }
+
+    def policy(self, policy):
+        return policy.to_dict()

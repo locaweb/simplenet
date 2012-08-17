@@ -278,7 +278,7 @@ class SimpleNet(object):
             raise Exception(e)
         return True
 
-    def ip_list(self, *args, **kawrgs):
+    def ip_list(self):
         ss = session.query(models.Ip).all()
         ips = []
         for ip in ss:
@@ -307,7 +307,7 @@ class SimpleNet(object):
             raise Exception(e)
         return self.ip_info_by_ip(data['ip'])
 
-    def ip_info(self, *args, **kawrgs):
+    def ip_info(self, id):
         ss = session.query(models.Ip).get(id)
         if not ss:
             raise EntityNotFound('Ip', id)

@@ -28,17 +28,47 @@ session = db_utils.get_database_session()
 
 class Net(SimpleNet):
 
-    def policy_list(self, *args, **kwargs):
-        raise FeatureNotImplemented()
+    def policy_list(self):
+        ss = session.query(models.Policy).all()
+        policies = []
+        for policy in ss:
+            policies.append(
+                self.format_for.policy(
+                    policy
+                )
+            )
+        return policies
 
-    def policy_create(self, *args, **kwargs):
-        raise FeatureNotImplemented()
+    def policy_create(self, owner_id, data):
+        if 'owner_type' in data:
+            raise Exception('Missing ip on request')
+        owner_type = data.pop('owner_type')
+        model = getattr(models, "%sPolicy" % owner_type.Capitalize())
+        session.begin(subtransactions=True)
+        try:
+            session.add(model(data, owner_id=owner_id))
+            session.commit()
+        except Exception, e:
+            session.rollback()
+            raise Exception(e)
+        return self.policy_info(data)
 
-    def policy_info(self, *args, **kwargs):
-        raise FeatureNotImplemented()
+    def policy_info(self, id):
+        ss = session.query(models.Policy).get(id)
+        if not ss:
+            raise EntityNotFound('Policy', id)
+        return self.format_for.ip(ss.id, ss.ip, ss.subnet_id)
 
     def policy_update(self, *args, **kwargs):
         raise FeatureNotImplemented()
 
-    def policy_delete(self, *args, **kwargs):
-        raise FeatureNotImplemented()
+    def policy_delete(self, id):
+        ss = session.query(models.Policy).get(id)
+        session.begin(subtransactions=True)
+        try:
+            session.delete(ss)
+            session.commit()
+        except Exception, e:
+            session.rollback()
+            raise Exception(e)
+        return True
