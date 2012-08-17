@@ -25,10 +25,10 @@ class SimpleNetError(HTTPError):
         super(SimpleNetError, self).__init__(
             code, None, None, None, {"Content-Type": "application/json"}
         )
-        self.output = json.dumps({
+        self.output = {
             "error": self.__class__.__name__,
             "message": message
-        })
+        }
 
 
 class FeatureNotAvailable(SimpleNetError):
@@ -53,6 +53,7 @@ class EntityNotFound(SimpleNetError):
         simplenet_error.__init__(
             404, "%s:%s not found" % (entity_type, entity_id)
         )
+
 
 class OperationNotPermited(SimpleNetError):
     def __init__(self, forbidden_type, forbidden_id):

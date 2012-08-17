@@ -34,12 +34,14 @@ from bottle import abort, request, ServerAdapter, response, static_file
 from bottle import error, HTTPError
 
 from simplenet.common.config import config, set_logger
+from simplenet.common.http_utils import reply_json
 
 app = bottle.app()
 LOG = logging.getLogger('simplenet.server')
 
 
 @get('/neighborhoods')
+@reply_json
 def neighborhood_list():
     """
     ::
@@ -50,10 +52,11 @@ def neighborhood_list():
     """
     response.content_type = "application/json"
     manager = create_manager('base')
-    return json.dumps(manager.neighborhood_list())
+    return manager.neighborhood_list()
 
 
 @post('/neighborhoods')
+@reply_json
 def neighborhood_create():
     """
     ::
@@ -71,10 +74,11 @@ def neighborhood_create():
     neighborhood = manager.neighborhood_create(data)
     location = "neighborhoods/%s" % (neighborhood['id'])
     response.set_header("Location", location)
-    return json.dumps(neighborhood)
+    return neighborhood
 
 
 @post('/neighborhoods/:neighborhood_id/devices')
+@reply_json
 def neighborhood_device_create(neighborhood_id):
     """
     ::
@@ -92,10 +96,11 @@ def neighborhood_device_create(neighborhood_id):
     device = manager.device_create(neighborhood_id, data)
     location = "devices/%s" % (device['id'])
     response.set_header("Location", location)
-    return json.dumps(device)
+    return device
 
 
 @post('/neighborhoods/:neighborhood_id/vlans')
+@reply_json
 def neighborhood_vlan_create(neighborhood_id):
     """
     ::
@@ -117,6 +122,7 @@ def neighborhood_vlan_create(neighborhood_id):
 
 
 @get('/neighborhoods/:neighborhood_id')
+@reply_json
 def neighborhood_info(neighborhood_id):
     """
     ::
@@ -127,10 +133,11 @@ def neighborhood_info(neighborhood_id):
     """
     response.content_type = "application/json"
     manager = create_manager('base')
-    return json.dumps(manager.neighborhood_info(neighborhood_id))
+    return manager.neighborhood_info(neighborhood_id)
 
 
 @get('/neighborhoods/by-name/:neighborhood_name')
+@reply_json
 def neighborhood_info_by_name(neighborhood_name):
     """
     ::
@@ -141,10 +148,11 @@ def neighborhood_info_by_name(neighborhood_name):
     """
     response.content_type = "application/json"
     manager = create_manager('base')
-    return json.dumps(manager.neighborhood_info_by_name(neighborhood_name))
+    return manager.neighborhood_info_by_name(neighborhood_name)
 
 
 @put('/neighborhoods/:neighborhood_id')
+@reply_json
 def neighborhood_update(neighborhood_id):
     """
     ::
@@ -159,10 +167,11 @@ def neighborhood_update(neighborhood_id):
     if not data:
         abort(400, 'No data received')
     data = json.loads(data)
-    return json.dumps(manager.neighborhood_update(neighborhood_data))
+    return manager.neighborhood_update(neighborhood_data)
 
 
 @delete('/neighborhoods/:neighborhood_id')
+@reply_json
 def neighborhood_delete(neighborhood_id):
     """
     ::
@@ -173,10 +182,11 @@ def neighborhood_delete(neighborhood_id):
     """
     response.content_type = "application/json"
     manager = create_manager('base')
-    return json.dumps(manager.neighborhood_delete(neighborhood_id))
+    manager.neighborhood_delete(neighborhood_id)
 
 
 @get('/devices')
+@reply_json
 def device_list():
     """
     ::
@@ -187,10 +197,11 @@ def device_list():
     """
     response.content_type = "application/json"
     manager = create_manager('base')
-    return json.dumps(manager.device_list())
+    return manager.device_list()
 
 
 @get('/devices/:device_id')
+@reply_json
 def device_info(device_id):
     """
     ::
@@ -201,10 +212,11 @@ def device_info(device_id):
     """
     response.content_type = "application/json"
     manager = create_manager('base')
-    return json.dumps(manager.device_info(device_id))
+    return manager.device_info(device_id)
 
 
 @post('/devices/:device_id/vlans')
+@reply_json
 def device_add_vlan(device_id):
     """
     ::
@@ -222,10 +234,11 @@ def device_add_vlan(device_id):
     device = manager.device_add_vlan(device_id, data)
     location = "devices/relationship/%s" % (device['id'])
     response.set_header("Location", location)
-    return json.dumps(device)
+    return device
 
 
 @delete('/devices/:device_id/vlans/:vlan_id')
+@reply_json
 def device_remove_vlan(device_id, vlan_id):
     """
     ::
@@ -237,10 +250,11 @@ def device_remove_vlan(device_id, vlan_id):
     response.content_type = "application/json"
     manager = create_manager('base')
     device = manager.device_remove_vlan(device_id, vlan_id)
-    return json.dumps(device)
+    return device
 
 
 @get('/devices/by-name/:device_name')
+@reply_json
 def device_info_by_name(device_name):
     """
     ::
@@ -251,10 +265,11 @@ def device_info_by_name(device_name):
     """
     response.content_type = "application/json"
     manager = create_manager('base')
-    return json.dumps(manager.device_info_by_name(device_name))
+    return manager.device_info_by_name(device_name)
 
 
 @put('/devices/:device_id')
+@reply_json
 def device_update(device_id):
     """
     ::
@@ -269,10 +284,14 @@ def device_update(device_id):
     if not data:
         abort(400, 'No data received')
     data = json.loads(data)
-    return json.dumps(manager.device_update(device_data))
+    device = manager.device_update(device_id, data)
+    location = "devices/%s" % (device['id'])
+    response.set_header("Location", location)
+    return manager.device_update(device)
 
 
 @delete('/devices/:device_id')
+@reply_json
 def device_delete(device_id):
     """
     ::
@@ -283,10 +302,11 @@ def device_delete(device_id):
     """
     response.content_type = "application/json"
     manager = create_manager('base')
-    return json.dumps(manager.device_delete(device_id))
+    return manager.device_delete(device_id)
 
 
 @post('/vlans/:vlan_id/subnets')
+@reply_json
 def vlan_subnet_create(vlan_id):
     """
     ::
@@ -304,10 +324,11 @@ def vlan_subnet_create(vlan_id):
     subnet = manager.subnet_create(vlan_id, data)
     location = "subnets/%s" % (subnet['id'])
     response.set_header("Location", location)
-    return json.dumps(subnet)
+    return subnet
 
 
 @get('/vlans/:vlan_id')
+@reply_json
 def vlan_info(vlan_id):
     """
     ::
@@ -318,10 +339,11 @@ def vlan_info(vlan_id):
     """
     response.content_type = "application/json"
     manager = create_manager('base')
-    return json.dumps(manager.vlan_info(vlan_id))
+    return manager.vlan_info(vlan_id)
 
 
 @get('/vlans/by-name/:vlan_name')
+@reply_json
 def vlan_info_by_name(vlan_name):
     """
     ::
@@ -332,9 +354,11 @@ def vlan_info_by_name(vlan_name):
     """
     response.content_type = "application/json"
     manager = create_manager('base')
-    return json.dumps(manager.vlan_info_by_name(vlan_name))
+    return manager.vlan_info_by_name(vlan_name)
+
 
 @get('/vlans')
+@reply_json
 def vlan_list():
     """
     ::
@@ -345,10 +369,11 @@ def vlan_list():
     """
     response.content_type = "application/json"
     manager = create_manager('base')
-    return json.dumps(manager.vlan_list())
+    return manager.vlan_list()
 
 
 @delete('/vlans/:vlan_id')
+@reply_json
 def vlan_delete(vlan_id):
     """
     ::
@@ -359,10 +384,11 @@ def vlan_delete(vlan_id):
     """
     response.content_type = "application/json"
     manager = create_manager('base')
-    return json.dumps(manager.vlan_delete(vlan_id))
+    return manager.vlan_delete(vlan_id)
 
 
 @post('/subnets/:subnet_id/ips')
+@reply_json
 def subnet_ip_create(subnet_id):
     """
     ::
@@ -380,10 +406,11 @@ def subnet_ip_create(subnet_id):
     ip = manager.ip_create(subnet_id, data)
     location = "ips/%s" % (ip['id'])
     response.set_header("Location", location)
-    return json.dumps(ip)
+    return ip
 
 
 @get('/subnets/:subnet_id')
+@reply_json
 def subnet_info(subnet_id):
     """
     ::
@@ -394,10 +421,11 @@ def subnet_info(subnet_id):
     """
     response.content_type = "application/json"
     manager = create_manager('base')
-    return json.dumps(manager.subnet_info(subnet_id))
+    return manager.subnet_info(subnet_id)
 
 
 @get('/subnets/by-cidr/:subnet_ip/:subnet_mask')
+@reply_json
 def subnet_info_by_cidr(subnet_ip, subnet_mask):
     """
     ::
@@ -408,10 +436,11 @@ def subnet_info_by_cidr(subnet_ip, subnet_mask):
     """
     response.content_type = "application/json"
     manager = create_manager('base')
-    return json.dumps(manager.subnet_info_by_cidr('%s/%s' % (subnet_ip, subnet_mask)))
+    return manager.subnet_info_by_cidr('%s/%s' % (subnet_ip, subnet_mask))
 
 
 @get('/subnets')
+@reply_json
 def subnet_list():
     """
     ::
@@ -422,10 +451,11 @@ def subnet_list():
     """
     response.content_type = "application/json"
     manager = create_manager('base')
-    return json.dumps(manager.subnet_list())
+    return manager.subnet_list()
 
 
 @delete('/subnets/:subnet_id')
+@reply_json
 def subnet_delete(subnet_id):
     """
     ::
@@ -436,10 +466,11 @@ def subnet_delete(subnet_id):
     """
     response.content_type = "application/json"
     manager = create_manager('base')
-    return json.dumps(manager.subnet_delete(subnet_id))
+    return manager.subnet_delete(subnet_id)
 
 
 @get('/ips/:ip_id')
+@reply_json
 def ip_info(ip_id):
     """
     ::
@@ -450,10 +481,11 @@ def ip_info(ip_id):
     """
     response.content_type = "application/json"
     manager = create_manager('base')
-    return json.dumps(manager.ip_info(ip_id))
+    return manager.ip_info(ip_id)
 
 
 @get('/ips/by-ip/:ip')
+@reply_json
 def ip_info_by_ip(ip):
     """
     ::
@@ -464,10 +496,11 @@ def ip_info_by_ip(ip):
     """
     response.content_type = "application/json"
     manager = create_manager('base')
-    return json.dumps(manager.ip_info_by_ip(ip))
+    return manager.ip_info_by_ip(ip)
 
 
 @get('/ips')
+@reply_json
 def ip_list():
     """
     ::
@@ -478,10 +511,11 @@ def ip_list():
     """
     response.content_type = "application/json"
     manager = create_manager('base')
-    return json.dumps(manager.ip_list())
+    return manager.ip_list()
 
 
 @delete('/ips/:ip_id')
+@reply_json
 def ip_delete(ip_id):
     """
     ::
@@ -492,8 +526,59 @@ def ip_delete(ip_id):
     """
     response.content_type = "application/json"
     manager = create_manager('base')
-    return json.dumps(manager.ip_delete(ip_id))
+    return manager.ip_delete(ip_id)
 
+@post('/:network_appliance/policy/:owner_id')
+@reply_json
+def policy_rule_add(owner_id):
+    """
+    ::
+
+      POST /subnet/:subnet_id/ips
+
+    Create a new ip in subnet
+    """
+    response.content_type = "application/json"
+    manager = create_manager(network_appliance)
+    data = request.body.readline()
+    if not data:
+        abort(400, 'No data received')
+    data = json.loads(data)
+    ip = manager.ip_create(subnet_id, data)
+    location = "ips/%s" % (ip['id'])
+    response.set_header("Location", location)
+    return ip
+
+
+@error(400)
+@reply_json
+def error400(err):
+    return {"status": err.status, "message": err.output}
+
+@error(403)
+@reply_json
+def error403(err):
+    return {"status": err.status, "message": err.output}
+
+@error(404)
+@reply_json
+def error404(err):
+    return {"status": err.status, "message": err.output}
+
+@error(405)
+@reply_json
+def error405(err):
+    return {"status": err.status, "message": err.output}
+
+@error(500)
+@reply_json
+def error500(err):
+    return {"status": err.status, "message": err.exception.__repr__()}
+
+@error(501)
+@reply_json
+def error501(err):
+    return {"status": err.status, "message": err.output}
 
 def create_manager(network_appliance):
 #    network_appliance_token = request.headers.get("x-simplenet-network_appliance-token")
@@ -502,7 +587,11 @@ def create_manager(network_appliance):
 
 #    username, password = parse_token(network_appliance_token)
 
-    module = __import__("simplenet.network_appliances.%s" % network_appliance)
+    _module_ = "simplenet.network_appliances.%s" % network_appliance
+    if not os.path.isfile("%s.py" % _module_.replace('.', '/')):
+        raise RuntimeError("The requested module is missing")
+
+    module = __import__(_module_)
     module = getattr(module.network_appliances, network_appliance)
 
     return module.Net()
