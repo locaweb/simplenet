@@ -76,9 +76,9 @@ piid=$(./simplenet-cli policy create ip $iid --src 192.168.0.2 --proto udp --tab
 echo
 
 echo "Attaching Vlan to Device"
-./simplenet-cli device attach $dic2 --vlan_id $vid | ccze -A
-echo "Next attach creation must fail"
 ./simplenet-cli device attach $dic --vlan_id $vid | ccze -A
+echo "Next attach creation must fail"
+./simplenet-cli device attach $dic2 --vlan_id $vid | ccze -A
 echo
 
 echo "Listing Devices"

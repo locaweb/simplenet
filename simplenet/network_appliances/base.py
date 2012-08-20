@@ -169,7 +169,7 @@ class SimpleNet(object):
         device = session.query(models.Device).get(device_id)
         vlan = session.query(models.Vlan).get(data['vlan_id'])
 
-        if device.zone_id =! vlan.zone_id:
+        if device.zone_id != vlan.zone_id:
             raise OperationNotPermited(
                 'Device', 'Device and Vlan must be from the same zone'
             )
