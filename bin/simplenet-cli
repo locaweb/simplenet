@@ -40,10 +40,10 @@ def pretty_output(data):
 
 @baker.command(
     params={ "action": "<list all|create|delete|rename>",
-             "name": "zone name"}
+             "name": "datacenter name"}
 )
-def zone(action, name):
-    base_url = '%s/zones' % (server)
+def datacenter(action, name):
+    base_url = '%s/datacenters' % (server)
     action_list = { 'list':  "%s/list" % base_url,
                     'create': base_url,
                     'delete': '%s/%s/delete' % (base_url, name),
@@ -55,6 +55,34 @@ def zone(action, name):
         r = requests.get(url)
     elif action == 'create':
         r = requests.post(url, data=json.dumps({'name': name}))
+    elif action == 'delete':
+        r = requests.delete(url)
+    elif action == 'info':
+        r = requests.get(url)
+    pretty_output(r.text)
+
+@baker.command(
+    params={ "action": "<list all|create|delete|rename>",
+             "name": "zone name"}
+)
+def zone(action, name, datacenter_id=None):
+    base_url = '%s/zones' % (server)
+    action_list = { 'list':  "%s/list" % base_url,
+                    'create': '%s/datacenters/%s/zones' % (
+                        server, datacenter_id
+                    ),
+                    'delete': '%s/%s/delete' % (base_url, name),
+                    'info': '%s/by-name/%s' % (base_url, name) }
+
+    url = action_list[action]
+    r = None
+    if action == 'list':
+        r = requests.get(url)
+    elif action == 'create':
+        if not datacenter_id:
+            print "Missing datacenter_id to create"
+            sys.exit(1)
+        r = requests.post(url, data=json.dumps({'name': name, 'datacenter_id': datacenter_id}))
     elif action == 'delete':
         r = requests.delete(url)
     elif action == 'info':

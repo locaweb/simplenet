@@ -48,13 +48,12 @@ class Zone(Base):
     id = Column(String(255), primary_key=True)
     name = Column(String(255), unique=True)
     description = Column(String(255))
-#    dc_id = Column(String(255), ForeignKey('datacenters.id'))
+    datacenter_id = Column(String(255), ForeignKey('datacenters.id'))
 
-#    def __init__(self, name, dc_id, description=""):
-    def __init__(self, name, description=""):
+    def __init__(self, name, datacenter_id, description=""):
         self.id = str(uuid.uuid4())
         self.name = name
-#        dc_id = dc_id
+        self.datacenter_id = datacenter_id
 
     def __repr__(self):
        return "<Zone('%s','%s')>" % (self.id, self.name)

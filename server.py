@@ -34,7 +34,7 @@ from bottle import abort, request, ServerAdapter, response, static_file
 from bottle import error, HTTPError
 
 from simplenet.common.config import config, set_logger
-from simplenet.common.http_utils import reply_json
+from simplenet.common.http_utils import reply_json, validate_input
 
 #from simplenet.routes import datacenter, zone, vlan, subnet, ip
 
@@ -107,28 +107,52 @@ def generic_resource_delete(resource, resource_id):
     return _delete(resource_id)
 
 
-@post('/zones')
+@post('/datacenters')
+@validate_input(name=str)
 @reply_json
-def zone_create():
+def datacenter_create():
     """
     ::
 
-      POST /zone
+      POST /datacenters
 
-    Create a new zone
+    Create a new datacenter
     """
     manager = create_manager('base')
     data = request.body.readline()
     if not data:
         abort(400, 'No data received')
     data = json.loads(data)
-    zone = manager.zone_create(data)
+    datacenter = manager.datacenter_create(data)
+    location = "datacenters/%s" % (datacenter['id'])
+    response.set_header("Location", location)
+    return datacenter
+
+
+@post('/datacenters/<datacenter_id>/zones')
+@validate_input(name=str)
+@reply_json
+def datacenter_zone_create(datacenter_id):
+    """
+    ::
+
+      POST /datacenter/<datacenter_id>/zones
+
+    Create a new zone in datacenter
+    """
+    manager = create_manager('base')
+    data = request.body.readline()
+    if not data:
+        abort(400, 'No data received')
+    data = json.loads(data)
+    zone = manager.zone_create(datacenter_id, data)
     location = "zones/%s" % (zone['id'])
     response.set_header("Location", location)
     return zone
 
 
 @post('/zones/<zone_id>/devices')
+@validate_input(name=str)
 @reply_json
 def zone_device_create(zone_id):
     """
@@ -150,6 +174,7 @@ def zone_device_create(zone_id):
 
 
 @post('/zones/<zone_id>/vlans')
+@validate_input(name=str)
 @reply_json
 def zone_vlan_create(zone_id):
     """
@@ -171,6 +196,7 @@ def zone_vlan_create(zone_id):
 
 
 @post('/devices/<device_id>/vlans')
+@validate_input(vlan_id=str)
 @reply_json
 def device_add_vlan(device_id):
     """
@@ -207,6 +233,7 @@ def device_remove_vlan(device_id, vlan_id):
 
 
 @post('/vlans/<vlan_id>/subnets')
+@validate_input(cidr=str)
 @reply_json
 def vlan_subnet_create(vlan_id):
     """
@@ -228,6 +255,7 @@ def vlan_subnet_create(vlan_id):
 
 
 @post('/subnets/<subnet_id>/ips')
+@validate_input(ip=str)
 @reply_json
 def subnet_ip_create(subnet_id):
     """
@@ -311,15 +339,14 @@ def policy_list(network_appliance, owner_type):
     return manager.policy_list(owner_type)
 
 
-@get('/:network_appliance/policy/by-owner/:owner_type/:owner_id/list')
+@get('/<network_appliance>/policy/by-owner/<owner_type>/<owner_id>/list')
 @reply_json
 def policy_list_by_owner(network_appliance, owner_type):
     """
     ::
 
-      GET /policys
+      GET /<network_appliance>/policy/by-owner/<owner_type>/<owner_id>/list
 
-    Get policys for a given pool
     """
     manager = create_manager(network_appliance)
     return manager.policy_list_by_owner(owner_type, owner_id)
@@ -390,5 +417,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
-

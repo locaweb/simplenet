@@ -17,8 +17,13 @@
 #
 # @author: Juliano Martinez (ncode), Locaweb.
 
+echo "Creating Datacenter"
+./simplenet-cli datacenter create ita | sed 's/,\|"//g' | ccze -A
+dcid=$(./simplenet-cli datacenter info ita | awk '/"id": / {gsub(/"|,/,"",$2) ; print $2}')
+echo
+
 echo "Creating Zone"
-./simplenet-cli zone create ita01 | sed 's/,\|"//g' | ccze -A
+./simplenet-cli zone create ita01 --datacenter_id $dcid | sed 's/,\|"//g' | ccze -A
 nid=$(./simplenet-cli zone info ita01 | awk '/"id": / {gsub(/"|,/,"",$2) ; print $2}')
 echo
 
@@ -124,4 +129,8 @@ echo
 
 echo "Deleting Zone"
 ./simplenet-cli zone delete $nid
+echo
+
+echo "Deleting Datacenter"
+./simplenet-cli datacenter delete $dcid
 echo

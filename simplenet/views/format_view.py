@@ -19,10 +19,17 @@
 
 class FormatView(object):
 
-    def zone(self, id, name):
+    def datacenter(self, id, name):
         return {
             'id': id,
             'name': name,
+        }
+
+    def zone(self, id, name, datacenter_id):
+        return {
+            'id': id,
+            'name': name,
+            'datacenter_id': datacenter_id
         }
 
     def vlan(self, id, name, zone_id):

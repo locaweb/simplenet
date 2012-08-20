@@ -17,14 +17,17 @@
 # @author: Juliano Martinez (ncode), Locaweb.
 
 import os
+import logging
 
 from functools import wraps
-from bottle import response
+from bottle import response, request, abort
 
 try:
-    from simplejson import dumps
+    from simplejson import dumps, loads
 except ImportError:
-    from json import dumps
+    from json import dumps, loads
+
+LOG = logging.getLogger('simplenet.server')
 
 
 def reply_json(f):
@@ -52,3 +55,63 @@ def create_manager(network_appliance):
     module = getattr(module.network_appliances, network_appliance)
 
     return module.Net()
+
+def validate_input(src="query", *vargs, **vkwargs):
+    """
+    Usage:
+    >>> @get('/test')
+    ... @validate_input(name=str, age=int, email=re.compile("\w+@\w+.com"), gender=("M", "F"))
+    ... def test():
+    ...    data = json.loads(request.body.readline())
+    ...    return data.get("name")
+    """
+    def proxy(f):
+        @wraps(f)
+        def validate(*args, **kwargs):
+            psource = loads(request.body.readline())
+
+            for param, ptype in vkwargs.iteritems():
+                pvalue = psource.get(param, None)
+
+                try:
+                    # lambda
+                    if isinstance(ptype, type(lambda: None)) and ptype.__name__ == '<lambda>':
+                        if not ptype(pvalue):
+                            raise InvalidParameter("False")
+                        continue
+
+                    if pvalue is None:
+                        raise NullParameter("Error: the '%s' query param is null" % param)
+
+                    # exact match
+                    if type(ptype) in (str, unicode):
+                        assert pvalue == ptype
+                        continue
+                    # valid option list
+                    if type(ptype) in (list, tuple):
+                        assert pvalue in ptype
+                        continue
+                    # int(), str(), etc
+                    if type(ptype) is type:
+                        ptype(pvalue)
+                        continue
+                    # regexp
+                    if isinstance(ptype, _pattern_type):
+                        assert ptype.search(pvalue) is not None
+                        continue
+                except NullParameter, e:
+                    LOG.warn(str(e))
+                    abort(400, str(e))
+                except Exception, e:
+                    LOG.warn("Error: the '%s' param has an unexpected type or an invalid format" % param) \
+                    if logger else None
+                    abort(400, "Error: '%s' query parameter has an unexpected type or an invalid format" % param)
+            return f(*args, **kwargs)
+        return validate
+    return proxy
+
+class InvalidParameter(Exception):
+    pass
+
+class NullParameter(Exception):
+    pass

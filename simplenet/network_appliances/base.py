@@ -33,6 +33,58 @@ class SimpleNet(object):
     def __init__(self):
         self.format_for = FormatView()
 
+    def datacenter_list(self):
+        ss = session.query(models.Datacenter).all()
+        datacenters = []
+        for datacenter in ss:
+            datacenters.append(
+                self.format_for.datacenter(
+                    datacenter.id,
+                    datacenter.name
+                )
+            )
+        return datacenters
+
+    def datacenter_create(self, data):
+        session.begin(subtransactions=True)
+        try:
+            session.add(models.Datacenter(name=data['name']))
+            session.commit()
+        except IntegrityError:
+            session.rollback()
+            forbidden_msg = "%s already exists" % data['name']
+            raise OperationNotPermited('Datacenter', forbidden_msg)
+        except Exception, e:
+            session.rollback()
+            raise Exception(e)
+        return self.datacenter_info_by_name(data['name'])
+
+    def datacenter_update(self, *args, **kawrgs):
+        raise FeatureNotImplemented()
+
+    def datacenter_info(self, id):
+        ss = session.query(models.Datacenter).get(id)
+        if not ss:
+            raise EntityNotFound('Datacenter', id)
+        return self.format_for.datacenter(ss.id, ss.name)
+
+    def datacenter_info_by_name(self, name):
+        ss = session.query(models.Datacenter).filter_by(name=name).first()
+        if not ss:
+            raise EntityNotFound('Datacenter', name)
+        return self.format_for.datacenter(ss.id, ss.name)
+
+    def datacenter_delete(self, id):
+        ss = session.query(models.Datacenter).get(id)
+        session.begin(subtransactions=True)
+        try:
+            session.delete(ss)
+            session.commit()
+        except Exception, e:
+            session.rollback()
+            raise Exception(e)
+        return True
+
     def zone_list(self):
         ss = session.query(models.Zone).all()
         zones = []
@@ -40,17 +92,16 @@ class SimpleNet(object):
             zones.append(
                 self.format_for.zone(
                     zone.id,
-                    zone.name
+                    zone.name,
+                    zone.datacenter_id
                 )
             )
         return zones
 
-    def zone_create(self, data):
-        if not 'name' in data:
-            raise Exception('Missing name on request')
+    def zone_create(self, datacenter_id, data):
         session.begin(subtransactions=True)
         try:
-            session.add(models.Zone(name=data['name']))
+            session.add(models.Zone(name=data['name'], datacenter_id=datacenter_id))
             session.commit()
         except IntegrityError:
             session.rollback()
@@ -68,13 +119,13 @@ class SimpleNet(object):
         ss = session.query(models.Zone).get(id)
         if not ss:
             raise EntityNotFound('Zone', id)
-        return self.format_for.zone(ss.id, ss.name)
+        return self.format_for.zone(ss.id, ss.name, ss.datacenter_id)
 
     def zone_info_by_name(self, name):
         ss = session.query(models.Zone).filter_by(name=name).first()
         if not ss:
             raise EntityNotFound('Zone', name)
-        return self.format_for.zone(ss.id, ss.name)
+        return self.format_for.zone(ss.id, ss.name, ss.datacenter_id)
 
     def zone_delete(self, id):
         ss = session.query(models.Zone).get(id)
@@ -101,8 +152,6 @@ class SimpleNet(object):
         return devices
 
     def device_create(self, zone_id, data):
-        if not 'name' in data:
-            raise Exception('Missing name on request')
         session.begin(subtransactions=True)
         try:
             session.add(models.Device(name=data['name'], zone_id=zone_id))
@@ -117,8 +166,6 @@ class SimpleNet(object):
         return self.device_info_by_name(data['name'])
 
     def device_add_vlan(self, device_id, data):
-        if not 'vlan_id' in data:
-            raise Exception('Missing name on request')
         session.begin(subtransactions=True)
         try:
             device = session.query(models.Device).get(device_id)
@@ -182,8 +229,6 @@ class SimpleNet(object):
         return vlans
 
     def vlan_create(self, zone_id, data):
-        if not 'name' in data:
-            raise Exception('Missing name on request')
         session.begin(subtransactions=True)
         try:
             session.add(models.Vlan(name=data['name'], zone_id=zone_id))
@@ -237,8 +282,6 @@ class SimpleNet(object):
         return subnets
 
     def subnet_create(self, vlan_id, data):
-        if not 'cidr' in data:
-            raise Exception('Missing cidr on request')
         session.begin(subtransactions=True)
         try:
             session.add(models.Subnet(cidr=data['cidr'], vlan_id=vlan_id))
@@ -293,8 +336,6 @@ class SimpleNet(object):
         return ips
 
     def ip_create(self, subnet_id, data):
-        if not 'ip' in data:
-            raise Exception('Missing ip on request')
         session.begin(subtransactions=True)
         try:
             session.add(models.Ip(ip=data['ip'], subnet_id=subnet_id))
