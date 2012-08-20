@@ -172,8 +172,13 @@ class SimpleNet(object):
             vlan = session.query(models.Vlan).get(data['vlan_id'])
             relationship = models.Vlans_to_Device()
             relationship.vlan = vlan
-            device.vlans_to_devices.append(relationship)
-            session.commit()
+            if device.zone_id == vlan.zone_id:
+                device.vlans_to_devices.append(relationship)
+                session.commit()
+            else:
+                raise OperationNotPermited(
+                    'Device', 'Device and Vlan must be from the same zone'
+                )
         except Exception, e:
             session.rollback()
             raise Exception(e)
