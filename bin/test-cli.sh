@@ -100,7 +100,7 @@ echo
 echo "Listing Ip"
 ./simplenet-cli ip list all | ccze -A
 echo
-read
+
 echo "Delete vlan Zone"
 ./simplenet-cli policy delete zone $pnid
 echo
