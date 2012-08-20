@@ -633,6 +633,7 @@ def main():
     set_logger()
     LOG.info("Starting Simplestack server")
     run(host=bind_addr, port=port, server="gevent")
+    #run(host=bind_addr, port=port)
 
 if __name__ == '__main__':
     main()
