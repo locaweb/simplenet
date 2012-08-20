@@ -40,10 +40,10 @@ def pretty_output(data):
 
 @baker.command(
     params={ "action": "<list all|create|delete|rename>",
-             "name": "neighborhood name"}
+             "name": "zone name"}
 )
-def neighborhood(action, name):
-    base_url = '%s/neighborhoods' % (server)
+def zone(action, name):
+    base_url = '%s/zones' % (server)
     action_list = { 'list':  "%s/list" % base_url,
                     'create': base_url,
                     'delete': '%s/%s/delete' % (base_url, name),
@@ -65,13 +65,13 @@ def neighborhood(action, name):
 @baker.command(
     params={ "action": "<list all|create|delete|rename>",
              "name": "vlan name",
-             "neighborhood_id": "neighborhood_id to create a new vlan"}
+             "zone_id": "zone_id to create a new vlan"}
 )
-def vlan(action, name, neighborhood_id=None):
+def vlan(action, name, zone_id=None):
     base_url = '%s/vlans' % (server)
     action_list = { 'list': "%s/list" %  base_url,
-                    'create': '%s/neighborhoods/%s/vlans' % (
-                        server, neighborhood_id
+                    'create': '%s/zones/%s/vlans' % (
+                        server, zone_id
                     ),
                     'delete': '%s/%s/delete' % (base_url, name),
                     'info': '%s/by-name/%s' % (base_url, name) }
@@ -81,8 +81,8 @@ def vlan(action, name, neighborhood_id=None):
     if action == 'list':
         r = requests.get(url)
     elif action == 'create':
-        if not neighborhood_id:
-            print "Missing neighborhood_id to create"
+        if not zone_id:
+            print "Missing zone_id to create"
             sys.exit(1)
         r = requests.post(url, data=json.dumps({'name': name}))
     elif action == 'delete':
@@ -153,14 +153,14 @@ def ip(action, ip, subnet_id=None):
 @baker.command(
     params={ "action": "<list all|attach|create|delete|rename>",
              "name": "device name",
-             "neighborhood_id": "neighborhood_id to create a new device",
+             "zone_id": "zone_id to create a new device",
              "vlan_id": "vlan_id to attach vlans to devices" }
 )
-def device(action, name, neighborhood_id=None, vlan_id=None):
+def device(action, name, zone_id=None, vlan_id=None):
     base_url = '%s/devices' % (server)
     action_list = { 'list': "%s/list" % base_url,
-                    'create': '%s/neighborhoods/%s/devices' % (
-                        server, neighborhood_id
+                    'create': '%s/zones/%s/devices' % (
+                        server, zone_id
                     ),
                     'delete': '%s/%s/delete' % (base_url, name),
                     'attach': '%s/%s/vlans' % (base_url, name),
@@ -172,8 +172,8 @@ def device(action, name, neighborhood_id=None, vlan_id=None):
     if action == 'list':
         r = requests.get(url)
     elif action == 'create':
-        if not neighborhood_id:
-            print "Missing neighborhood_id to create"
+        if not zone_id:
+            print "Missing zone_id to create"
             sys.exit(1)
         r = requests.post(url, data=json.dumps({'name': name}))
     elif action == 'delete':
@@ -192,7 +192,7 @@ def device(action, name, neighborhood_id=None, vlan_id=None):
 
 @baker.command(
     params={ "action": "<list all|attach|create|delete|rename>",
-             "owner_type": "type of ownder <neighborhood|vlan|subnet|ip>",
+             "owner_type": "type of ownder <zone|vlan|subnet|ip>",
              "name": "policy name",
              "owner_id": "policy owner id",
              "src": "source ip or subnet",

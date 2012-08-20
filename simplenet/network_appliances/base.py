@@ -33,51 +33,51 @@ class SimpleNet(object):
     def __init__(self):
         self.format_for = FormatView()
 
-    def neighborhood_list(self):
-        ss = session.query(models.Neighborhood).all()
-        neighborhoods = []
-        for neighborhood in ss:
-            neighborhoods.append(
-                self.format_for.neighborhood(
-                    neighborhood.id,
-                    neighborhood.name
+    def zone_list(self):
+        ss = session.query(models.Zone).all()
+        zones = []
+        for zone in ss:
+            zones.append(
+                self.format_for.zone(
+                    zone.id,
+                    zone.name
                 )
             )
-        return neighborhoods
+        return zones
 
-    def neighborhood_create(self, data):
+    def zone_create(self, data):
         if not 'name' in data:
             raise Exception('Missing name on request')
         session.begin(subtransactions=True)
         try:
-            session.add(models.Neighborhood(name=data['name']))
+            session.add(models.Zone(name=data['name']))
             session.commit()
         except IntegrityError:
             session.rollback()
             forbidden_msg = "%s already exists" % data['name']
-            raise OperationNotPermited('Neighborhood', forbidden_msg)
+            raise OperationNotPermited('Zone', forbidden_msg)
         except Exception, e:
             session.rollback()
             raise Exception(e)
-        return self.neighborhood_info_by_name(data['name'])
+        return self.zone_info_by_name(data['name'])
 
-    def neighborhood_update(self, *args, **kawrgs):
+    def zone_update(self, *args, **kawrgs):
         raise FeatureNotImplemented()
 
-    def neighborhood_info(self, id):
-        ss = session.query(models.Neighborhood).get(id)
+    def zone_info(self, id):
+        ss = session.query(models.Zone).get(id)
         if not ss:
-            raise EntityNotFound('Neighborhood', id)
-        return self.format_for.neighborhood(ss.id, ss.name)
+            raise EntityNotFound('Zone', id)
+        return self.format_for.zone(ss.id, ss.name)
 
-    def neighborhood_info_by_name(self, name):
-        ss = session.query(models.Neighborhood).filter_by(name=name).first()
+    def zone_info_by_name(self, name):
+        ss = session.query(models.Zone).filter_by(name=name).first()
         if not ss:
-            raise EntityNotFound('Neighborhood', name)
-        return self.format_for.neighborhood(ss.id, ss.name)
+            raise EntityNotFound('Zone', name)
+        return self.format_for.zone(ss.id, ss.name)
 
-    def neighborhood_delete(self, id):
-        ss = session.query(models.Neighborhood).get(id)
+    def zone_delete(self, id):
+        ss = session.query(models.Zone).get(id)
         session.begin(subtransactions=True)
         try:
             session.delete(ss)
@@ -95,17 +95,17 @@ class SimpleNet(object):
                 self.format_for.device(
                     device.id,
                     device.name,
-                    device.neighborhood_id
+                    device.zone_id
                 )
             )
         return devices
 
-    def device_create(self, neighborhood_id, data):
+    def device_create(self, zone_id, data):
         if not 'name' in data:
             raise Exception('Missing name on request')
         session.begin(subtransactions=True)
         try:
-            session.add(models.Device(name=data['name'], neighborhood_id=neighborhood_id))
+            session.add(models.Device(name=data['name'], zone_id=zone_id))
             session.commit()
         except IntegrityError:
             session.rollback()
@@ -130,7 +130,7 @@ class SimpleNet(object):
         except Exception, e:
             session.rollback()
             raise Exception(e)
-        return self.format_for.device(device.id, device.name, device.neighborhood_id)
+        return self.format_for.device(device.id, device.name, device.zone_id)
 
     def device_remove_vlan(self, device_id, vlan_id):
         session.begin(subtransactions=True)
@@ -152,7 +152,7 @@ class SimpleNet(object):
         ss = session.query(models.Device).filter_by(name=name).first()
         if not ss:
             raise EntityNotFound('Device', name)
-        return self.format_for.device(ss.id, ss.name, ss.neighborhood_id)
+        return self.format_for.device(ss.id, ss.name, ss.zone_id)
 
     def device_update(self, *args, **kawrgs):
         raise FeatureNotImplemented()
@@ -176,17 +176,17 @@ class SimpleNet(object):
                 self.format_for.vlan(
                     vlan.id,
                     vlan.name,
-                    vlan.neighborhood_id
+                    vlan.zone_id
                 )
             )
         return vlans
 
-    def vlan_create(self, neighborhood_id, data):
+    def vlan_create(self, zone_id, data):
         if not 'name' in data:
             raise Exception('Missing name on request')
         session.begin(subtransactions=True)
         try:
-            session.add(models.Vlan(name=data['name'], neighborhood_id=neighborhood_id))
+            session.add(models.Vlan(name=data['name'], zone_id=zone_id))
             session.commit()
         except IntegrityError:
             session.rollback()
@@ -207,7 +207,7 @@ class SimpleNet(object):
         ss = session.query(models.Vlan).filter_by(name=name).first()
         if not ss:
             raise EntityNotFound('Vlan', name)
-        return self.format_for.vlan(ss.id, ss.name, ss.neighborhood_id)
+        return self.format_for.vlan(ss.id, ss.name, ss.zone_id)
 
     def vlan_update(self, *args, **kawrgs):
         raise FeatureNotImplemented()

@@ -25,9 +25,9 @@ from sqlalchemy.orm import relationship, backref
 
 Base = declarative_base()
 
-class Neighborhood(Base):
+class Datacenter(Base):
 
-    __tablename__ = 'neighborhoods'
+    __tablename__ = 'datacenters'
 
     id = Column(String(255), primary_key=True)
     name = Column(String(255), unique=True)
@@ -38,7 +38,25 @@ class Neighborhood(Base):
         self.name = name
 
     def __repr__(self):
-       return "<Neighborhood('%s','%s')>" % (self.id, self.name)
+       return "<Datacenter('%s','%s')>" % (self.id, self.name)
+
+
+class Zone(Base):
+
+    __tablename__ = 'zones'
+
+    id = Column(String(255), primary_key=True)
+    name = Column(String(255), unique=True)
+    description = Column(String(255))
+    dc_id = Column(String(255), ForeignKey('datacenters.id'))
+
+    def __init__(self, name, dc_id, description=""):
+        self.id = str(uuid.uuid4())
+        self.name = name
+        dc_id = dc_id
+
+    def __repr__(self):
+       return "<Zone('%s','%s')>" % (self.id, self.name)
 
 
 class Device(Base):
@@ -48,13 +66,13 @@ class Device(Base):
     id = Column(String(255), primary_key=True)
     name = Column(String(255), unique=True)
     description = Column(String(255))
-    neighborhood_id = Column(String(255), ForeignKey('neighborhoods.id'))
+    zone_id = Column(String(255), ForeignKey('zones.id'))
     vlans_to_devices = relationship("Vlans_to_Device", cascade='all, delete-orphan')
 
-    def __init__(self, name, neighborhood_id, description=""):
+    def __init__(self, name, zone_id, description=""):
         self.id = str(uuid.uuid4())
         self.name = name
-        self.neighborhood_id = neighborhood_id
+        self.zone_id = zone_id
 
     def __repr__(self):
        return "<Device('%s','%s')>" % (self.id, self.name)
@@ -67,12 +85,12 @@ class Vlan(Base):
     id = Column(String(255), primary_key=True)
     name = Column(String(255), unique=True)
     description = Column(String(255))
-    neighborhood_id = Column(String(255), ForeignKey('neighborhoods.id'))
+    zone_id = Column(String(255), ForeignKey('zones.id'))
 
-    def __init__(self, name, neighborhood_id, description=""):
+    def __init__(self, name, zone_id, description=""):
         self.id = str(uuid.uuid4())
         self.name = name
-        self.neighborhood_id = neighborhood_id
+        self.zone_id = zone_id
 
     def __repr__(self):
        return "<Vlan('%s','%s')>" % (self.id, self.name)
@@ -167,9 +185,9 @@ class Ip(Base):
 #                 'policy': self.policy }
 #
 
-class NeighborhoodPolicy(Base):
+class ZonePolicy(Base):
 
-    __tablename__ = 'neighborhood_policies'
+    __tablename__ = 'zone_policies'
     id = Column(String(255), primary_key=True)
     proto = Column(String(255), nullable=True)
     src = Column(String(255), nullable=True)
@@ -178,7 +196,7 @@ class NeighborhoodPolicy(Base):
     dst_port = Column(String(255), nullable=True)
     table = Column(String(255), nullable=False)
     policy = Column(String(255), nullable=False)
-    owner_id = Column(String(255), ForeignKey('neighborhoods.id'))
+    owner_id = Column(String(255), ForeignKey('zones.id'))
 
     def __init__(self, owner_id, proto, src, src_port, dst, dst_port, table, policy):
         self.id = str(uuid.uuid4())

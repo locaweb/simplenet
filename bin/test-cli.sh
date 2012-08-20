@@ -17,13 +17,13 @@
 #
 # @author: Juliano Martinez (ncode), Locaweb.
 
-echo "Creating Neighborhood"
-./simplenet-cli neighborhood create ita01 | sed 's/,\|"//g' | ccze -A
-nid=$(./simplenet-cli neighborhood info ita01 | awk '/"id": / {gsub(/"|,/,"",$2) ; print $2}')
+echo "Creating Zone"
+./simplenet-cli zone create ita01 | sed 's/,\|"//g' | ccze -A
+nid=$(./simplenet-cli zone info ita01 | awk '/"id": / {gsub(/"|,/,"",$2) ; print $2}')
 echo
 
 echo "Creating Vlan"
-./simplenet-cli vlan create vlan01 --neighborhood_id $nid | ccze -A
+./simplenet-cli vlan create vlan01 --zone_id $nid | ccze -A
 vid=$(./simplenet-cli vlan info vlan01 | awk '/"id": / {gsub(/"|,/,"",$2) ; print $2}')
 echo
 
@@ -38,13 +38,13 @@ iid=$(./simplenet-cli ip info 192.168.0.1 | awk '/"id": / {gsub(/"|,/,"",$2) ; p
 echo
 
 echo "Creating Device"
-./simplenet-cli device create firewall01 --neighborhood_id $nid | ccze -A
+./simplenet-cli device create firewall01 --zone_id $nid | ccze -A
 dic=$(./simplenet-cli device info firewall01 | awk '/"id": / {gsub(/"|,/,"",$2) ; print $2}')
 echo
 
-echo "Creating policy to neighborhood"
-pnid=$(./simplenet-cli policy create neighborhood $nid --src 192.168.0.1 --proto tcp --table INPUT --policy ACCEPT | awk '/"id": / {gsub(/"|,/,"",$2) ; print $2}')
-./simplenet-cli policy info neighborhood $pnid | ccze -A
+echo "Creating policy to zone"
+pnid=$(./simplenet-cli policy create zone $nid --src 192.168.0.1 --proto tcp --table INPUT --policy ACCEPT | awk '/"id": / {gsub(/"|,/,"",$2) ; print $2}')
+./simplenet-cli policy info zone $pnid | ccze -A
 echo
 
 echo "Creating policy to vlan"
@@ -70,8 +70,8 @@ echo "Listing Devices"
 ./simplenet-cli device list all | ccze -A
 echo
 
-echo "Listing Neighborhoods"
-./simplenet-cli neighborhood list all | ccze -A
+echo "Listing Zones"
+./simplenet-cli zone list all | ccze -A
 echo
 
 echo "Listing Vlans"
@@ -86,8 +86,8 @@ echo "Listing Ip"
 ./simplenet-cli ip list all | ccze -A
 echo
 
-echo "Delete vlan Neighborhood"
-./simplenet-cli policy delete neighborhood $pnid
+echo "Delete vlan Zone"
+./simplenet-cli policy delete zone $pnid
 echo
 
 echo "Delete vlan policy"
@@ -122,6 +122,6 @@ echo "Deleting Vlan"
 ./simplenet-cli vlan delete $vid
 echo
 
-echo "Deleting Neighborhood"
-./simplenet-cli neighborhood delete $nid
+echo "Deleting Zone"
+./simplenet-cli zone delete $nid
 echo

@@ -36,6 +36,8 @@ from bottle import error, HTTPError
 from simplenet.common.config import config, set_logger
 from simplenet.common.http_utils import reply_json
 
+#from simplenet.routes import datacenter, zone, vlan, subnet, ip
+
 app = bottle.app()
 LOG = logging.getLogger('simplenet.server')
 
@@ -105,64 +107,64 @@ def generic_resource_delete(resource, resource_id):
     return _delete(resource_id)
 
 
-@post('/neighborhoods')
+@post('/zones')
 @reply_json
-def neighborhood_create():
+def zone_create():
     """
     ::
 
-      POST /neighborhood
+      POST /zone
 
-    Create a new neighborhood
+    Create a new zone
     """
     manager = create_manager('base')
     data = request.body.readline()
     if not data:
         abort(400, 'No data received')
     data = json.loads(data)
-    neighborhood = manager.neighborhood_create(data)
-    location = "neighborhoods/%s" % (neighborhood['id'])
+    zone = manager.zone_create(data)
+    location = "zones/%s" % (zone['id'])
     response.set_header("Location", location)
-    return neighborhood
+    return zone
 
 
-@post('/neighborhoods/<neighborhood_id>/devices')
+@post('/zones/<zone_id>/devices')
 @reply_json
-def neighborhood_device_create(neighborhood_id):
+def zone_device_create(zone_id):
     """
     ::
 
-      POST /neighborhood/<neighborhood_id>/devices
+      POST /zone/<zone_id>/devices
 
-    Create a new device in neighborhood
+    Create a new device in zone
     """
     manager = create_manager('base')
     data = request.body.readline()
     if not data:
         abort(400, 'No data received')
     data = json.loads(data)
-    device = manager.device_create(neighborhood_id, data)
+    device = manager.device_create(zone_id, data)
     location = "devices/%s" % (device['id'])
     response.set_header("Location", location)
     return device
 
 
-@post('/neighborhoods/<neighborhood_id>/vlans')
+@post('/zones/<zone_id>/vlans')
 @reply_json
-def neighborhood_vlan_create(neighborhood_id):
+def zone_vlan_create(zone_id):
     """
     ::
 
-      POST /neighborhood/<neighborhood_id>/vlans
+      POST /zone/<zone_id>/vlans
 
-    Create a new vlan in neighborhood
+    Create a new vlan in zone
     """
     manager = create_manager('base')
     data = request.body.readline()
     if not data:
         abort(400, 'No data received')
     data = json.loads(data)
-    vlan = manager.vlan_create(neighborhood_id, data)
+    vlan = manager.vlan_create(zone_id, data)
     location = "vlans/%s" % (vlan['id'])
     response.set_header("Location", location)
     return json.dumps(vlan)

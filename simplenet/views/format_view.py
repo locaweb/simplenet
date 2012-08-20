@@ -19,17 +19,17 @@
 
 class FormatView(object):
 
-    def neighborhood(self, id, name):
+    def zone(self, id, name):
         return {
             'id': id,
             'name': name,
         }
 
-    def vlan(self, id, name, neighborhood_id):
+    def vlan(self, id, name, zone_id):
         return {
             'id': id,
             'name': name,
-            'neighborhood_id': neighborhood_id
+            'zone_id': zone_id
         }
 
     def subnet(self, id, cidr, vlan_id):
@@ -46,11 +46,11 @@ class FormatView(object):
             'subnet_id': subnet_id
         }
 
-    def device(self, id, name, neighborhood_id):
+    def device(self, id, name, zone_id):
         return {
             'id': id,
             'name': name,
-            'neighborhood_id': neighborhood_id
+            'zone_id': zone_id
         }
 
     def policy(self, policy):
