@@ -77,6 +77,7 @@ echo
 
 echo "Attaching Vlan to Device"
 ./simplenet-cli device attach $dic2 --vlan_id $vid | ccze -A
+echo "Next attach creation must fail"
 ./simplenet-cli device attach $dic --vlan_id $vid | ccze -A
 echo
 
@@ -130,14 +131,17 @@ echo
 
 echo "Deleting Device"
 ./simplenet-cli device delete $dic
+./simplenet-cli device delete $dic2
 echo
 
 echo "Deleting Vlan"
 ./simplenet-cli vlan delete $vid
+./simplenet-cli vlan delete $vid2
 echo
 
 echo "Deleting Zone"
 ./simplenet-cli zone delete $nid
+./simplenet-cli zone delete $nid2
 echo
 
 echo "Deleting Datacenter"
