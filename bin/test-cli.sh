@@ -44,6 +44,8 @@ echo
 echo "Creating Ip"
 ./simplenet-cli ip create 192.168.0.1 --subnet_id $sid | ccze -A
 iid=$(./simplenet-cli ip info 192.168.0.1 | awk '/"id": / {gsub(/"|,/,"",$2) ; print $2}')
+echo "Next ip creation must fail"
+./simplenet-cli ip create 192.168.1.1 --subnet_id $sid | ccze -A
 echo
 
 echo "Creating Device"
