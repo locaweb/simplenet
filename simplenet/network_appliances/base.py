@@ -259,6 +259,7 @@ class SimpleNet(object):
         return self.format_for.subnet(ss.id, ss.cidr, ss.vlan_id)
 
     def subnet_info_by_cidr(self, cidr):
+        cidr = cidr.replace('_', '/')
         ss = session.query(models.Subnet).filter_by(cidr=cidr).first()
         if not ss:
             raise EntityNotFound('Subnet', cidr)

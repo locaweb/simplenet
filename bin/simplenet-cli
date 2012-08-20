@@ -44,9 +44,9 @@ def pretty_output(data):
 )
 def neighborhood(action, name):
     base_url = '%s/neighborhoods' % (server)
-    action_list = { 'list':  base_url,
+    action_list = { 'list':  "%s/list" % base_url,
                     'create': base_url,
-                    'delete': '%s/%s' % (base_url, name),
+                    'delete': '%s/%s/delete' % (base_url, name),
                     'info': '%s/by-name/%s' % (base_url, name) }
 
     url = action_list[action]
@@ -69,11 +69,11 @@ def neighborhood(action, name):
 )
 def vlan(action, name, neighborhood_id=None):
     base_url = '%s/vlans' % (server)
-    action_list = { 'list':  base_url,
+    action_list = { 'list': "%s/list" %  base_url,
                     'create': '%s/neighborhoods/%s/vlans' % (
                         server, neighborhood_id
                     ),
-                    'delete': '%s/%s' % (base_url, name),
+                    'delete': '%s/%s/delete' % (base_url, name),
                     'info': '%s/by-name/%s' % (base_url, name) }
 
     url = action_list[action]
@@ -98,12 +98,12 @@ def vlan(action, name, neighborhood_id=None):
 )
 def subnet(action, cidr, vlan_id=None):
     base_url = '%s/subnets' % (server)
-    action_list = { 'list':  base_url,
+    action_list = { 'list': "%s/list" %  base_url,
                     'create': '%s/vlans/%s/subnets' % (
                         server, vlan_id
                     ),
-                    'delete': '%s/%s' % (base_url, cidr),
-                    'info': '%s/by-cidr/%s' % (base_url, cidr) }
+                    'delete': '%s/%s/delete' % (base_url, cidr),
+                    'info': '%s/by-cidr/%s' % (base_url, cidr.replace('/', '_')) }
 
     url = action_list[action]
     r = None
@@ -128,11 +128,11 @@ def subnet(action, cidr, vlan_id=None):
 )
 def ip(action, ip, subnet_id=None):
     base_url = '%s/ips' % (server)
-    action_list = { 'list':  base_url,
+    action_list = { 'list': "%s/list" %  base_url,
                     'create': '%s/subnets/%s/ips' % (
                         server, subnet_id
                     ),
-                    'delete': '%s/%s' % (base_url, ip),
+                    'delete': '%s/%s/delete' % (base_url, ip),
                     'info': '%s/by-ip/%s' % (base_url, ip) }
 
     url = action_list[action]
@@ -158,11 +158,11 @@ def ip(action, ip, subnet_id=None):
 )
 def device(action, name, neighborhood_id=None, vlan_id=None):
     base_url = '%s/devices' % (server)
-    action_list = { 'list':  base_url,
+    action_list = { 'list': "%s/list" % base_url,
                     'create': '%s/neighborhoods/%s/devices' % (
                         server, neighborhood_id
                     ),
-                    'delete': '%s/%s' % (base_url, name),
+                    'delete': '%s/%s/delete' % (base_url, name),
                     'attach': '%s/%s/vlans' % (base_url, name),
                     'detach': '%s/%s/vlans/%s' % (base_url, name, vlan_id),
                     'info': '%s/by-name/%s' % (base_url, name) }
@@ -206,12 +206,12 @@ def device(action, name, neighborhood_id=None, vlan_id=None):
 def policy(action, name, owner_id, dst=None, src=None, dst_port=None,
            src_port=None, proto=None, table=None, policy=None):
     base_url = '%s/firewall/policy' % server
-    action_list = { 'list':  "%s/%s" % (base_url, name),
+    action_list = { 'list': "%s/%s/list" % (base_url, name),
                     'create': '%s/%s/%s' % (
                         base_url, name, owner_id
                     ),
-                    'delete': '%s/%s/%s' % (base_url, name, owner_id),
-                    'info': '%s/%s/%s' % (base_url, name, owner_id) }
+                    'delete': '%s/%s/%s/delete' % (base_url, name, owner_id),
+                    'info': '%s/%s/%s/info' % (base_url, name, owner_id) }
 
     url = action_list[action]
     r = None

@@ -56,7 +56,6 @@ class Net(SimpleNet):
     def policy_info(self, owner_type, id):
         _model = getattr(models, "%sPolicy" % owner_type.capitalize())
         ss = session.query(_model).get(id)
-        print ss, "%sPolicy" % owner_type.capitalize()
         if not ss:
             raise EntityNotFound('%sPolicy' % owner_type.capitalize(), id)
         return self.format_for.policy(ss)

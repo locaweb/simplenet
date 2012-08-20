@@ -14,6 +14,9 @@
 #    limitations under the License.
 #
 # @author: Eduardo Scarpelini (odraude), Locaweb.
+# @author: Juliano Martinez (ncode), Locaweb.
+
+import os
 
 from functools import wraps
 from bottle import response
@@ -34,3 +37,18 @@ def reply_json(f):
         if r and type(r) is str:
             return r
     return json_dumps
+
+def create_manager(network_appliance):
+#    network_appliance_token = request.headers.get("x-simplenet-network_appliance-token")
+#    if not network_appliance_token:
+#        abort(401, 'No x-simplenet-network_appliance-token header provided')
+
+#    username, password = parse_token(network_appliance_token)
+
+    _module_ = "simplenet.network_appliances.%s" % network_appliance
+    if not os.path.isfile("%s.py" % _module_.replace('.', '/')):
+        raise RuntimeError("The requested module is missing")
+    module = __import__(_module_)
+    module = getattr(module.network_appliances, network_appliance)
+
+    return module.Net()
