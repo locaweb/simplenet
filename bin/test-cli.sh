@@ -24,12 +24,16 @@ echo
 
 echo "Creating Zone"
 ./simplenet-cli zone create ita01 --datacenter_id $dcid | sed 's/,\|"//g' | ccze -A
+./simplenet-cli zone create ita02 --datacenter_id $dcid | sed 's/,\|"//g' | ccze -A
 nid=$(./simplenet-cli zone info ita01 | awk '/"id": / {gsub(/"|,/,"",$2) ; print $2}')
+nid2=$(./simplenet-cli zone info ita02 | awk '/"id": / {gsub(/"|,/,"",$2) ; print $2}')
 echo
 
 echo "Creating Vlan"
 ./simplenet-cli vlan create vlan01 --zone_id $nid | ccze -A
+./simplenet-cli vlan create vlan02 --zone_id $nid2 | ccze -A
 vid=$(./simplenet-cli vlan info vlan01 | awk '/"id": / {gsub(/"|,/,"",$2) ; print $2}')
+vid2=$(./simplenet-cli vlan info vlan02 | awk '/"id": / {gsub(/"|,/,"",$2) ; print $2}')
 echo
 
 echo "Creating Subnet"
@@ -44,7 +48,9 @@ echo
 
 echo "Creating Device"
 ./simplenet-cli device create firewall01 --zone_id $nid | ccze -A
+./simplenet-cli device create firewall02 --zone_id $nid2 | ccze -A
 dic=$(./simplenet-cli device info firewall01 | awk '/"id": / {gsub(/"|,/,"",$2) ; print $2}')
+dic2=$(./simplenet-cli device info firewall02 | awk '/"id": / {gsub(/"|,/,"",$2) ; print $2}')
 echo
 
 echo "Creating policy to zone"
@@ -68,6 +74,7 @@ piid=$(./simplenet-cli policy create ip $iid --src 192.168.0.2 --proto udp --tab
 echo
 
 echo "Attaching Vlan to Device"
+./simplenet-cli device attach $dic2 --vlan_id $vid | ccze -A
 ./simplenet-cli device attach $dic --vlan_id $vid | ccze -A
 echo
 
@@ -90,7 +97,7 @@ echo
 echo "Listing Ip"
 ./simplenet-cli ip list all | ccze -A
 echo
-
+read
 echo "Delete vlan Zone"
 ./simplenet-cli policy delete zone $pnid
 echo
