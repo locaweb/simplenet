@@ -206,7 +206,7 @@ def device(action, name, neighborhood_id=None, vlan_id=None):
 def policy(action, name, owner_id, dst=None, src=None, dst_port=None,
            src_port=None, proto=None, table=None, policy=None):
     base_url = '%s/firewall/policy' % server
-    action_list = { 'list':  base_url,
+    action_list = { 'list':  "%s/%s" % (base_url, name),
                     'create': '%s/%s/%s' % (
                         base_url, name, owner_id
                     ),

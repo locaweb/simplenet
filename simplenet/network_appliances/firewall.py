@@ -28,8 +28,9 @@ session = db_utils.get_database_session()
 
 class Net(SimpleNet):
 
-    def policy_list(self):
-        ss = session.query(models.BasePolicy).all()
+    def policy_list(self, owner_type):
+        _model = getattr(models, "%sPolicy" % owner_type.capitalize())
+        ss = session.query(_model).all()
         policies = []
         for policy in ss:
             policies.append(
@@ -55,8 +56,9 @@ class Net(SimpleNet):
     def policy_info(self, owner_type, id):
         _model = getattr(models, "%sPolicy" % owner_type.capitalize())
         ss = session.query(_model).get(id)
+        print ss, "%sPolicy" % owner_type.capitalize()
         if not ss:
-            raise EntityNotFound('Policy', id)
+            raise EntityNotFound('%sPolicy' % owner_type.capitalize(), id)
         return self.format_for.policy(ss)
 
     def policy_update(self, *args, **kwargs):
@@ -65,6 +67,8 @@ class Net(SimpleNet):
     def policy_delete(self, owner_type, id):
         _model = getattr(models, "%sPolicy" % owner_type.capitalize())
         ss = session.query(_model).get(id)
+        if not ss:
+            raise EntityNotFound('%sPolicy' % owner_type.capitalize(), id)
         session.begin(subtransactions=True)
         try:
             session.delete(ss)

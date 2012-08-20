@@ -151,25 +151,6 @@ def neighborhood_info_by_name(neighborhood_name):
     return manager.neighborhood_info_by_name(neighborhood_name)
 
 
-@put('/neighborhoods/:neighborhood_id')
-@reply_json
-def neighborhood_update(neighborhood_id):
-    """
-    ::
-
-      PUT /neighborhoods/:neighborhood_id
-
-    Update neighborhood informations
-    """
-    response.content_type = "application/json"
-    manager = create_manager('base')
-    data = request.body.readline()
-    if not data:
-        abort(400, 'No data received')
-    data = json.loads(data)
-    return manager.neighborhood_update(neighborhood_data)
-
-
 @delete('/neighborhoods/:neighborhood_id')
 @reply_json
 def neighborhood_delete(neighborhood_id):
@@ -266,28 +247,6 @@ def device_info_by_name(device_name):
     response.content_type = "application/json"
     manager = create_manager('base')
     return manager.device_info_by_name(device_name)
-
-
-@put('/devices/:device_id')
-@reply_json
-def device_update(device_id):
-    """
-    ::
-
-      PUT /devices/:device_id
-
-    Update device informations
-    """
-    response.content_type = "application/json"
-    manager = create_manager('base')
-    data = request.body.readline()
-    if not data:
-        abort(400, 'No data received')
-    data = json.loads(data)
-    device = manager.device_update(device_id, data)
-    location = "devices/%s" % (device['id'])
-    response.set_header("Location", location)
-    return manager.device_update(device)
 
 
 @delete('/devices/:device_id')
@@ -528,7 +487,23 @@ def ip_delete(ip_id):
     manager = create_manager('base')
     return manager.ip_delete(ip_id)
 
-#/firewall/policy/neighborhood/68f69731-e1c5-4a31-bbf5-d8f9aa603c29
+
+@get('/:network_appliance/policy/:owner_type/:policy_id')
+@reply_json
+def policy_info(network_appliance, owner_type, policy_id):
+    """
+    ::
+
+      GET /:network_appliance/policy/:owner_type/:policy_id
+
+    Get policy informations
+    """
+    print network_appliance, owner_type, policy_id
+    response.content_type = "application/json"
+    manager = create_manager(network_appliance)
+    print network_appliance, owner_type, policy_id
+    return manager.policy_info(owner_type, policy_id)
+
 @post('/:network_appliance/policy/:owner_type/:owner_id')
 @reply_json
 def policy_create(network_appliance, owner_type, owner_id):
@@ -564,88 +539,73 @@ def policy_delete(network_appliance, owner_type, policy_id):
     """
     response.content_type = "application/json"
     manager = create_manager(network_appliance)
-    return manager.policy_delete(policy_id, owner_type)
+    return manager.policy_delete(owner_type, policy_id)
 
 
-@get('/:network_appliance/policy/:owner_type/:policy_id')
-@reply_json
-def policy_info(owner_type, policy_id):
-    """
-    ::
-
-      GET /:network_appliance/policy/:owner_type/:policy_id
-
-    Get policy informations
-    """
-    response.content_type = "application/json"
-    manager = create_manager(network_appliance)
-    return manager.policy_info(policy_id, owner_type)
-
-
-@get('/:network_appliance/policy')
-@reply_json
-def policy_list(network_appliance):
-    """
-    ::
-
-      GET /:network_appliance/policy
-
-    Get all policy
-    """
-    response.content_type = "application/json"
-    manager = create_manager(network_appliance)
-    return manager.policy_list()
+#@get('/:network_appliance/policy/:owner_type')
+#@reply_json
+#def policy_list(network_appliance, owner_type):
+#    """
+#    ::
+#
+#      GET /:network_appliance/policy
+#
+#    Get all policy
+#    """
+#    response.content_type = "application/json"
+#    manager = create_manager(network_appliance)
+#    return manager.policy_list(owner_type)
 
 
-@get('/:network_appliance/policy/by-owner/:owner_type/:owner_id')
-@reply_json
-def policy_list_by_owner(network_appliance, owner_type, owner_id=None):
-    """
-    ::
-
-      GET /policys
-
-    Get policys for a given pool
-    """
-    response.content_type = "application/json"
-    manager = create_manager(network_appliance)
-    return manager.policy_list_by_owner(owner_type, owner_id)
-
-
-@error(400)
-@reply_json
-def error400(err):
-    return {"status": err.status, "message": err.output}
+#@get('/:network_appliance/policy/by-owner/:owner_type/:owner_id')
+#@reply_json
+#def policy_list_by_owner(network_appliance, owner_type, owner_id=None):
+#    """
+#    ::
+#
+#      GET /policys
+#
+#    Get policys for a given pool
+#    """
+#    response.content_type = "application/json"
+#    manager = create_manager(network_appliance)
+#    return manager.policy_list_by_owner(owner_type, owner_id)
 
 
-@error(403)
-@reply_json
-def error403(err):
-    return {"status": err.status, "message": err.output}
-
-
-@error(404)
-@reply_json
-def error404(err):
-    return {"status": err.status, "message": err.output}
-
-
-@error(405)
-@reply_json
-def error405(err):
-    return {"status": err.status, "message": err.output}
-
-
-@error(500)
-@reply_json
-def error500(err):
-    return {"status": err.status, "message": err.exception.__repr__()}
-
-
-@error(501)
-@reply_json
-def error501(err):
-    return {"status": err.status, "message": err.output}
+#@error(400)
+#@reply_json
+#def error400(err):
+#    return {"status": err.status, "message": err.output}
+#
+#
+#@error(403)
+#@reply_json
+#def error403(err):
+#    return {"status": err.status, "message": err.output}
+#
+#
+#@error(404)
+#@reply_json
+#def error404(err):
+#    return {"status": err.status, "message": err.output}
+#
+#
+#@error(405)
+#@reply_json
+#def error405(err):
+#    return {"status": err.status, "message": err.output}
+#
+#
+#@error(500)
+#@reply_json
+#def error500(err):
+#    return {"status": err.status, "message": err.exception.__repr__()}
+#
+#
+#@error(501)
+#@reply_json
+#def error501(err):
+#    return {"status": err.status, "message": err.output}
 
 
 def create_manager(network_appliance):
@@ -658,7 +618,6 @@ def create_manager(network_appliance):
     _module_ = "simplenet.network_appliances.%s" % network_appliance
     if not os.path.isfile("%s.py" % _module_.replace('.', '/')):
         raise RuntimeError("The requested module is missing")
-
     module = __import__(_module_)
     module = getattr(module.network_appliances, network_appliance)
 
@@ -668,7 +627,7 @@ def create_manager(network_appliance):
 def main():
 #    os.setgid(grp.getgrnam('nogroup')[2])
 #    os.setuid(pwd.getpwnam(config.get("server", "user"))[2])
-    debug(config.getboolean("server", "debug"))
+#    debug(config.getboolean("server", "debug"))
     port = config.getint("server", "port")
     bind_addr = config.get("server", "bind_addr")
     set_logger()
