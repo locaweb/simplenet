@@ -166,19 +166,20 @@ class SimpleNet(object):
         return self.device_info_by_name(data['name'])
 
     def device_add_vlan(self, device_id, data):
+        device = session.query(models.Device).get(device_id)
+        vlan = session.query(models.Vlan).get(data['vlan_id'])
+
+        if device.zone_id =! vlan.zone_id:
+            raise OperationNotPermited(
+                'Device', 'Device and Vlan must be from the same zone'
+            )
+
         session.begin(subtransactions=True)
         try:
-            device = session.query(models.Device).get(device_id)
-            vlan = session.query(models.Vlan).get(data['vlan_id'])
             relationship = models.Vlans_to_Device()
             relationship.vlan = vlan
-            if device.zone_id == vlan.zone_id:
-                device.vlans_to_devices.append(relationship)
-                session.commit()
-            else:
-                raise OperationNotPermited(
-                    'Device', 'Device and Vlan must be from the same zone'
-                )
+            device.vlans_to_devices.append(relationship)
+            session.commit()
         except Exception, e:
             session.rollback()
             raise Exception(e)
