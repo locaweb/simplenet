@@ -341,6 +341,14 @@ class SimpleNet(object):
         return ips
 
     def ip_create(self, subnet_id, data):
+        subnet = session.query(models.Subnet).get(subnet_id)
+        if not subnet.contains(data['ip']):
+            raise OperationNotPermited(
+                'Ip', "%s address must be contained in %s" % (
+                        data['ip'],
+                        subnet.cidr
+                )
+            )
         session.begin(subtransactions=True)
         try:
             session.add(models.Ip(ip=data['ip'], subnet_id=subnet_id))

@@ -148,43 +148,6 @@ class Ip(Base):
        return "<Ip('%s','%s')>" % (self.id, self.ip)
 
 
-#class BasePolicy(object):
-#
-#    __tablename__ = 'base_policies'
-#
-#    id = Column(String(255), primary_key=True)
-#    proto = Column(String(255), nullable=True)
-#    src = Column(String(255), nullable=True)
-#    src_port = Column(String(255), nullable=True)
-#    dst = Column(String(255), nullable=True)
-#    dst_port = Column(String(255), nullable=True)
-#    table = Column(String(255), nullable=False)
-#    policy = Column(String(255), nullable=False)
-#    owner_id = Column(String(255), nullable=False)
-#
-#    def __init__(self, owner_id, proto, src, src_port, dst, dst_port, table, policy):
-#        self.id = str(uuid.uuid4())
-#        self.proto = proto
-#        self.src = src
-#        self.src_port = src_port
-#        self.dst = dst
-#        self.dst_port = dst_port
-#        self.table = table
-#        self.policy = policy
-#        self.owner_id = owner_id
-#
-#    def to_dict(self):
-#        return { 'id': self.id,
-#                 'owner_id': self.owner_id,
-#                 'proto': self.proto,
-#                 'src': self.src,
-#                 'src_port': self.src_port,
-#                 'dst': self.dst,
-#                 'dst_port': self.dst_port,
-#                 'table': self.table,
-#                 'policy': self.policy }
-#
-
 class ZonePolicy(Base):
 
     __tablename__ = 'zone_policies'
