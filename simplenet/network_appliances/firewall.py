@@ -28,6 +28,13 @@ session = db_utils.get_database_session()
 
 class Net(SimpleNet):
 
+    def _get_parents_(self, type, id, data):
+        subnet = self.ip_info(id)
+        vlan_id = self.subnet_info(subnet_id)['id']
+        zone_id = self.vlan_info(vlan_id)['id']
+        datacenter_id = zone_info(zone_id)['id']
+        device_info
+
     def policy_list(self, owner_type):
         _model = getattr(models, "%sPolicy" % owner_type.capitalize())
         ss = session.query(_model).all()
