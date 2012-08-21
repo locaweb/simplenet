@@ -1,0 +1,57 @@
+#!/usr/bin/python
+
+# Copyright 2012 Locaweb.
+# All Rights Reserved.
+#
+#    Licensed under the Apache License, Version 2.0 (the "License");
+#    you may not use this file except in compliance with the License.
+#    You may obtain a copy of the License at
+#
+#        http://www.apache.org/licenses/LICENSE-2.0
+#
+#    Unless required by applicable law or agreed to in writing, software
+#    distributed under the License is distributed on an "AS IS" BASIS,
+#    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#    See the License for the specific language governing permissions and
+#    limitations under the License.
+#
+# @author: Juliano Martinez (ncode), Locaweb.
+
+import os
+import sys
+from kombu.mixins import ConsumerMixin
+from kombu.utils import kwdict, reprcall
+
+myname = os.uname()[1]
+
+class Worker(ConsumerMixin):
+
+    def __init__(self, connection):
+        self.connection = connection
+
+    def get_consumers(self, Consumer, channel):
+        return [Consumer(queues=Queue(
+            myname, Exchange(myname, type="direct"),
+            routing_key=myname),
+        callbacks=[self.process_task])]
+
+    def process_task(self, body, message):
+        work = body["work"]
+        print work
+#        try:
+#            fun(*args, **kwdict(kwargs))
+#        except Exception, exc:
+#            self.error("task raised exception: %r", exc)
+        message.ack()
+
+if __name__ == "__main__":
+    from kombu import BrokerConnection
+    from kombu.utils.debug import setup_logging
+    setup_logging(loglevel="INFO")
+
+    with BrokerConnection("amqp://guest:guest@localhost:5672//") as conn:
+        try:
+            Worker(conn).run()
+        except KeyboardInterrupt:
+            print("bye bye")
+

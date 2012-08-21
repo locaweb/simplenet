@@ -41,6 +41,7 @@ def pretty_output(r):
 
     if (r.status_code != 200):
         sys.exit(1)
+    sys.exit(0)
 
 @baker.command(
     params={ "action": "<list all|create|delete|rename>",
