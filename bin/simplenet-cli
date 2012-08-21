@@ -32,6 +32,25 @@ config.read(config_file)
 
 server = 'http://127.0.0.1:8081'
 
+def fetch_id(_type, _data):
+    if (_data):
+        if (_data.find("/") != -1):
+            data = requests.get("%s/%s/by-cidr/%s" % (server, _type, _data.replace("/","_")))
+        elif (_data.find(".") != -1):
+            data = requests.get("%s/%s/by-ip/%s" % (server, _type, _data))
+        elif (len(_data) == 36):
+            return _data
+        else:
+            data = requests.get("%s/%s/by-name/%s" % (server, _type, _data))
+
+        try:
+            return json.loads(data.text)['id']
+        except:
+            #print data
+            return None
+    else:
+        return None
+
 def pretty_output(r):
     data = r.text
     try:
@@ -50,7 +69,7 @@ def datacenter(action, name):
     base_url = '%s/datacenters' % (server)
     action_list = { 'list':  "%s/list" % base_url,
                     'create': base_url,
-                    'delete': '%s/%s/delete' % (base_url, name),
+                    'delete': '%s/%s/delete' % (base_url, fetch_id("datacenters",name)),
                     'info': '%s/by-name/%s' % (base_url, name) }
 
     url = action_list[action]
@@ -69,13 +88,13 @@ def datacenter(action, name):
     params={ "action": "<list all|create|delete|rename>",
              "name": "zone name"}
 )
-def zone(action, name, datacenter_id=None):
+def zone(action, name, datacenter=None):
     base_url = '%s/zones' % (server)
     action_list = { 'list':  "%s/list" % base_url,
                     'create': '%s/datacenters/%s/zones' % (
-                        server, datacenter_id
+                        server, fetch_id("datacenters", datacenter)
                     ),
-                    'delete': '%s/%s/delete' % (base_url, name),
+                    'delete': '%s/%s/delete' % (base_url, fetch_id("zones",name)),
                     'info': '%s/by-name/%s' % (base_url, name) }
 
     url = action_list[action]
@@ -83,10 +102,10 @@ def zone(action, name, datacenter_id=None):
     if action == 'list':
         r = requests.get(url)
     elif action == 'create':
-        if not datacenter_id:
+        if not fetch_id("datacenters", datacenter):
             print "Missing datacenter_id to create"
             sys.exit(1)
-        r = requests.post(url, data=json.dumps({'name': name, 'datacenter_id': datacenter_id}))
+        r = requests.post(url, data=json.dumps({'name': name, 'datacenter_id': fetch_id("datacenters", datacenter)}))
     elif action == 'delete':
         r = requests.delete(url)
     elif action == 'info':
@@ -97,15 +116,15 @@ def zone(action, name, datacenter_id=None):
 @baker.command(
     params={ "action": "<list all|create|delete|rename>",
              "name": "vlan name",
-             "zone_id": "zone_id to create a new vlan"}
+             "zone": "zone_id to create a new vlan"}
 )
-def vlan(action, name, zone_id=None):
+def vlan(action, name, zone=None):
     base_url = '%s/vlans' % (server)
     action_list = { 'list': "%s/list" %  base_url,
                     'create': '%s/zones/%s/vlans' % (
-                        server, zone_id
+                        server, fetch_id("zones", zone)
                     ),
-                    'delete': '%s/%s/delete' % (base_url, name),
+                    'delete': '%s/%s/delete' % (base_url, fetch_id("vlans", name)),
                     'info': '%s/by-name/%s' % (base_url, name) }
 
     url = action_list[action]
@@ -113,7 +132,7 @@ def vlan(action, name, zone_id=None):
     if action == 'list':
         r = requests.get(url)
     elif action == 'create':
-        if not zone_id:
+        if not fetch_id("zones", zone):
             print "Missing zone_id to create"
             sys.exit(1)
         r = requests.post(url, data=json.dumps({'name': name}))
@@ -126,15 +145,15 @@ def vlan(action, name, zone_id=None):
 @baker.command(
     params={ "action": "<list all|create|delete|rename>",
              "cidr": "subnet cidr",
-             "vlan_id": "vlan_id to create a new subnet" }
+             "vlan": "vlan to create a new subnet" }
 )
-def subnet(action, cidr, vlan_id=None):
+def subnet(action, cidr, vlan=None):
     base_url = '%s/subnets' % (server)
     action_list = { 'list': "%s/list" %  base_url,
                     'create': '%s/vlans/%s/subnets' % (
-                        server, vlan_id
+                        server, fetch_id("vlans", vlan)
                     ),
-                    'delete': '%s/%s/delete' % (base_url, cidr),
+                    'delete': '%s/%s/delete' % (base_url, fetch_id("subnets", cidr)),
                     'info': '%s/by-cidr/%s' % (base_url, cidr.replace('/', '_')) }
 
     url = action_list[action]
@@ -142,7 +161,7 @@ def subnet(action, cidr, vlan_id=None):
     if action == 'list':
         r = requests.get(url)
     elif action == 'create':
-        if not vlan_id:
+        if not fetch_id("vlans", vlan):
             print "Missing vlan_id to create"
             sys.exit(1)
         r = requests.post(url, data=json.dumps({'cidr': cidr}))
@@ -156,15 +175,15 @@ def subnet(action, cidr, vlan_id=None):
 @baker.command(
     params={ "action": "<list all|create|delete|rename>",
              "ip": "ip address",
-             "subnet_id": "subnet_id to create a new vlan" }
+             "subnet": "subnet to create a new vlan" }
 )
-def ip(action, ip, subnet_id=None):
+def ip(action, ip, subnet=None):
     base_url = '%s/ips' % (server)
     action_list = { 'list': "%s/list" %  base_url,
                     'create': '%s/subnets/%s/ips' % (
-                        server, subnet_id
+                        server, fetch_id("subnets", subnet)
                     ),
-                    'delete': '%s/%s/delete' % (base_url, ip),
+                    'delete': '%s/%s/delete' % (base_url, fetch_id("ips", ip)),
                     'info': '%s/by-ip/%s' % (base_url, ip) }
 
     url = action_list[action]
@@ -172,7 +191,7 @@ def ip(action, ip, subnet_id=None):
     if action == 'list':
         r = requests.get(url)
     elif action == 'create':
-        if not subnet_id:
+        if not fetch_id("subnets", subnet):
             print "Missing subnet_id to create"
             sys.exit(1)
         r = requests.post(url, data=json.dumps({'ip': ip}))
@@ -185,18 +204,18 @@ def ip(action, ip, subnet_id=None):
 @baker.command(
     params={ "action": "<list all|attach|create|delete|rename>",
              "name": "device name",
-             "zone_id": "zone_id to create a new device",
-             "vlan_id": "vlan_id to attach vlans to devices" }
+             "zone": "zone to create a new device",
+             "vlan": "vlan to attach vlans to devices" }
 )
-def device(action, name, zone_id=None, vlan_id=None):
+def device(action, name, zone=None, vlan=None):
     base_url = '%s/devices' % (server)
     action_list = { 'list': "%s/list" % base_url,
                     'create': '%s/zones/%s/devices' % (
-                        server, zone_id
+                        server, fetch_id("zones", zone)
                     ),
-                    'delete': '%s/%s/delete' % (base_url, name),
-                    'attach': '%s/%s/vlans' % (base_url, name),
-                    'detach': '%s/%s/vlans/%s' % (base_url, name, vlan_id),
+                    'delete': '%s/%s/delete' % (base_url, fetch_id("devices", name)),
+                    'attach': '%s/%s/vlans' % (base_url, fetch_id("devices", name)),
+                    'detach': '%s/%s/vlans/%s' % (base_url, fetch_id("devices", name), fetch_id("vlans", vlan)),
                     'info': '%s/by-name/%s' % (base_url, name) }
 
     url = action_list[action]
@@ -204,7 +223,7 @@ def device(action, name, zone_id=None, vlan_id=None):
     if action == 'list':
         r = requests.get(url)
     elif action == 'create':
-        if not zone_id:
+        if not fetch_id("zones", zone):
             print "Missing zone_id to create"
             sys.exit(1)
         r = requests.post(url, data=json.dumps({'name': name}))
@@ -213,10 +232,10 @@ def device(action, name, zone_id=None, vlan_id=None):
     elif action == 'info':
         r = requests.get(url)
     elif action == 'attach':
-        if not vlan_id:
+        if not fetch_id("vlans", vlan):
             print "Missing vlan_id to create"
             sys.exit(1)
-        r = requests.post(url, data=json.dumps({'vlan_id': vlan_id}))
+        r = requests.post(url, data=json.dumps({'vlan_id': fetch_id("vlans", vlan)}))
     elif action == 'detach':
         r = requests.delete(url)
     pretty_output(r)
@@ -226,7 +245,7 @@ def device(action, name, zone_id=None, vlan_id=None):
     params={ "action": "<list all|attach|create|delete|rename>",
              "owner_type": "type of ownder <zone|vlan|subnet|ip>",
              "name": "policy name",
-             "owner_id": "policy owner id",
+             "owner": "policy owner",
              "src": "source ip or subnet",
              "src_port": "source port",
              "dst": "destination ip or subnet",
@@ -235,15 +254,15 @@ def device(action, name, zone_id=None, vlan_id=None):
              "table": "table to apply the policy <INPUT|FORWARD|OUTPUT>",
              "policy": "policy to use <ACCEPT|REJECT|DROP>" }
 )
-def policy(action, name, owner_id, dst=None, src=None, dst_port=None,
+def policy(action, name, owner, dst=None, src=None, dst_port=None,
            src_port=None, proto=None, table=None, policy=None):
     base_url = '%s/firewall/policy' % server
     action_list = { 'list': "%s/%s/list" % (base_url, name),
                     'create': '%s/%s/%s' % (
-                        base_url, name, owner_id
+                        base_url, name, fetch_id(name + "s", owner)
                     ),
-                    'delete': '%s/%s/%s/delete' % (base_url, name, owner_id),
-                    'info': '%s/%s/%s/info' % (base_url, name, owner_id) }
+                    'delete': '%s/%s/%s/delete' % (base_url, name, fetch_id(name + "s", owner)),
+                    'info': '%s/%s/%s/info' % (base_url, name, fetch_id(name + "s", owner)) }
 
     url = action_list[action]
     r = None
