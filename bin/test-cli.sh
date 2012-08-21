@@ -47,9 +47,8 @@ echo "Creating Ip"
 iid=$(./simplenet-cli ip info 192.168.0.1 | awk '/"id": / {gsub(/"|,/,"",$2) ; print $2}')
 echo "Next ip creation must fail"
 ./simplenet-cli ip create 192.168.1.1 --subnet 192.168.0.0/24 | ccze -A
-if [ $? -eq 1 ]; then
-    echo "OK"
-else
+if [ $? -ne 1 ]; then
+    echo "Return must FAIL but it has exited OK"
     exit 1
 fi
 echo
@@ -85,9 +84,8 @@ echo "Attaching Vlan to Device"
 ./simplenet-cli device attach firewall01 --vlan vlan01 | ccze -A
 echo "Next attach creation must fail"
 ./simplenet-cli device attach firewall02 --vlan vlan01 | ccze -A
-if [ $? -eq 1 ]; then
-    echo "OK"
-else
+if [ $? -ne 1 ]; then
+    echo "Return must FAIL but it has exited OK"
     exit 1
 fi
 echo
