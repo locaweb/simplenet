@@ -16,6 +16,7 @@
 #    limitations under the License.
 #
 # @author: Juliano Martinez (ncode), Locaweb.
+set -o pipefail
 
 echo "Creating Datacenter"
 ./simplenet-cli datacenter create ita | sed 's/,\|"//g' | ccze -A
@@ -46,6 +47,11 @@ echo "Creating Ip"
 iid=$(./simplenet-cli ip info 192.168.0.1 | awk '/"id": / {gsub(/"|,/,"",$2) ; print $2}')
 echo "Next ip creation must fail"
 ./simplenet-cli ip create 192.168.1.1 --subnet_id $sid | ccze -A
+if [ $? -eq 1 ]; then
+    echo "OK"
+else
+    exit 1
+fi
 echo
 
 echo "Creating Device"
@@ -79,6 +85,11 @@ echo "Attaching Vlan to Device"
 ./simplenet-cli device attach $dic --vlan_id $vid | ccze -A
 echo "Next attach creation must fail"
 ./simplenet-cli device attach $dic2 --vlan_id $vid | ccze -A
+if [ $? -eq 1 ]; then
+    echo "OK"
+else
+    exit 1
+fi
 echo
 
 echo "Listing Devices"

@@ -32,11 +32,15 @@ config.read(config_file)
 
 server = 'http://127.0.0.1:8081'
 
-def pretty_output(data):
+def pretty_output(r):
+    data = r.text
     try:
         print json.dumps(json.loads(data), sort_keys=True, indent=4)
     except ValueError:
         print data
+
+    if (r.status_code != 200):
+        sys.exit(1)
 
 @baker.command(
     params={ "action": "<list all|create|delete|rename>",
@@ -59,7 +63,7 @@ def datacenter(action, name):
         r = requests.delete(url)
     elif action == 'info':
         r = requests.get(url)
-    pretty_output(r.text)
+    pretty_output(r)
 
 @baker.command(
     params={ "action": "<list all|create|delete|rename>",
@@ -87,7 +91,7 @@ def zone(action, name, datacenter_id=None):
         r = requests.delete(url)
     elif action == 'info':
         r = requests.get(url)
-    pretty_output(r.text)
+    pretty_output(r)
 
 
 @baker.command(
@@ -117,7 +121,7 @@ def vlan(action, name, zone_id=None):
         r = requests.delete(url)
     elif action == 'info':
         r = requests.get(url)
-    pretty_output(r.text)
+    pretty_output(r)
 
 @baker.command(
     params={ "action": "<list all|create|delete|rename>",
@@ -146,7 +150,7 @@ def subnet(action, cidr, vlan_id=None):
         r = requests.delete(url)
     elif action == 'info':
         r = requests.get(url)
-    pretty_output(r.text)
+    pretty_output(r)
 
 
 @baker.command(
@@ -176,7 +180,7 @@ def ip(action, ip, subnet_id=None):
         r = requests.delete(url)
     elif action == 'info':
         r = requests.get(url)
-    pretty_output(r.text)
+    pretty_output(r)
 
 @baker.command(
     params={ "action": "<list all|attach|create|delete|rename>",
@@ -215,7 +219,7 @@ def device(action, name, zone_id=None, vlan_id=None):
         r = requests.post(url, data=json.dumps({'vlan_id': vlan_id}))
     elif action == 'detach':
         r = requests.delete(url)
-    pretty_output(r.text)
+    pretty_output(r)
 
 
 @baker.command(
@@ -264,6 +268,6 @@ def policy(action, name, owner_id, dst=None, src=None, dst_port=None,
         r = requests.delete(url)
     elif action == 'info':
         r = requests.get(url)
-    pretty_output(r.text)
+    pretty_output(r)
 
 baker.run()
