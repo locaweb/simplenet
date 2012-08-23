@@ -104,6 +104,7 @@ class Vlans_to_Device(Base):
     device_id = Column(String(255), ForeignKey('devices.id'), primary_key=True)
     description = Column(String(255))
     vlan = relationship("Vlan")
+    device = relationship("Device")
 
 
 class Subnet(Base):

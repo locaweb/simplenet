@@ -90,6 +90,10 @@ if [ $? -ne 1 ]; then
 fi
 echo
 
+echo "Listing Vlans atteched with device"
+./simplenet-cli device vlan_list firewall01 | ccze -A
+echo
+
 echo "Listing Devices"
 ./simplenet-cli device list all | ccze -A
 echo

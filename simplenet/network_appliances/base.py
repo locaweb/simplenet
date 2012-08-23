@@ -185,6 +185,32 @@ class SimpleNet(object):
             raise Exception(e)
         return self.format_for.device(device.id, device.name, device.zone_id)
 
+    def device_list_device_by_vlan(self, vlan_id):
+        ss = session.query(models.Vlans_to_Device).filter_by(vlan_id=vlan_id).all()
+        devices = []
+        for relationship in ss:
+            devices.append(
+                self.format_for.device(
+                    relationship.device_id,
+                    relationship.device.name,
+                    relationship.device.zone_id
+                )
+            )
+        return devices
+
+    def device_list_vlans_by_device(self, device_id):
+        ss = session.query(models.Vlans_to_Device).filter_by(device_id=device_id).all()
+        vlans = []
+        for relationship in ss:
+            vlans.append(
+                self.format_for.vlan(
+                    relationship.vlan_id,
+                    relationship.vlan.name,
+                    relationship.vlan.zone_id
+                )
+            )
+        return vlans
+
     def device_remove_vlan(self, device_id, vlan_id):
         session.begin(subtransactions=True)
         try:

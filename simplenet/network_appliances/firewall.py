@@ -33,7 +33,9 @@ class Net(SimpleNet):
         vlan_id = self.subnet_info(subnet_id)['id']
         zone_id = self.vlan_info(vlan_id)['id']
         datacenter_id = zone_info(zone_id)['id']
-        device_info
+
+    def _get_related_devices_(self, vlan_id):
+        device_info =
 
     def policy_list(self, owner_type):
         _model = getattr(models, "%sPolicy" % owner_type.capitalize())

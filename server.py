@@ -194,6 +194,19 @@ def zone_vlan_create(zone_id):
     response.set_header("Location", location)
     return json.dumps(vlan)
 
+@get('/devices/<device_id>/vlans/list')
+@reply_json
+def device_list_vlans_by_device(device_id):
+    """
+    ::
+
+      GET /devices/<device_id>/vlans/list
+
+    List vlans
+    """
+    manager = create_manager('base')
+    vlans = manager.device_list_vlans_by_device(device_id)
+    return vlans
 
 @post('/devices/<device_id>/vlans')
 @validate_input(vlan_id=str)
@@ -253,6 +266,19 @@ def vlan_subnet_create(vlan_id):
     response.set_header("Location", location)
     return subnet
 
+@get('/vlans/<vlan_id>/devices/list')
+@reply_json
+def device_list_devices_by_vlan(vlan_id):
+    """
+    ::
+
+      GET /vlans/<vlan_id>/devices/list
+
+    List devices
+    """
+    manager = create_manager('base')
+    devices = manager.device_list_device_by_vlan(vlan_id)
+    return devices
 
 @post('/subnets/<subnet_id>/ips')
 @validate_input(ip=str)
