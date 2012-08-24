@@ -21,6 +21,7 @@ import os
 import sys
 from kombu.mixins import ConsumerMixin
 from kombu.utils import kwdict, reprcall
+from kombu import Exchange, Queue
 
 myname = os.uname()[1]
 

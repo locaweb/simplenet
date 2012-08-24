@@ -180,15 +180,20 @@ def subnet(action, cidr, vlan=None):
 
 @baker.command(
     params={ 'action': '<list all|create|delete|rename>',
-             'ip': 'ip address' }
+             'ip': 'ip address',
+             'subnet': 'subnet cidr' }
 )
-def ip(action, ip):
+def ip(action, ip, subnet=None):
     base_url = '%s/ips' % (server)
     r = None
     if action == 'list':
         r = requests.get('%s/list' %  base_url)
     elif action == 'create':
-        r = requests.post('%s/subnets/ips' % (server),
+        if not subnet:
+            print 'Missing subnet to create'
+            sys.exit(1)
+
+        r = requests.post('%s/subnets/%s/ips' % (server, fetch_id('subnets', subnet)),
             data=json.dumps({'ip': ip})
         )
     elif action == 'delete':

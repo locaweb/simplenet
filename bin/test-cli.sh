@@ -81,9 +81,9 @@ piid=$(./simplenet-cli policy create ip 192.168.0.1 --src 192.168.0.2 --proto ud
 echo
 
 echo "Attaching Vlan to Device"
-./simplenet-cli device attach firewall01 --vlan vlan01 | ccze -A
+./simplenet-cli device vlan_attach firewall01 --vlan vlan01 | ccze -A
 echo "Next attach creation must fail"
-./simplenet-cli device attach firewall02 --vlan vlan01 | ccze -A
+./simplenet-cli device vlan_attach firewall02 --vlan vlan01 | ccze -A
 if [ $? -ne 1 ]; then
     echo "Return must FAIL but it has exited OK"
     exit 1
@@ -131,7 +131,7 @@ echo "Delete ip policy"
 echo
 
 echo "Detaching Device"
-./simplenet-cli device detach firewall01 --vlan vlan01
+./simplenet-cli device vlan_detach firewall01 --vlan vlan01
 echo
 
 echo "Deleting Ip"

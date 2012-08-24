@@ -278,7 +278,7 @@ class SimpleNet(object):
         ss = session.query(models.Vlan).get(id)
         if not ss:
             raise EntityNotFound('Vlan', id)
-        return self.format_for.vlan(ss.id, ss.name)
+        return self.format_for.vlan(ss.id, ss.name, ss.zone_id)
 
     def vlan_info_by_name(self, name):
         ss = session.query(models.Vlan).filter_by(name=name).first()
@@ -367,25 +367,18 @@ class SimpleNet(object):
             )
         return ips
 
-    def ip_find_range(self, data):
-        subnets = session.query(models.Subnet).all()
-        for subnet in subnets:
-            if subnet.contains(data['ip']):
-                return subnet
-
-        return None
-
-    def ip_create(self, data):
-        subnet = self.ip_find_range(data)
-        if not subnet:
+    def ip_create(self, subnet_id, data):
+        subnet = session.query(models.Subnet).get(subnet_id)
+        if not subnet.contains(data['ip']):
             raise OperationNotPermited(
-                'Ip', "%s address must be contained in subnet" % (
-                        data['ip']
+                'Ip', "%s address must be contained in %s" % (
+                        data['ip'],
+                        subnet.cidr
                 )
             )
         session.begin(subtransactions=True)
         try:
-            session.add(models.Ip(ip=data['ip'], subnet_id=subnet.id))
+            session.add(models.Ip(ip=data['ip'], subnet_id=subnet_id))
             session.commit()
         except IntegrityError:
             session.rollback()
