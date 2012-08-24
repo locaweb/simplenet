@@ -17,65 +17,22 @@
 
 import logging
 
+from simplenet.common import event
 from simplenet.db import models, db_utils
 from simplenet.exceptions import EntityNotFound, OperationNotPermited
 from simplenet.network_appliances.base import SimpleNet
+
 from sqlalchemy.exc import IntegrityError
 
 from kombu import Exchange, BrokerConnection
 from kombu.common import maybe_declare
 from kombu.pools import producers
 
-
 LOG = logging.getLogger(__name__)
 session = db_utils.get_database_session()
 
 
 class Net(SimpleNet):
-
-    def _get_parents_ip_(self, id):
-        ip = self.ip_info(id)
-        subnet = self.subnet_info(ip['subnet_id'])
-        vlan = self.vlan_info(subnet['vlan_id'])
-        zone = self.zone_info(vlan['zone_id'])
-        return {
-            'subnet_id': ip['subnet_id'],
-            'vlan_id': vlan['id'],
-            'zone_id': zone['id'],
-            'datacenter_id': zone['datacenter_id']
-        }
-
-    def _get_parents_subnet_(self, id):
-        subnet = self.subnet_info(id)
-        vlan = self.vlan_info(subnet['vlan_id'])
-        zone = self.zone_info(vlan['zone_id'])
-        return {
-            'vlan_id': vlan['id'],
-            'zone_id': zone['id'],
-            'datacenter_id': zone['datacenter_id']
-        }
-
-    def _get_parents_vlan_(self, id):
-        vlan = self.vlan_info(id)
-        zone = self.zone_info(vlan['zone_id'])
-        return {
-            'zone_id': zone['id'],
-            'datacenter_id': zone['datacenter_id']
-        }
-
-    def _get_parents_zone_(self, id):
-        return {
-            'datacenter_id': self.zone_info(id)['datacenter_id']
-        }
-
-    def _get_related_devices_(self, vlan_id):
-        devices = self.device_list_device_by_vlan(vlan_id)
-
-    def _enqueue_rules_(self, parent_data, rule):
-        connection = BrokerConnection("amqp://guest:guest@localhost:5672//")
-        with producers[connection].acquire(block=True) as producer:
-            maybe_declare(Exchange("kanti", type="direct"), producer.channel)
-            producer.publish((parent_data, rule), serializer="json", routing_key="kanti")
 
     def policy_list(self, owner_type):
         _model = getattr(models, "%sPolicy" % owner_type.capitalize())
@@ -96,7 +53,8 @@ class Net(SimpleNet):
         policy = _model(**data)
         session.begin(subtransactions=True)
         parent_data = _get_parent(owner_id)
-        self._enqueue_rules_(parent_data, data)
+        parent_data.update({'policy': data})
+        event.EventManager().raise_event("kanti", parent_data)
         try:
             session.add(policy)
             session.commit()

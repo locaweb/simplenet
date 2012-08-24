@@ -37,8 +37,7 @@ class Worker(ConsumerMixin):
         callbacks=[self.process_task])]
 
     def process_task(self, body, message):
-        work = body["work"]
-        print work
+        print body
 #        try:
 #            fun(*args, **kwdict(kwargs))
 #        except Exception, exc:
