@@ -33,14 +33,12 @@ config.read(config_file)
 server = 'http://127.0.0.1:8081'
 
 def fetch_id(_type, _data):
-    if (_data.find('/') != -1):
+    if (_type == 'subnets'):
         data = requests.get('%s/%s/by-cidr/%s' %
             (server, _type, _data.replace('/','_'))
         )
-    elif (_data.find('.') != -1):
+    elif (_type == 'ips'):
         data = requests.get('%s/%s/by-ip/%s' % (server, _type, _data))
-    elif (len(_data) == 36):
-        return _data
     else:
         data = requests.get('%s/%s/by-name/%s' % (server, _type, _data))
 
@@ -263,9 +261,8 @@ def device(action, name, zone=None, vlan=None):
 
 @baker.command(
     params={ 'action': '<list all|attach|create|delete|rename>',
-             'owner_type': 'type of ownder <zone|vlan|subnet|ip>',
-             'name': 'policy name',
-             'owner': 'policy owner',
+             'name': 'type of owner <zone|vlan|subnet|ip>',
+             'owner': 'policy owner name',
              'src': 'source ip or subnet',
              'src_port': 'source port',
              'dst': 'destination ip or subnet',
@@ -277,30 +274,32 @@ def device(action, name, zone=None, vlan=None):
 def policy(action, name, owner, dst=None, src=None, dst_port=None,
            src_port=None, proto=None, table=None, policy=None):
     base_url = '%s/firewall/policy' % server
-    owner_id = fetch_id('%ss' % name, owner)
     r = None
     if action == 'list':
         r = requests.get('%s/%s/list' % (base_url, name))
     elif action == 'create':
+        owner_id = fetch_id('%ss' % name, owner)
         if not table:
             print 'Missing table to create'
             sys.exit(1)
         elif not policy:
             print 'Missing policy to create'
             sys.exit(1)
+
         data = {}
         for key in ['policy', 'dst', 'src', 'dst_port',
                     'src_port', 'proto', 'table']:
             value = vars()[key]
             if key != None:
                 data.update({key: value})
+        print '%s/%s/%s' % (base_url, name, owner_id)
         r = requests.post('%s/%s/%s' %
             (base_url, name, owner_id), data=json.dumps(data)
         )
     elif action == 'delete':
-        r = requests.delete('%s/%s/%s/delete' % (base_url, name, owner_id))
+        r = requests.delete('%s/%s/%s/delete' % (base_url, name, owner))
     elif action == 'info':
-        r = requests.get('%s/%s/%s/info' % (base_url, name, owner_id))
+        r = requests.get('%s/%s/%s/info' % (base_url, name, owner))
     else:
         print "Invalid action"
         sys.exit(1)

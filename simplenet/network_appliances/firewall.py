@@ -36,20 +36,22 @@ class Net(SimpleNet):
     def _get_parents_ip_(self, id):
         ip = self.ip_info(id)
         subnet = self.subnet_info(ip['subnet_id'])
-        zone = self.zone_info(subnet['vlan_id'])
+        vlan = self.vlan_info(subnet['vlan_id'])
+        zone = self.zone_info(vlan['zone_id'])
         return {
             'subnet_id': ip['subnet_id'],
-            'vlan_id': subnet['vlan_id'],
+            'vlan_id': vlan['id'],
             'zone_id': zone['id'],
             'datacenter_id': zone['datacenter_id']
         }
 
     def _get_parents_subnet_(self, id):
         subnet = self.subnet_info(id)
-        zone_id = self.zone_info(subnet['vlan_id'])['id']
+        vlan = self.vlan_info(subnet['vlan_id'])
+        zone = self.zone_info(vlan['zone_id'])
         return {
-            'vlan_id': subnet['vlan_id'],
-            'zone_id': zone['zone_id'],
+            'vlan_id': vlan['id'],
+            'zone_id': zone['id'],
             'datacenter_id': zone['datacenter_id']
         }
 
