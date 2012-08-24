@@ -351,7 +351,7 @@ def policy_delete(network_appliance, owner_type, policy_id):
     return manager.policy_delete(owner_type, policy_id)
 
 
-@get('/<network_appliance>/policy/<owner_type>/list')
+@get('/<network_appliance>/policy/by-type/<owner_type>/list')
 @reply_json
 def policy_list(network_appliance, owner_type):
     """
@@ -367,12 +367,13 @@ def policy_list(network_appliance, owner_type):
 
 @get('/<network_appliance>/policy/by-owner/<owner_type>/<owner_id>/list')
 @reply_json
-def policy_list_by_owner(network_appliance, owner_type):
+def policy_list_by_owner(network_appliance, owner_type, owner_id):
     """
     ::
 
       GET /<network_appliance>/policy/by-owner/<owner_type>/<owner_id>/list
 
+    Get all policy from a given owner
     """
     manager = create_manager(network_appliance)
     return manager.policy_list_by_owner(owner_type, owner_id)

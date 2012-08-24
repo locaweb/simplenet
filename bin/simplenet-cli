@@ -276,7 +276,10 @@ def policy(action, name, owner, dst=None, src=None, dst_port=None,
     base_url = '%s/firewall/policy' % server
     r = None
     if action == 'list':
-        r = requests.get('%s/%s/list' % (base_url, name))
+        if owner == 'all':
+            r = requests.get('%s/by-type/%s/list' % (base_url, name))
+        else:
+            r = requests.get('%s/by-owner/%s/%s/list' % (base_url, name, fetch_id('%ss' % name, owner)))
     elif action == 'create':
         owner_id = fetch_id('%ss' % name, owner)
         if not table:

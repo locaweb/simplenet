@@ -52,22 +52,22 @@ echo "Creating Device"
 echo
 
 echo "Creating policy to zone"
-pnid=$(./simplenet-cli policy create zone --owner ita01 --src 192.168.0.1 --proto tcp --table INPUT --policy ACCEPT | awk '/"id": / {gsub(/"|,/,"",$2) ; print $2}')
+pnid=$(./simplenet-cli policy create zone ita01 --src 192.168.0.1 --proto tcp --table INPUT --policy ACCEPT | awk '/"id": / {gsub(/"|,/,"",$2) ; print $2}')
 ./simplenet-cli policy info zone $pnid | ccze -A
 echo
 
 echo "Creating policy to vlan"
-pvid=$(./simplenet-cli policy create vlan --owner vlan01 --dst_port 53 --proto udp --table INPUT --policy ACCEPT | awk '/"id": / {gsub(/"|,/,"",$2) ; print $2}')
+pvid=$(./simplenet-cli policy create vlan vlan01 --dst_port 53 --proto udp --table INPUT --policy ACCEPT | awk '/"id": / {gsub(/"|,/,"",$2) ; print $2}')
 ./simplenet-cli policy info vlan $pvid | ccze -A
 echo
 
 echo "Creating policy to subnet"
-psid=$(./simplenet-cli policy create subnet --owner 192.168.0.0/24 --dst 192.168.0.2 --proto tcp --table OUTPUT --policy DROP | awk '/"id": / {gsub(/"|,/,"",$2) ; print $2}')
+psid=$(./simplenet-cli policy create subnet 192.168.0.0/24 --dst 192.168.0.2 --proto tcp --table OUTPUT --policy DROP | awk '/"id": / {gsub(/"|,/,"",$2) ; print $2}')
 ./simplenet-cli policy info subnet $psid | ccze -A
 echo
 
 echo "Creating policy to ip"
-piid=$(./simplenet-cli policy create ip --owner 192.168.0.1 --src 192.168.0.2 --proto udp --table FORWARD --policy REJECT | awk '/"id": / {gsub(/"|,/,"",$2) ; print $2}')
+piid=$(./simplenet-cli policy create ip 192.168.0.1 --src 192.168.0.2 --proto udp --table FORWARD --policy REJECT | awk '/"id": / {gsub(/"|,/,"",$2) ; print $2}')
 ./simplenet-cli policy info ip $piid | ccze -A
 echo
 

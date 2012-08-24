@@ -128,3 +128,15 @@ class Net(SimpleNet):
             session.rollback()
             raise Exception(e)
         return True
+
+    def policy_list_by_owner(self, owner_type, id):
+        _model = getattr(models, "%sPolicy" % owner_type.capitalize())
+        ss = session.query(_model).filter_by(owner_id=id).all()
+        policies = []
+        for policy in ss:
+            policies.append(
+                self.format_for.policy(
+                    policy
+                )
+            )
+        return policies

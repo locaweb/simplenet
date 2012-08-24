@@ -161,6 +161,7 @@ class ZonePolicy(Base):
     table = Column(String(255), nullable=False)
     policy = Column(String(255), nullable=False)
     owner_id = Column(String(255), ForeignKey('zones.id'))
+    zone = relationship("Zone")
 
     def __init__(self, owner_id, proto, src, src_port, dst, dst_port, table, policy):
         self.id = str(uuid.uuid4())
@@ -182,7 +183,8 @@ class ZonePolicy(Base):
                  'dst': self.dst,
                  'dst_port': self.dst_port,
                  'table': self.table,
-                 'policy': self.policy }
+                 'policy': self.policy,
+                 'owner': self.zone.name }
 
 
 class VlanPolicy(Base):
@@ -198,6 +200,7 @@ class VlanPolicy(Base):
     table = Column(String(255), nullable=False)
     policy = Column(String(255), nullable=False)
     owner_id = Column(String(255), ForeignKey('vlans.id'))
+    vlan = relationship("Vlan")
 
     def __init__(self, owner_id, proto, src, src_port, dst, dst_port, table, policy):
         self.id = str(uuid.uuid4())
@@ -219,7 +222,8 @@ class VlanPolicy(Base):
                  'dst': self.dst,
                  'dst_port': self.dst_port,
                  'table': self.table,
-                 'policy': self.policy }
+                 'policy': self.policy,
+                 'owner': self.vlan.name }
 
 
 class SubnetPolicy(Base):
@@ -234,6 +238,7 @@ class SubnetPolicy(Base):
     table = Column(String(255), nullable=False)
     policy = Column(String(255), nullable=False)
     owner_id = Column(String(255), ForeignKey('subnets.id'))
+    subnet = relationship("Subnet")
 
     def __init__(self, owner_id, proto, src, src_port, dst, dst_port, table, policy):
         self.id = str(uuid.uuid4())
@@ -255,7 +260,8 @@ class SubnetPolicy(Base):
                  'dst': self.dst,
                  'dst_port': self.dst_port,
                  'table': self.table,
-                 'policy': self.policy }
+                 'policy': self.policy,
+                 'owner': self.subnet.cidr }
 
 
 class IpPolicy(Base):
@@ -270,6 +276,7 @@ class IpPolicy(Base):
     table = Column(String(255), nullable=False)
     policy = Column(String(255), nullable=False)
     owner_id = Column(String(255), ForeignKey('ips.id'))
+    ip = relationship("Ip")
 
     def __init__(self, owner_id, proto, src, src_port, dst, dst_port, table, policy):
         self.id = str(uuid.uuid4())
@@ -291,7 +298,8 @@ class IpPolicy(Base):
                  'dst': self.dst,
                  'dst_port': self.dst_port,
                  'table': self.table,
-                 'policy': self.policy }
+                 'policy': self.policy,
+                 'owner': self.ip.ip }
 
 
 def _fk_pragma_on_connect(dbapi_con, con_record):
