@@ -28,14 +28,35 @@ session = db_utils.get_database_session()
 
 class Net(SimpleNet):
 
-    def _get_parents_(self, type, id, data):
-        subnet = self.ip_info(id)
-        vlan_id = self.subnet_info(subnet_id)['id']
-        zone_id = self.vlan_info(vlan_id)['id']
-        datacenter_id = zone_info(zone_id)['id']
+    def _get_parents_ip_(self, id, data):
+        ip = self.ip_info(id)
+        vlan = self.subnet_info(ip.subnet_id)
+        datacenter = datacenter_info(vlan.zone_id)['id']
+        return {
+            'subnet_id': ip.subnet_id,
+            'vlan_id': vlan.id,
+            'zone_id': vlan.zone_id,
+            'datacenter_id': datacenter.id
+        }
+
+    def _get_parents_subnet_(self, id, data):
+        subnet = self.subnet_info(id)
+        zone_id = self.zone_info(subnet.vlan_id)['id']
+        return {
+            'vlan_id' subnet.vlan_id,
+            'zone_id': zone.zone_id,
+            'datacenter_id': datacenter.id
+        }
+
+    def _get_parents_vlan_(self, id, data):
+        zone_id = self.vlan_info(subnet.id)['id']
+        return {
+            'zone_id': zone.zone_id,
+            'datacenter_id': datacenter.id
+        }
 
     def _get_related_devices_(self, vlan_id):
-        device_info =
+        devices = self.device_list_device_by_vlan(vlan_id)
 
     def policy_list(self, owner_type):
         _model = getattr(models, "%sPolicy" % owner_type.capitalize())

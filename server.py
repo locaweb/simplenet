@@ -431,15 +431,14 @@ def create_manager(network_appliance):
 
 
 def main():
-#    os.setgid(grp.getgrnam('nogroup')[2])
-#    os.setuid(pwd.getpwnam(config.get("server", "user"))[2])
-#    debug(config.getboolean("server", "debug"))
+    os.setgid(grp.getgrnam('nogroup')[2])
+    os.setuid(pwd.getpwnam(config.get("server", "user"))[2])
+    debug(config.getboolean("server", "debug"))
     port = config.getint("server", "port")
     bind_addr = config.get("server", "bind_addr")
     set_logger()
     LOG.info("Starting Simplestack server")
     run(host=bind_addr, port=port, server="gevent")
-    #run(host=bind_addr, port=port)
 
 if __name__ == '__main__':
     main()
