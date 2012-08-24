@@ -367,18 +367,25 @@ class SimpleNet(object):
             )
         return ips
 
-    def ip_create(self, subnet_id, data):
-        subnet = session.query(models.Subnet).get(subnet_id)
-        if not subnet.contains(data['ip']):
+    def ip_find_range(self, data):
+        subnets = session.query(models.Subnet).all()
+        for subnet in subnets:
+            if subnet.contains(data['ip']):
+                return subnet
+
+        return None
+
+    def ip_create(self, data):
+        subnet = self.ip_find_range(data)
+        if not subnet:
             raise OperationNotPermited(
-                'Ip', "%s address must be contained in %s" % (
-                        data['ip'],
-                        subnet.cidr
+                'Ip', "%s address must be contained in subnet" % (
+                        data['ip']
                 )
             )
         session.begin(subtransactions=True)
         try:
-            session.add(models.Ip(ip=data['ip'], subnet_id=subnet_id))
+            session.add(models.Ip(ip=data['ip'], subnet_id=subnet.id))
             session.commit()
         except IntegrityError:
             session.rollback()
@@ -399,7 +406,7 @@ class SimpleNet(object):
         ss = session.query(models.Ip).filter_by(ip=ip).first()
         if not ss:
             raise EntityNotFound('Ip', ip)
-        return self.format_for.subnet(ss.id, ss.ip, ss.subnet_id)
+        return self.format_for.ip(ss.id, ss.ip, ss.subnet_id)
 
     def ip_update(self, *args, **kawrgs):
         raise FeatureNotImplemented()
