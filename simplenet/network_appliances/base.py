@@ -38,34 +38,43 @@ class SimpleNet(object):
         subnet = self.subnet_info(ip['subnet_id'])
         vlan = self.vlan_info(subnet['vlan_id'])
         zone = self.zone_info(vlan['zone_id'])
+        datacenter = self.datacenter_info(zone['datacenter_id'])
         return {
-            'subnet_id': ip['subnet_id'],
-            'vlan_id': vlan['id'],
-            'zone_id': zone['id'],
-            'datacenter_id': zone['datacenter_id']
+            'ip': ip['ip'],
+            'subnet': subnet['cidr'],
+            'vlan': vlan['name'],
+            'zone': zone['name'],
+            'datacenter': datacenter['name'],
         }
 
     def _get_parents_subnet_(self, id):
         subnet = self.subnet_info(id)
         vlan = self.vlan_info(subnet['vlan_id'])
         zone = self.zone_info(vlan['zone_id'])
+        datacenter = self.datacenter_info(zone['datacenter_id'])
         return {
-            'vlan_id': vlan['id'],
-            'zone_id': zone['id'],
-            'datacenter_id': zone['datacenter_id']
+            'subnet': subnet['cidr'],
+            'vlan': vlan['name'],
+            'zone': zone['name'],
+            'datacenter': datacenter['name'],
         }
 
     def _get_parents_vlan_(self, id):
         vlan = self.vlan_info(id)
         zone = self.zone_info(vlan['zone_id'])
+        datacenter = self.datacenter_info(zone['datacenter_id'])
         return {
-            'zone_id': zone['id'],
-            'datacenter_id': zone['datacenter_id']
+            'vlan': vlan['name'],
+            'zone': zone['name'],
+            'datacenter': datacenter['name'],
         }
 
     def _get_parents_zone_(self, id):
+        zone = self.zone_info(id)
+        datacenter = self.datacenter_info(zone['datacenter_id'])
         return {
-            'datacenter_id': self.zone_info(id)['datacenter_id']
+            'zone': zone['name'],
+            'datacenter': datacenter['name'],
         }
 
     def datacenter_list(self):

@@ -52,15 +52,17 @@ class Net(SimpleNet):
         _get_parent = getattr(self, "_get_parents_%s_" % owner_type)
         policy = _model(**data)
         session.begin(subtransactions=True)
-        parent_data = _get_parent(owner_id)
-        parent_data.update({'policy': data})
-        event.EventManager().raise_event("kanti", parent_data)
         try:
             session.add(policy)
             session.commit()
         except Exception, e:
             session.rollback()
             raise Exception(e)
+
+        parent_data = _get_parent(owner_id)
+        parent_data.update({'policy': policy.to_dict()})
+        event.EventManager().raise_event("kanti", parent_data)
+
         return self.policy_info(owner_type, policy.id)
 
     def policy_info(self, owner_type, id):

@@ -19,6 +19,7 @@
 
 import os
 import sys
+import json
 from kombu.mixins import ConsumerMixin
 from kombu.utils import kwdict, reprcall
 from kombu import Exchange, Queue
@@ -37,17 +38,66 @@ class Worker(ConsumerMixin):
         callbacks=[self.process_task])]
 
     def process_task(self, body, message):
-        print body
-#        try:
-#            fun(*args, **kwdict(kwargs))
-#        except Exception, exc:
-#            self.error("task raised exception: %r", exc)
-        message.ack()
+        #print json.dumps(body, sort_keys=True, indent=4)
+        self._gen_parents_(body)
+        #message.ack()
+
+    def _gen_jumps_(self, table, name, cidr, nextjump, datacenter=False):
+        print "-N %s-%s" % (table, nextjump)
+        if 'FORWARD' in table:
+            for direction in ['src', 'dst']:
+                if not datacenter:
+                    print "-D %s-%s --%s %s -j %s-%s" % (table, name, direction, cidr, table, nextjump)
+                    print "-A %s-%s --%s %s -j %s-%s" % (table, name, direction, cidr, table, nextjump)
+                else:
+                    print "-D %s --%s %s -j %s-%s" % (table, direction, cidr, table, nextjump)
+                    print "-A %s --%s %s -j %s-%s" % (table, direction, cidr, table, nextjump)
+        else:
+            if not datacenter:
+                print "-D %s-%s %s -j %s-%s" % (table, name, cidr, table, nextjump)
+                print "-A %s-%s %s -j %s-%s" % (table, name, cidr, table, nextjump)
+            else:
+                print "-D %s %s -j %s-%s" % (table, cidr, table, nextjump)
+                print "-A %s %s -j %s-%s" % (table, cidr, table, nextjump)
+
+    def _gen_rule_(self, rule):
+        iptables = []
+        iptables.append('-I {table}-{owner}'.format(table=rule['table'], owner=rule['owner']))
+        field_maps = {
+            'src': '-s',
+            'dst': '-d',
+            'src_port': '--sport',
+            'dst_port': '--dport',
+            'proto': '-p',
+            'id': '-m comment --comment'
+        }
+
+        for field, value in field_maps.iteritems():
+            if rule[field]:
+                iptables.append(' %s %s' % (value, rule[field]))
+
+        iptables.append(' -j {policy}'.format(policy=rule['policy']))
+        print "".join(iptables)
+
+    def _gen_parents_(self, data):
+        rule = data.get('policy')
+        if 'subnet' in data:
+            self._gen_jumps_(rule['table'], data['datacenter'], data['subnet'], data['datacenter'], datacenter=True)
+            self._gen_jumps_(rule['table'], data['datacenter'], data['subnet'], data['zone'])
+            self._gen_jumps_(rule['table'], data['zone'], data['subnet'], data['vlan'])
+            self._gen_jumps_(rule['table'], data['vlan'], data['subnet'], data['subnet'])
+
+        if 'ip' in data:
+            self._gen_jumps_(rule['table'], data['subnet'], data['ip'], data['ip'])
+
+        self._gen_rule_(rule)
+
+#        message.ack()
 
 if __name__ == "__main__":
     from kombu import BrokerConnection
     from kombu.utils.debug import setup_logging
-    setup_logging(loglevel="INFO")
+    setup_logging(loglevel="DEBUG")
 
     with BrokerConnection("amqp://guest:guest@localhost:5672//") as conn:
         try:
