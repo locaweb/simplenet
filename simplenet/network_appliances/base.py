@@ -17,7 +17,6 @@
 
 import logging
 
-from simplenet.views.format_view import FormatView
 from simplenet.db import models, db_utils
 from simplenet.exceptions import (
     FeatureNotImplemented, EntityNotFound, OperationNotPermited
@@ -29,9 +28,6 @@ session = db_utils.get_database_session()
 
 
 class SimpleNet(object):
-
-    def __init__(self):
-        self.format_for = FormatView()
 
     def _get_parents_ip_(self, id):
         ip = self.ip_info(id)

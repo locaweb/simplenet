@@ -40,9 +40,7 @@ class Net(SimpleNet):
         policies = []
         for policy in ss:
             policies.append(
-                self.format_for.policy(
-                    policy
-                )
+                policy.to_dict()
             )
         return policies
 
@@ -70,7 +68,7 @@ class Net(SimpleNet):
         ss = session.query(_model).get(id)
         if not ss:
             raise EntityNotFound('%sPolicy' % owner_type.capitalize(), id)
-        return self.format_for.policy(ss)
+        return ss.to_dict()
 
     def policy_update(self, *args, **kwargs):
         raise FeatureNotImplemented()
@@ -95,8 +93,6 @@ class Net(SimpleNet):
         policies = []
         for policy in ss:
             policies.append(
-                self.format_for.policy(
-                    policy
-                )
+                policy.to_dict()
             )
         return policies
