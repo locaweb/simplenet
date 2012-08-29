@@ -41,6 +41,7 @@ def reply_json(f):
             return r
     return json_dumps
 
+
 def create_manager(network_appliance):
 #    network_appliance_token = request.headers.get("x-simplenet-network_appliance-token")
 #    if not network_appliance_token:
@@ -55,6 +56,7 @@ def create_manager(network_appliance):
     module = getattr(module.network_appliances, network_appliance)
 
     return module.Net()
+
 
 def validate_input(src="query", *vargs, **vkwargs):
     """
