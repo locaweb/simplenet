@@ -82,10 +82,7 @@ class SimpleNet(object):
         datacenters = []
         for datacenter in ss:
             datacenters.append(
-                self.format_for.datacenter(
-                    datacenter.id,
-                    datacenter.name
-                )
+                datacenter.to_dict()
             )
         return datacenters
 
@@ -110,13 +107,13 @@ class SimpleNet(object):
         ss = session.query(models.Datacenter).get(id)
         if not ss:
             raise EntityNotFound('Datacenter', id)
-        return self.format_for.datacenter(ss.id, ss.name)
+        return ss.to_dict()
 
     def datacenter_info_by_name(self, name):
         ss = session.query(models.Datacenter).filter_by(name=name).first()
         if not ss:
             raise EntityNotFound('Datacenter', name)
-        return self.format_for.datacenter(ss.id, ss.name)
+        return ss.to_dict()
 
     def datacenter_delete(self, id):
         ss = session.query(models.Datacenter).get(id)
@@ -134,11 +131,7 @@ class SimpleNet(object):
         zones = []
         for zone in ss:
             zones.append(
-                self.format_for.zone(
-                    zone.id,
-                    zone.name,
-                    zone.datacenter_id
-                )
+                zone.to_dict(),
             )
         return zones
 
@@ -163,13 +156,13 @@ class SimpleNet(object):
         ss = session.query(models.Zone).get(id)
         if not ss:
             raise EntityNotFound('Zone', id)
-        return self.format_for.zone(ss.id, ss.name, ss.datacenter_id)
+        return ss.to_dict()
 
     def zone_info_by_name(self, name):
         ss = session.query(models.Zone).filter_by(name=name).first()
         if not ss:
             raise EntityNotFound('Zone', name)
-        return self.format_for.zone(ss.id, ss.name, ss.datacenter_id)
+        return ss.to_dict()
 
     def zone_delete(self, id):
         ss = session.query(models.Zone).get(id)
@@ -187,11 +180,7 @@ class SimpleNet(object):
         devices = []
         for device in ss:
             devices.append(
-                self.format_for.device(
-                    device.id,
-                    device.name,
-                    device.zone_id
-                )
+                device.to_dict()
             )
         return devices
 
@@ -227,18 +216,14 @@ class SimpleNet(object):
         except Exception, e:
             session.rollback()
             raise Exception(e)
-        return self.format_for.device(device.id, device.name, device.zone_id)
+        return device.to_dict()
 
     def device_list_by_vlan(self, vlan_id):
         ss = session.query(models.Vlans_to_Device).filter_by(vlan_id=vlan_id).all()
         devices = []
         for relationship in ss:
             devices.append(
-                self.format_for.device(
-                    relationship.device_id,
-                    relationship.device.name,
-                    relationship.device.zone_id
-                )
+                relationship.to_dict()
             )
         return devices
 
@@ -256,13 +241,13 @@ class SimpleNet(object):
         ss = session.query(models.Device).get(id)
         if not ss:
             raise EntityNotFound('Device', id)
-        return self.format_for.device(ss.id, ss.name)
+        return ss.to_dict()
 
     def device_info_by_name(self, name):
         ss = session.query(models.Device).filter_by(name=name).first()
         if not ss:
             raise EntityNotFound('Device', name)
-        return self.format_for.device(ss.id, ss.name, ss.zone_id)
+        return ss.to_dict()
 
     def device_update(self, *args, **kawrgs):
         raise FeatureNotImplemented()
@@ -283,11 +268,7 @@ class SimpleNet(object):
         vlans = []
         for vlan in ss:
             vlans.append(
-                self.format_for.vlan(
-                    vlan.id,
-                    vlan.name,
-                    vlan.zone_id
-                )
+                vlan.to_dict()
             )
         return vlans
 
@@ -296,11 +277,7 @@ class SimpleNet(object):
         vlans = []
         for relationship in ss:
             vlans.append(
-                self.format_for.vlan(
-                    relationship.vlan_id,
-                    relationship.vlan.name,
-                    relationship.vlan.zone_id
-                )
+                relationship.to_dict()
             )
         return vlans
 
@@ -309,11 +286,7 @@ class SimpleNet(object):
         vlans = []
         for relationship in ss:
             vlans.append(
-                self.format_for.vlan(
-                    relationship.vlan_id,
-                    relationship.vlan.name,
-                    relationship.vlan.zone_id
-                )
+                relationship.to_dict()
             )
         return vlans
 
@@ -335,13 +308,13 @@ class SimpleNet(object):
         ss = session.query(models.Vlan).get(id)
         if not ss:
             raise EntityNotFound('Vlan', id)
-        return self.format_for.vlan(ss.id, ss.name, ss.zone_id)
+        return ss.to_dict()
 
     def vlan_info_by_name(self, name):
         ss = session.query(models.Vlan).filter_by(name=name).first()
         if not ss:
             raise EntityNotFound('Vlan', name)
-        return self.format_for.vlan(ss.id, ss.name, ss.zone_id)
+        return ss.to_dict()
 
     def vlan_update(self, *args, **kawrgs):
         raise FeatureNotImplemented()
@@ -362,11 +335,7 @@ class SimpleNet(object):
         subnets = []
         for subnet in ss:
             subnets.append(
-                self.format_for.subnet(
-                    subnet.id,
-                    subnet.cidr,
-                    subnet.vlan_id
-                )
+                subnet.to_dict()
             )
         return subnets
 
@@ -375,11 +344,7 @@ class SimpleNet(object):
         subnets = []
         for subnet in ss:
             subnets.append(
-                self.format_for.subnet(
-                    subnet.id,
-                    subnet.cidr,
-                    subnet.vlan_id
-                )
+                subnet.to_dict()
             )
         return subnets
 
@@ -401,14 +366,14 @@ class SimpleNet(object):
         ss = session.query(models.Subnet).get(id)
         if not ss:
             raise EntityNotFound('Subnet', id)
-        return self.format_for.subnet(ss.id, ss.cidr, ss.vlan_id)
+        return ss.to_dict()
 
     def subnet_info_by_cidr(self, cidr):
         cidr = cidr.replace('_', '/')
         ss = session.query(models.Subnet).filter_by(cidr=cidr).first()
         if not ss:
             raise EntityNotFound('Subnet', cidr)
-        return self.format_for.subnet(ss.id, ss.cidr, ss.vlan_id)
+        return ss.to_dict()
 
     def subnet_update(self, *args, **kwargs):
         raise FeatureNotImplemented()
@@ -429,11 +394,7 @@ class SimpleNet(object):
         ips = []
         for ip in ss:
             ips.append(
-                self.format_for.ip(
-                    ip.id,
-                    ip.ip,
-                    ip.subnet_id
-                )
+                ip.to_dict(),
             )
         return ips
 
@@ -463,13 +424,13 @@ class SimpleNet(object):
         ss = session.query(models.Ip).get(id)
         if not ss:
             raise EntityNotFound('Ip', id)
-        return self.format_for.ip(ss.id, ss.ip, ss.subnet_id)
+        return ss.to_dict()
 
     def ip_info_by_ip(self, ip):
         ss = session.query(models.Ip).filter_by(ip=ip).first()
         if not ss:
             raise EntityNotFound('Ip', ip)
-        return self.format_for.ip(ss.id, ss.ip, ss.subnet_id)
+        return ss.to_dict()
 
     def ip_update(self, *args, **kawrgs):
         raise FeatureNotImplemented()
