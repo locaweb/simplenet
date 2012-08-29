@@ -304,6 +304,7 @@ def subnet_ip_create(subnet_id):
     response.set_header("Location", location)
     return ip
 
+
 @get('/<network_appliance>/policy/<owner_type>/<policy_id>/info')
 @reply_json
 def policy_info(network_appliance, owner_type, policy_id):

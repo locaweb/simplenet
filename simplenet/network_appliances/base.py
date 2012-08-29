@@ -242,19 +242,6 @@ class SimpleNet(object):
             )
         return devices
 
-    def vlan_list_by_device(self, device_id):
-        ss = session.query(models.Vlans_to_Device).filter_by(device_id=device_id).all()
-        vlans = []
-        for relationship in ss:
-            vlans.append(
-                self.format_for.vlan(
-                    relationship.vlan_id,
-                    relationship.vlan.name,
-                    relationship.vlan.zone_id
-                )
-            )
-        return vlans
-
     def device_remove_vlan(self, device_id, vlan_id):
         session.begin(subtransactions=True)
         try:
@@ -300,6 +287,32 @@ class SimpleNet(object):
                     vlan.id,
                     vlan.name,
                     vlan.zone_id
+                )
+            )
+        return vlans
+
+    def vlan_list_by_device(self, device_id):
+        ss = session.query(models.Vlans_to_Device).filter_by(device_id=device_id).all()
+        vlans = []
+        for relationship in ss:
+            vlans.append(
+                self.format_for.vlan(
+                    relationship.vlan_id,
+                    relationship.vlan.name,
+                    relationship.vlan.zone_id
+                )
+            )
+        return vlans
+
+    def vlan_list_by_zone(self, zone_id):
+        ss = session.query(models.Vlans).filter_by(zone_id=zone_id).all()
+        vlans = []
+        for relationship in ss:
+            vlans.append(
+                self.format_for.vlan(
+                    relationship.vlan_id,
+                    relationship.vlan.name,
+                    relationship.vlan.zone_id
                 )
             )
         return vlans

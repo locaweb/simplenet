@@ -40,6 +40,9 @@ class Datacenter(Base):
     def __repr__(self):
        return "<Datacenter('%s','%s')>" % (self.id, self.name)
 
+    def to_dict(self):
+        return { 'id': self.id, 'name': self.name }
+
 
 class Zone(Base):
 
@@ -49,6 +52,7 @@ class Zone(Base):
     name = Column(String(255), unique=True)
     description = Column(String(255))
     datacenter_id = Column(String(255), ForeignKey('datacenters.id'))
+    datacenter = relationship("Datacenter")
 
     def __init__(self, name, datacenter_id, description=""):
         self.id = str(uuid.uuid4())
@@ -57,6 +61,14 @@ class Zone(Base):
 
     def __repr__(self):
        return "<Zone('%s','%s')>" % (self.id, self.name)
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'name': self.name,
+            'datacenter': self.datacenter.name,
+            'datacenter_id': self.datacenter_id,
+        }
 
 
 class Device(Base):
@@ -68,6 +80,7 @@ class Device(Base):
     description = Column(String(255))
     zone_id = Column(String(255), ForeignKey('zones.id'))
     vlans_to_devices = relationship("Vlans_to_Device", cascade='all, delete-orphan')
+    zone = relationship("Zone")
 
     def __init__(self, name, zone_id, description=""):
         self.id = str(uuid.uuid4())
@@ -76,6 +89,14 @@ class Device(Base):
 
     def __repr__(self):
        return "<Device('%s','%s')>" % (self.id, self.name)
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'name': self.name,
+            'zone': self.zone.name,
+            'zone_id': self.zone_id,
+        }
 
 
 class Vlan(Base):
@@ -86,6 +107,7 @@ class Vlan(Base):
     name = Column(String(255), unique=True)
     description = Column(String(255))
     zone_id = Column(String(255), ForeignKey('zones.id'))
+    zone = relationship("Zone")
 
     def __init__(self, name, zone_id, description=""):
         self.id = str(uuid.uuid4())
@@ -94,6 +116,14 @@ class Vlan(Base):
 
     def __repr__(self):
        return "<Vlan('%s','%s')>" % (self.id, self.name)
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'name': self.name,
+            'zone': self.zone.name,
+            'zone_id': self.zone_id,
+        }
 
 
 class Vlans_to_Device(Base):
@@ -106,6 +136,14 @@ class Vlans_to_Device(Base):
     vlan = relationship("Vlan")
     device = relationship("Device")
 
+    def to_dict(self):
+        return {
+            'vlan_id': self.vlan_id,
+            'device_id': self.device_id,
+            'vlan': self.vlan.name,
+            'device': self.device.name,
+        }
+
 
 class Subnet(Base):
 
@@ -115,6 +153,7 @@ class Subnet(Base):
     cidr = Column(String(255), unique=True)
     description = Column(String(255))
     vlan_id = Column(String(255), ForeignKey('vlans.id'))
+    vlan = relationship("Vlan")
 
     def __init__(self, cidr, vlan_id, description=""):
         self.id = str(uuid.uuid4())
@@ -130,6 +169,14 @@ class Subnet(Base):
     def __repr__(self):
        return "<Subnet('%s','%s')>" % (self.id, self.cidr)
 
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'cidr': self.cidr,
+            'vlan': self.vlan.name,
+            'vlan_id': self.vlan_id,
+        }
+
 
 class Ip(Base):
 
@@ -139,6 +186,7 @@ class Ip(Base):
     ip = Column(String(255), unique=True)
     description = Column(String(255))
     subnet_id = Column(String(255), ForeignKey('subnets.id'))
+    subnet = relationship("Subnet")
 
     def __init__(self, ip, subnet_id, description=""):
         self.id = str(uuid.uuid4())
@@ -147,6 +195,52 @@ class Ip(Base):
 
     def __repr__(self):
        return "<Ip('%s','%s')>" % (self.id, self.ip)
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'ip': self.ip,
+            'subnet': self.subnet.cidr,
+            'subnet_id': self.subnet_id,
+        }
+
+
+class DatacenterPolicy(Base):
+
+    __tablename__ = 'datacenter_policies'
+    id = Column(String(255), primary_key=True)
+    proto = Column(String(255), nullable=True)
+    src = Column(String(255), nullable=True)
+    src_port = Column(String(255), nullable=True)
+    dst = Column(String(255), nullable=True)
+    dst_port = Column(String(255), nullable=True)
+    table = Column(String(255), nullable=False)
+    policy = Column(String(255), nullable=False)
+    owner_id = Column(String(255), ForeignKey('datacenters.id'))
+    datacenter = relationship("Datacenter")
+
+    def __init__(self, owner_id, proto, src, src_port, dst, dst_port, table, policy):
+        self.id = str(uuid.uuid4())
+        self.proto = proto
+        self.src = src
+        self.src_port = src_port
+        self.dst = dst
+        self.dst_port = dst_port
+        self.table = table
+        self.policy = policy
+        self.owner_id = owner_id
+
+    def to_dict(self):
+        return { 'id': self.id,
+                 'owner_id': self.owner_id,
+                 'proto': self.proto,
+                 'src': self.src,
+                 'src_port': self.src_port,
+                 'dst': self.dst,
+                 'dst_port': self.dst_port,
+                 'table': self.table,
+                 'policy': self.policy,
+                 'owner': self.datacenter.name }
 
 
 class ZonePolicy(Base):
