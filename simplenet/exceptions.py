@@ -35,7 +35,7 @@ class FeatureNotAvailable(SimpleNetError):
     def __init__(self):
         simplenet_error = super(FeatureNotAvailable, self)
         simplenet_error.__init__(
-            501, "The selected hypervisor doesn't implement this feature"
+            501, "The selected network_appliance doesn't implement this feature"
         )
 
 
@@ -43,7 +43,7 @@ class FeatureNotImplemented(SimpleNetError):
     def __init__(self):
         simplenet_error = super(FeatureNotImplemented, self)
         simplenet_error.__init__(
-            501, "Feature not implemented for the selected hypervisor yet"
+            501, "Feature not implemented for the selected network_appliance yet"
         )
 
 

@@ -229,7 +229,7 @@ class SimpleNet(object):
             raise Exception(e)
         return self.format_for.device(device.id, device.name, device.zone_id)
 
-    def device_list_device_by_vlan(self, vlan_id):
+    def device_list_by_vlan(self, vlan_id):
         ss = session.query(models.Vlans_to_Device).filter_by(vlan_id=vlan_id).all()
         devices = []
         for relationship in ss:
@@ -242,7 +242,7 @@ class SimpleNet(object):
             )
         return devices
 
-    def device_list_vlans_by_device(self, device_id):
+    def vlan_list_by_device(self, device_id):
         ss = session.query(models.Vlans_to_Device).filter_by(device_id=device_id).all()
         vlans = []
         for relationship in ss:
@@ -346,6 +346,19 @@ class SimpleNet(object):
 
     def subnet_list(self):
         ss = session.query(models.Subnet).all()
+        subnets = []
+        for subnet in ss:
+            subnets.append(
+                self.format_for.subnet(
+                    subnet.id,
+                    subnet.cidr,
+                    subnet.vlan_id
+                )
+            )
+        return subnets
+
+    def subnet_list_by_vlan(self, vlan_id):
+        ss = session.query(models.Subnet).filter(vlan_id=vlan_id).all()
         subnets = []
         for subnet in ss:
             subnets.append(

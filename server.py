@@ -53,8 +53,11 @@ def generic_resources_list(resource):
     Retrieves all entries from resource
     """
     manager = create_manager('base')
-    _list = getattr(manager, '%s_list' % resource[:-1])
-    return _list()
+    try:
+        _list = getattr(manager, '%s_list' % resource[:-1])
+        return _list()
+    except AttributeError:
+        raise FeatureNotAvailable()
 
 
 ## Generic Resource Info
@@ -69,14 +72,17 @@ def generic_resource_info(resource, resource_id):
     Retrieves resource information
     """
     manager = create_manager('base')
-    _info = getattr(manager, '%s_info' % resource[:-1])
-    return _info(resource_id)
+    try:
+        _info = getattr(manager, '%s_info' % resource[:-1])
+        return _info(resource_id)
+    except AttributeError:
+        raise FeatureNotAvailable()
 
 
 ## Generic Resource Info by name, cidr, ip
 @get('/<resource>/by-<resource_type>/<resource_value>')
 @reply_json
-def generic_resource_info_info_by_field(resource, resource_type, resource_value):
+def generic_resource_info_by_field(resource, resource_type, resource_value):
     """
     ::
 
@@ -85,9 +91,30 @@ def generic_resource_info_info_by_field(resource, resource_type, resource_value)
     Retrieves resource information by type
     """
     manager = create_manager('base')
-    _info = getattr(manager, '%s_info_by_%s' % (resource[:-1], resource_type))
+    try:
+        _info = getattr(manager, '%s_info_by_%s' % (resource[:-1], resource_type))
+        return _info(resource_value)
+    except AttributeError:
+        raise FeatureNotAvailable()
+
+
+# Generic list by parent
+@get('/<resource>/list-by-<relationship_type>/<relationship_value>')
+@reply_json
+def generic_resource_list_by_relationship(resource, relationship_type, relationship_value):
+    """
+    ::
+
+      GET /<resource>/list-by-<relationship_type>/<relationship_value>
+
+    List devices
+    """
     manager = create_manager('base')
-    return _info(resource_value)
+    try:
+        _list = getattr(manager, '%s_list_by_%s' % (resource[:-1], relationship_type))
+        return _list(relationship_value)
+    except AttributeError:
+        raise FeatureNotAvailable()
 
 
 ## Generic Resource Deletion
@@ -102,9 +129,11 @@ def generic_resource_delete(resource, resource_id):
     Deletes resource
     """
     manager = create_manager('base')
-    _delete = getattr(manager, '%s_delete' % (resource[:-1]))
-    manager = create_manager('base')
-    return _delete(resource_id)
+    try:
+        _delete = getattr(manager, '%s_delete' % (resource[:-1]))
+        return _delete(resource_id)
+    except AttributeError:
+        raise FeatureNotAvailable()
 
 
 @post('/datacenters')
@@ -194,19 +223,6 @@ def zone_vlan_create(zone_id):
     response.set_header("Location", location)
     return json.dumps(vlan)
 
-@get('/devices/<device_id>/vlans/list')
-@reply_json
-def device_list_vlans_by_device(device_id):
-    """
-    ::
-
-      GET /devices/<device_id>/vlans/list
-
-    List vlans
-    """
-    manager = create_manager('base')
-    vlans = manager.device_list_vlans_by_device(device_id)
-    return vlans
 
 @post('/devices/<device_id>/vlans')
 @validate_input(vlan_id=str)
@@ -266,19 +282,6 @@ def vlan_subnet_create(vlan_id):
     response.set_header("Location", location)
     return subnet
 
-@get('/vlans/<vlan_id>/devices/list')
-@reply_json
-def device_list_devices_by_vlan(vlan_id):
-    """
-    ::
-
-      GET /vlans/<vlan_id>/devices/list
-
-    List devices
-    """
-    manager = create_manager('base')
-    devices = manager.device_list_device_by_vlan(vlan_id)
-    return devices
 
 @post('/subnets/<subnet_id>/ips')
 @validate_input(ip=str)
@@ -300,7 +303,6 @@ def subnet_ip_create(subnet_id):
     location = "ips/%s" % (ip['id'])
     response.set_header("Location", location)
     return ip
-
 
 @get('/<network_appliance>/policy/<owner_type>/<policy_id>/info')
 @reply_json

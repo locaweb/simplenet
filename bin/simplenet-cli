@@ -137,7 +137,7 @@ def vlan(action, name, zone=None):
     elif action == 'info':
         r = requests.get('%s/by-name/%s' % (base_url, name))
     elif action == 'device_list':
-        r = requests.get('%s/%s/devices/list' % (base_url, fetch_id('vlans', name)))
+        r = requests.get('%s/devices/list-by-vlan/%s' % (server, fetch_id('vlans', name)))
     else:
         print "Invalid action"
         sys.exit(1)
@@ -250,8 +250,8 @@ def device(action, name, zone=None, vlan=None):
             base_url, fetch_id('devices', name), fetch_id('vlans', vlan))
         )
     elif action == 'vlan_list':
-        r = requests.get('%s/%s/vlans/list' % (
-            base_url, fetch_id('devices', name))
+        r = requests.get('%s/vlans/list-by-device/%s' %
+            (server, fetch_id('devices', name))
         )
     else:
         print "Invalid action"
