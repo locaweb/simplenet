@@ -38,16 +38,20 @@ class Worker(ConsumerMixin):
         callbacks=[self.process_task])]
 
     def process_task(self, body, message):
-        #print json.dumps(body, sort_keys=True, indent=4)
+        print json.dumps(body, sort_keys=True, indent=4)
         self._gen_parents_(body)
-        #message.ack()
+#        message.ack()
 
-    def _gen_jumps_(self, table, name, cidr, nextjump, datacenter=False):
-        print "-N %s-%s" % (table, nextjump)
+    def _add_rule(self, rule, iptables_save):
+        if not rule in iptables_save:
+            iptables_save.add(rule)
+
+    def _gen_jumps_(self, table, name, cidr, nextjump, iptables_save=[], datacenter=False):
+        self._add_rule("-N %s-%s" % (table, nextjump), iptables_save)
         if 'FORWARD' in table:
             for direction in ['src', 'dst']:
                 if not datacenter:
-                    print "-D %s-%s --%s %s -j %s-%s" % (table, name, direction, cidr, table, nextjump)
+                    self._add_rule("-D %s-%s --%s %s -j %s-%s" % (table, name, direction, cidr, table, nextjump))
                     print "-A %s-%s --%s %s -j %s-%s" % (table, name, direction, cidr, table, nextjump)
                 else:
                     print "-D %s --%s %s -j %s-%s" % (table, direction, cidr, table, nextjump)
@@ -81,13 +85,43 @@ class Worker(ConsumerMixin):
 
     def _gen_parents_(self, data):
         rule = data.get('policy')
-        if 'subnet' in data:
+        iptables_save = []
+        if ('datacenter' in data) and ('zones' in data):
+            for zone in data['zones']:
+                for vlan in zone['vlans']:
+                    for subnet in vlan['subnets']:
+                        self._gen_jumps_(rule['table'], data['datacenter'], subnet['cidr'], data['datacenter'], datacenter=True)
+                        self._gen_jumps_(rule['table'], data['datacenter'], subnet['cidr'], zone['zone'])
+                        self._gen_jumps_(rule['table'], zone['zone'], subnet['cidr'], vlan['vlan'])
+                        self._gen_jumps_(rule['table'], vlan['vlan'], subnet['cidr'], subnet['cidr'])
+
+        if ('zone' in data) and ('vlans' in data):
+            for vlan in data['vlans']:
+                for subnet in vlan['subnets']:
+                    self._gen_jumps_(rule['table'], data['datacenter'], subnet['cidr'], data['datacenter'], datacenter=True)
+                    self._gen_jumps_(rule['table'], data['datacenter'], subnet['cidr'], data['zone'])
+                    self._gen_jumps_(rule['table'], data['zone'], subnet['cidr'], vlan['vlan'])
+                    self._gen_jumps_(rule['table'], vlan['vlan'], subnet['cidr'], subnet['cidr'])
+
+        if ('vlan' in data) and ('subnets' in data):
+            for subnet in data['subnets']:
+                self._gen_jumps_(rule['table'], data['datacenter'], subnet['cidr'], data['datacenter'], datacenter=True)
+                self._gen_jumps_(rule['table'], data['datacenter'], subnet['cidr'], data['zone'])
+                self._gen_jumps_(rule['table'], data['zone'], subnet['cidr'], data['vlan'])
+                self._gen_jumps_(rule['table'], data['vlan'], subnet['cidr'], subnet['cidr'])
+
+        if ('subnet' in data) and ('ips' in data) :
             self._gen_jumps_(rule['table'], data['datacenter'], data['subnet'], data['datacenter'], datacenter=True)
             self._gen_jumps_(rule['table'], data['datacenter'], data['subnet'], data['zone'])
             self._gen_jumps_(rule['table'], data['zone'], data['subnet'], data['vlan'])
             self._gen_jumps_(rule['table'], data['vlan'], data['subnet'], data['subnet'])
+            [self._gen_jumps_(rule['table'], data['subnet'], ip['ip'], ip['ip']) for ip in data['ips']]
 
         if 'ip' in data:
+            self._gen_jumps_(rule['table'], data['datacenter'], data['subnet'], data['datacenter'], datacenter=True)
+            self._gen_jumps_(rule['table'], data['datacenter'], data['subnet'], data['zone'])
+            self._gen_jumps_(rule['table'], data['zone'], data['subnet'], data['vlan'])
+            self._gen_jumps_(rule['table'], data['vlan'], data['subnet'], data['subnet'])
             self._gen_jumps_(rule['table'], data['subnet'], data['ip'], data['ip'])
 
         self._gen_rule_(rule)

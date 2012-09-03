@@ -47,7 +47,6 @@ class Net(SimpleNet):
     def policy_create(self, owner_type, owner_id, data):
         data.update({'owner_id': owner_id})
         _model = getattr(models, "%sPolicy" % owner_type.capitalize())
-        _get_parent = getattr(self, "_get_parents_%s_" % owner_type)
         policy = _model(**data)
         session.begin(subtransactions=True)
         try:
@@ -57,10 +56,11 @@ class Net(SimpleNet):
             session.rollback()
             raise Exception(e)
 
-        parent_data = _get_parent(owner_id)
-        parent_data.update({'policy': policy.to_dict()})
-        event.EventManager().raise_event("kanti", parent_data)
+        _get_data = getattr(self, "_get_data_%s_" % owner_type)
+        _data = _get_data(owner_id)
+        _data.update({'policy': policy.to_dict()})
 
+        event.EventManager().raise_event("kanti", _data)
         return self.policy_info(owner_type, policy.id)
 
     def policy_info(self, owner_type, id):

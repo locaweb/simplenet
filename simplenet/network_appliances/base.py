@@ -29,7 +29,7 @@ session = db_utils.get_database_session()
 
 class SimpleNet(object):
 
-    def _get_parents_ip_(self, id):
+    def _get_data_ip_(self, id):
         ip = self.ip_info(id)
         subnet = self.subnet_info(ip['subnet_id'])
         vlan = self.vlan_info(subnet['vlan_id'])
@@ -43,7 +43,7 @@ class SimpleNet(object):
             'datacenter': datacenter['name'],
         }
 
-    def _get_parents_subnet_(self, id):
+    def _get_data_subnet_(self, id):
         subnet = self.subnet_info(id)
         vlan = self.vlan_info(subnet['vlan_id'])
         zone = self.zone_info(vlan['zone_id'])
@@ -53,9 +53,10 @@ class SimpleNet(object):
             'vlan': vlan['name'],
             'zone': zone['name'],
             'datacenter': datacenter['name'],
+            'ips': self.ip_list_by_subnet(id)
         }
 
-    def _get_parents_vlan_(self, id):
+    def _get_data_vlan_(self, id):
         vlan = self.vlan_info(id)
         zone = self.zone_info(vlan['zone_id'])
         datacenter = self.datacenter_info(zone['datacenter_id'])
@@ -63,14 +64,23 @@ class SimpleNet(object):
             'vlan': vlan['name'],
             'zone': zone['name'],
             'datacenter': datacenter['name'],
+            'subnets': self.subnet_list_by_vlan(id),
         }
 
-    def _get_parents_zone_(self, id):
+    def _get_data_zone_(self, id):
         zone = self.zone_info(id)
         datacenter = self.datacenter_info(zone['datacenter_id'])
         return {
             'zone': zone['name'],
             'datacenter': datacenter['name'],
+            'vlans': [ self._get_data_vlan_(vlan['id']) for vlan in self.vlan_list_by_zone(id) ]
+        }
+
+    def _get_data_datacenter_(self, id):
+        datacenter = self.datacenter_info(id)
+        return {
+            'datacenter': datacenter['name'],
+            'zones': self.zone_list_by_datacenter(id),
         }
 
     def datacenter_list(self):
@@ -278,7 +288,7 @@ class SimpleNet(object):
         return vlans
 
     def vlan_list_by_zone(self, zone_id):
-        ss = session.query(models.Vlans).filter_by(zone_id=zone_id).all()
+        ss = session.query(models.Vlan).filter_by(zone_id=zone_id).all()
         vlans = []
         for relationship in ss:
             vlans.append(
@@ -336,7 +346,7 @@ class SimpleNet(object):
         return subnets
 
     def subnet_list_by_vlan(self, vlan_id):
-        ss = session.query(models.Subnet).filter(vlan_id=vlan_id).all()
+        ss = session.query(models.Subnet).filter_by(vlan_id=vlan_id).all()
         subnets = []
         for subnet in ss:
             subnets.append(
@@ -391,6 +401,15 @@ class SimpleNet(object):
         for ip in ss:
             ips.append(
                 ip.to_dict(),
+            )
+        return ips
+
+    def ip_list_by_subnet(self, subnet_id):
+        ss = session.query(models.Ip).filter_by(subnet_id=subnet_id).all()
+        ips = []
+        for ip in ss:
+            ips.append(
+                ip.to_dict()
             )
         return ips
 
