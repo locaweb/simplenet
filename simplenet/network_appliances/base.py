@@ -38,9 +38,13 @@ class SimpleNet(object):
         return {
             'ip': ip['ip'],
             'subnet': subnet['cidr'],
+            'subnet_id': subnet['id'],
             'vlan': vlan['name'],
+            'vlan_id': vlan['id'],
             'zone': zone['name'],
+            'zone_id': zone['id'],
             'datacenter': datacenter['name'],
+            'datacenter_id': datacenter['id'],
         }
 
     def _get_data_subnet_(self, id):
@@ -51,8 +55,11 @@ class SimpleNet(object):
         return {
             'subnet': subnet['cidr'],
             'vlan': vlan['name'],
+            'vlan_id': vlan['id'],
             'zone': zone['name'],
+            'zone_id': zone['id'],
             'datacenter': datacenter['name'],
+            'datacenter_id': datacenter['id'],
             'ips': self.ip_list_by_subnet(id)
         }
 
@@ -63,7 +70,9 @@ class SimpleNet(object):
         return {
             'vlan': vlan['name'],
             'zone': zone['name'],
+            'zone_id': zone['id'],
             'datacenter': datacenter['name'],
+            'datacenter_id': datacenter['id'],
             'subnets': self.subnet_list_by_vlan(id),
         }
 
@@ -73,6 +82,7 @@ class SimpleNet(object):
         return {
             'zone': zone['name'],
             'datacenter': datacenter['name'],
+            'datacenter_id': datacenter['id'],
             'vlans': [ self._get_data_vlan_(vlan['id']) for vlan in self.vlan_list_by_zone(id) ]
         }
 

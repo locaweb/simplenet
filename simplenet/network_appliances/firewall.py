@@ -34,6 +34,25 @@ session = db_utils.get_database_session()
 
 class Net(SimpleNet):
 
+    def _enqueue_rules_(self, owner_type, owner_id):
+        policy_list = self.policy_list_by_owner(owner_type, owner_id)
+        _get_data = getattr(self, "_get_data_%s_" % owner_type)
+        _data = _get_data(owner_id)
+        info_dependency = {
+            'ip': ['datacenter', 'zone', 'vlan', 'subnet'],
+            'subnet': ['datacenter', 'zone', 'vlan'],
+            'vlan': ['datacenter', 'zone' ],
+            'zone': ['datacenter']
+        }
+
+        for field in info_dependency[owner_type]:
+            policy_list = policy_list + self.policy_list_by_owner(
+                field, _data['%s_id' % field]
+            )
+
+        _data.update({'policy': policy_list})
+        event.EventManager().raise_event("kanti", _data)
+
     def policy_list(self, owner_type):
         _model = getattr(models, "%sPolicy" % owner_type.capitalize())
         ss = session.query(_model).all()
@@ -56,11 +75,7 @@ class Net(SimpleNet):
             session.rollback()
             raise Exception(e)
 
-        _get_data = getattr(self, "_get_data_%s_" % owner_type)
-        _data = _get_data(owner_id)
-        _data.update({'policy': policy.to_dict()})
-
-        event.EventManager().raise_event("kanti", _data)
+        self._enqueue_rules_(owner_type, owner_id)
         return self.policy_info(owner_type, policy.id)
 
     def policy_info(self, owner_type, id):
