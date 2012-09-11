@@ -51,7 +51,8 @@ class Net(SimpleNet):
             )
 
         _data.update({'policy': policy_list})
-        event.EventManager().raise_event("kanti", _data)
+        if policy_list:
+            event.EventManager().raise_event("kanti", _data)
 
     def policy_list(self, owner_type):
         _model = getattr(models, "%sPolicy" % owner_type.capitalize())
@@ -93,6 +94,7 @@ class Net(SimpleNet):
         ss = session.query(_model).get(id)
         if not ss:
             raise EntityNotFound('%sPolicy' % owner_type.capitalize(), id)
+        owner_id = ss.owner_id
         session.begin(subtransactions=True)
         try:
             session.delete(ss)
@@ -100,6 +102,8 @@ class Net(SimpleNet):
         except Exception, e:
             session.rollback()
             raise Exception(e)
+
+        self._enqueue_rules_(owner_type, owner_id)
         return True
 
     def policy_list_by_owner(self, owner_type, id):

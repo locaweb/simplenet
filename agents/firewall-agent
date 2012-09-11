@@ -20,9 +20,19 @@
 import os
 import sys
 import json
-from kombu.mixins import ConsumerMixin
-from kombu.utils import kwdict, reprcall
+import fcntl
+
+from lockfile import FileLock, LockTimeout
+
 from kombu import Exchange, Queue
+from kombu import BrokerConnection
+
+from kombu.mixins import ConsumerMixin
+
+from kombu.utils import kwdict, reprcall
+from kombu.utils.debug import setup_logging
+
+setup_logging(loglevel="INFO")
 
 myname = os.uname()[1]
 
@@ -39,11 +49,18 @@ class Worker(ConsumerMixin):
 
     def process_task(self, body, message):
         self.iptables_save = []
-        print json.dumps(body, sort_keys=True, indent=4)
+        self.info("Received payload %s" % json.dumps(body, sort_keys=True, indent=4))
+
+        lock = FileLock('/var/run/firewall-agent')
+        lock.acquire()
+        #print json.dumps(body, sort_keys=True, indent=4)
         self._gen_iptables_save_(body)
         self.iptables_save.append('COMMIT')
-        print "\n".join(self.iptables_save)
-        #message.ack()
+        open('/tmp/meh', 'w').write("\n".join(self.iptables_save))
+        #print "\n".join(self.iptables_save)
+        self.info("Woke done")
+        lock.release()
+        message.ack()
 
     def _add_rule(self, rule):
         if not len(self.iptables_save):
@@ -63,7 +80,6 @@ class Worker(ConsumerMixin):
 
         name = table if datacenter else "%s-%s" % (table, name)
         for direction in directions[table]:
-            print 'a'
             self._add_rule(
                 jump.format(action='A',
                             table=table,
@@ -73,25 +89,25 @@ class Worker(ConsumerMixin):
                             nextjump=nextjump
                 )
             )
-            print 'b'
 
     def _gen_rule_(self, rule):
         iptables = []
-        iptables.append('-I {table}-{owner}'.format(table=rule['table'], owner=rule['owner']))
-        field_maps = {
-            'src': '-s',
-            'dst': '-d',
-            'src_port': '--sport',
-            'dst_port': '--dport',
-            'proto': '-p',
-            'id': '-m comment --comment'
-        }
+        if ('table' in rule) and ('owner' in rule):
+            iptables.append('-I {table}-{owner}'.format(table=rule['table'], owner=rule['owner']))
+            field_maps = {
+                'src': '-s',
+                'dst': '-d',
+                'src_port': '--sport',
+                'dst_port': '--dport',
+                'proto': '-p',
+                'id': '-m comment --comment'
+            }
 
-        for field, value in field_maps.iteritems():
-            if rule[field]:
-                iptables.append(' %s %s' % (value, rule[field]))
+            for field, value in field_maps.iteritems():
+                if rule[field]:
+                    iptables.append(' %s %s' % (value, rule[field]))
 
-        iptables.append(' -j {policy}'.format(policy=rule['policy']))
+            iptables.append(' -j {policy}'.format(policy=rule['policy']))
         return "".join(iptables)
 
     def _gen_iptables_save_(self, data):
@@ -101,7 +117,7 @@ class Worker(ConsumerMixin):
             self._gen_jumps_(infos['table'], infos['zone'], infos['cidr'], infos['vlan'])
             self._gen_jumps_(infos['table'], infos['vlan'], infos['cidr'], infos['cidr'])
 
-        for rule in data.get('policy'):
+        for rule in [ rule for rule in data.get('policy') if 'table' in rule ]:
             if ('datacenter' in data) and ('zones' in data):
                 for zone in data['zones']:
                     for vlan in zone['vlans']:
@@ -153,10 +169,6 @@ class Worker(ConsumerMixin):
             self._add_rule(self._gen_rule_(rule))
 
 if __name__ == "__main__":
-    from kombu import BrokerConnection
-    from kombu.utils.debug import setup_logging
-    setup_logging(loglevel="DEBUG")
-
     with BrokerConnection("amqp://guest:guest@localhost:5672//") as conn:
         try:
             Worker(conn).run()
