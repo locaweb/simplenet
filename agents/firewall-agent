@@ -40,6 +40,8 @@ class Worker(ConsumerMixin):
 
     def __init__(self, connection):
         self.connection = connection
+        if os.path.isfile('/var/run/firewall-agent.lock'):
+            os.unlink('/var/run/firewall-agent.lock')
 
     def get_consumers(self, Consumer, channel):
         return [Consumer(queues=Queue(
@@ -56,7 +58,7 @@ class Worker(ConsumerMixin):
         #print json.dumps(body, sort_keys=True, indent=4)
         self._gen_iptables_save_(body)
         self.iptables_save.append('COMMIT')
-        open('/tmp/meh', 'w').write("\n".join(self.iptables_save))
+        open('/etc/iptables/rules', 'w').write("\n".join(self.iptables_save))
         #print "\n".join(self.iptables_save)
         self.info("Woke done")
         lock.release()
