@@ -42,12 +42,17 @@ def reply_json(f):
     return json_dumps
 
 
-def create_manager(network_appliance):
-#    network_appliance_token = request.headers.get("x-simplenet-network_appliance-token")
-#    if not network_appliance_token:
-#        abort(401, 'No x-simplenet-network_appliance-token header provided')
+def create_manager(network_appliance, auth_type=None):
+    if auth_type:
+        network_appliance_token = request.headers.get("x-simplenet-network_appliance-token")
+        if not network_appliance_token:
+            abort(401, 'No x-simplenet-network_appliance-token header provided')
 
-#    username, password = parse_token(network_appliance_token)
+        username, password = parse_token(network_appliance_token)
+        _auth_ = "simplenet.auth_methods.%s" % auth_type
+        auth = __import__(_auth_)
+        if not os.path.isfile("%s.py" % _module_.replace('.', '/')):
+            raise RuntimeError("The requested authenticantion method is missing")
 
     _module_ = "simplenet.network_appliances.%s" % network_appliance
     if not os.path.isfile("%s.py" % _module_.replace('.', '/')):
