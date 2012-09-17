@@ -1,0 +1,55 @@
+#!/usr/bin/python
+
+# Copyright 2012 Locaweb.
+# All Rights Reserved.
+#
+#    Licensed under the Apache License, Version 2.0 (the "License");
+#    you may not use this file except in compliance with the License.
+#    You may obtain a copy of the License at
+#
+#        http://www.apache.org/licenses/LICENSE-2.0
+#
+#    Unless required by applicable law or agreed to in writing, software
+#    distributed under the License is distributed on an "AS IS" BASIS,
+#    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#    See the License for the specific language governing permissions and
+#    limitations under the License.
+#
+# @author: Juliano Martinez (ncode), Locaweb.
+
+from gevent import monkey
+monkey.patch_all()
+
+import os
+import grp
+import pwd
+import json
+import time
+import base64
+import logging
+
+import bottle
+from bottle import delete, put, get, post, error, run, debug
+from bottle import abort, request, ServerAdapter, response
+
+from simplenet.common.config import config, set_logger
+from simplenet.common.http_utils import reply_json, validate_input
+
+from simplenet.routes import base, policy, errors
+
+app = bottle.app()
+LOG = logging.getLogger('simplenet.server')
+
+
+def main():
+    os.setgid(grp.getgrnam('nogroup')[2])
+    os.setuid(pwd.getpwnam(config.get("server", "user"))[2])
+    debug(config.getboolean("server", "debug"))
+    port = config.getint("server", "port")
+    bind_addr = config.get("server", "bind_addr")
+    set_logger()
+    LOG.info("Starting Simplestack server")
+    run(host=bind_addr, port=port, server="gevent")
+
+if __name__ == '__main__':
+    main()

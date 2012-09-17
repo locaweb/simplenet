@@ -1,0 +1,311 @@
+#!/usr/bin/python
+
+# Copyright 2012 Locaweb.
+# All Rights Reserved.
+#
+#    Licensed under the Apache License, Version 2.0 (the "License");
+#    you may not use this file except in compliance with the License.
+#    You may obtain a copy of the License at
+#
+#        http://www.apache.org/licenses/LICENSE-2.0
+#
+#    Unless required by applicable law or agreed to in writing, software
+#    distributed under the License is distributed on an "AS IS" BASIS,
+#    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#    See the License for the specific language governing permissions and
+#    limitations under the License.
+#
+# @author: Juliano Martinez (ncode), Locaweb.
+
+import os
+import sys
+import json
+import baker
+import requests
+import ConfigParser
+
+config_file = ('/etc/simplenet/simplenet.cfg' if not 'SIMPLENET_CFG'
+                in os.environ else os.environ['SIMPLENET_CFG'])
+
+config = ConfigParser.ConfigParser()
+config.read(config_file)
+
+server = 'http://127.0.0.1:8081'
+
+def fetch_id(_type, _data):
+    if (_type == 'subnets'):
+        data = requests.get('%s/%s/by-cidr/%s' %
+            (server, _type, _data.replace('/','_'))
+        )
+    elif (_type == 'ips'):
+        data = requests.get('%s/%s/by-ip/%s' % (server, _type, _data))
+    else:
+        data = requests.get('%s/%s/by-name/%s' % (server, _type, _data))
+
+    try:
+        return json.loads(data.text)['id']
+    except:
+        print 'Invalid input name, cidr or ip'
+        sys.exit(1)
+
+def pretty_output(r):
+    data = r.text
+    try:
+        print json.dumps(json.loads(data), sort_keys=True, indent=4)
+    except ValueError:
+        print data
+
+    if (r.status_code != 200):
+        sys.exit(1)
+    sys.exit(0)
+
+@baker.command(
+    params={ 'action': '<list all|create|delete|rename>',
+             'name': 'datacenter name'}
+)
+def datacenter(action, name):
+    base_url = '%s/datacenters' % (server)
+    r = None
+    if action == 'list':
+        r = requests.get('%s/list' % base_url)
+    elif action == 'create':
+        r = requests.post(base_url, data=json.dumps({'name': name}))
+    elif action == 'delete':
+        r = requests.delete('%s/%s/delete' %
+            (base_url, fetch_id('datacenters', name))
+        )
+    elif action == 'info':
+        r = requests.get('%s/by-name/%s' % (base_url, name))
+    else:
+        print "Invalid action"
+        sys.exit(1)
+    pretty_output(r)
+
+@baker.command(
+    params={ 'action': '<list all|create|delete|rename>',
+             'name': 'zone name'}
+)
+def zone(action, name, datacenter=None):
+    base_url = '%s/zones' % (server)
+    r = None
+    if action == 'list':
+        r = requests.get('%s/list' % base_url)
+    elif action == 'create':
+        if not datacenter:
+            print 'Missing datacenter_id to create'
+            sys.exit(1)
+
+        datacenter_id = fetch_id('datacenters', datacenter)
+        r = requests.post('%s/datacenters/%s/zones' % (server, datacenter_id),
+            data=json.dumps({'name': name, 'datacenter_id': datacenter_id})
+        )
+    elif action == 'delete':
+        r = requests.delete('%s/%s/delete' %
+            (base_url, fetch_id('zones', name))
+        )
+    elif action == 'info':
+        r = requests.get('%s/by-name/%s' % (base_url, name))
+    else:
+        print "Invalid action"
+        sys.exit(1)
+    pretty_output(r)
+
+
+@baker.command(
+    params={ 'action': '<list all|create|delete|device_list>',
+             'name': 'vlan name',
+             'zone': 'zone_id to create a new vlan'}
+)
+def vlan(action, name, zone=None):
+    base_url = '%s/vlans' % (server)
+    r = None
+    if action == 'list':
+        r = requests.get('%s/list' % base_url)
+    elif action == 'create':
+        if not zone:
+            print 'Missing zone to create'
+            sys.exit(1)
+
+        zone_id = fetch_id('zones', zone)
+        r = requests.post('%s/zones/%s/vlans' % (server, zone_id),
+            data=json.dumps({'name': name})
+        )
+    elif action == 'delete':
+        r = requests.delete('%s/%s/delete' %
+            (base_url, fetch_id('vlans', name))
+        )
+    elif action == 'info':
+        r = requests.get('%s/by-name/%s' % (base_url, name))
+    elif action == 'device_list':
+        r = requests.get('%s/devices/list-by-vlan/%s' % (server, fetch_id('vlans', name)))
+    else:
+        print "Invalid action"
+        sys.exit(1)
+    pretty_output(r)
+
+@baker.command(
+    params={ 'action': '<list all|create|delete|rename>',
+             'cidr': 'subnet cidr',
+             'vlan': 'vlan to create a new subnet' }
+)
+def subnet(action, cidr, vlan=None):
+    base_url = '%s/subnets' % (server)
+    r = None
+    if action == 'list':
+        r = requests.get('%s/list' %  base_url)
+    elif action == 'create':
+        if not vlan:
+            print 'Missing vlan to create'
+            sys.exit(1)
+
+        vlan_id = fetch_id('vlans', vlan)
+        r = requests.post('%s/vlans/%s/subnets' % (server, vlan_id),
+             data=json.dumps({'cidr': cidr})
+        )
+    elif action == 'delete':
+        r = requests.delete('%s/%s/delete' %
+            (base_url, fetch_id('subnets', cidr))
+        )
+    elif action == 'info':
+        r = requests.get('%s/by-cidr/%s' %
+            (base_url, cidr.replace('/', '_'))
+        )
+    else:
+        print "Invalid action"
+        sys.exit(1)
+    pretty_output(r)
+
+
+@baker.command(
+    params={ 'action': '<list all|create|delete|rename>',
+             'ip': 'ip address',
+             'subnet': 'subnet cidr' }
+)
+def ip(action, ip, subnet=None):
+    base_url = '%s/ips' % (server)
+    r = None
+    if action == 'list':
+        r = requests.get('%s/list' %  base_url)
+    elif action == 'create':
+        if not subnet:
+            print 'Missing subnet to create'
+            sys.exit(1)
+
+        r = requests.post('%s/subnets/%s/ips' % (server, fetch_id('subnets', subnet)),
+            data=json.dumps({'ip': ip})
+        )
+    elif action == 'delete':
+        r = requests.delete('%s/%s/delete' %
+            (base_url, fetch_id('ips', ip))
+        )
+    elif action == 'info':
+        r = requests.get('%s/by-ip/%s' % (base_url, ip))
+    else:
+        print "Invalid action"
+        sys.exit(1)
+    pretty_output(r)
+
+@baker.command(
+    params={ 'action': '<list all|create|delete|vlan_attach|vlan_create|vlan_list>',
+             'name': 'device name',
+             'zone': 'zone to create a new device',
+             'vlan': 'vlan to attach vlans to devices' }
+)
+def device(action, name, zone=None, vlan=None):
+    base_url = '%s/devices' % (server)
+    r = None
+    if action == 'list':
+        r = requests.get('%s/list' % base_url)
+    elif action == 'create':
+        if not zone:
+            print 'Missing zone to create'
+            sys.exit(1)
+
+        zone_id = fetch_id('zones', zone)
+        r = requests.post('%s/zones/%s/devices' %
+            (server, zone_id), data=json.dumps({'name': name})
+        )
+    elif action == 'delete':
+        r = requests.delete('%s/%s/delete' % (
+            base_url, fetch_id('devices', name))
+        )
+    elif action == 'info':
+        r = requests.get('%s/by-name/%s' % (base_url, name))
+    elif action == 'vlan_attach':
+        if not vlan:
+            print 'Missing vlan to attach'
+            sys.exit(1)
+
+        vlan_id = fetch_id('vlans', vlan)
+        r = requests.post('%s/%s/vlans' %
+            (base_url, fetch_id('devices', name)),
+            data=json.dumps({'vlan_id': vlan_id})
+        )
+    elif action == 'vlan_detach':
+        if not vlan:
+            print 'Missing vlan to attach'
+            sys.exit(1)
+
+        r = requests.delete('%s/%s/vlans/%s' % (
+            base_url, fetch_id('devices', name), fetch_id('vlans', vlan))
+        )
+    elif action == 'vlan_list':
+        r = requests.get('%s/vlans/list-by-device/%s' %
+            (server, fetch_id('devices', name))
+        )
+    else:
+        print "Invalid action"
+        sys.exit(1)
+    pretty_output(r)
+
+
+@baker.command(
+    params={ 'action': '<list all|attach|create|delete|rename>',
+             'name': 'type of owner <zone|vlan|subnet|ip>',
+             'owner': 'policy owner name',
+             'src': 'source ip or subnet',
+             'src_port': 'source port',
+             'dst': 'destination ip or subnet',
+             'dst_port': 'destination port',
+             'proto': 'protocol name or number',
+             'table': 'table to apply the policy <INPUT|FORWARD|OUTPUT>',
+             'policy': 'policy to use <ACCEPT|REJECT|DROP>' }
+)
+def policy(action, name, owner, dst=None, src=None, dst_port=None,
+           src_port=None, proto=None, table=None, policy=None):
+    base_url = '%s/firewall/policy' % server
+    r = None
+    if action == 'list':
+        if owner == 'all':
+            r = requests.get('%s/by-type/%s/list' % (base_url, name))
+        else:
+            r = requests.get('%s/by-owner/%s/%s/list' % (base_url, name, fetch_id('%ss' % name, owner)))
+    elif action == 'create':
+        owner_id = fetch_id('%ss' % name, owner)
+        if not table:
+            print 'Missing table to create'
+            sys.exit(1)
+        elif not policy:
+            print 'Missing policy to create'
+            sys.exit(1)
+
+        data = {}
+        for key in ['policy', 'dst', 'src', 'dst_port',
+                    'src_port', 'proto', 'table']:
+            value = vars()[key]
+            if key != None:
+                data.update({key: value})
+        print '%s/%s/%s' % (base_url, name, owner_id)
+        r = requests.post('%s/%s/%s' %
+            (base_url, name, owner_id), data=json.dumps(data)
+        )
+    elif action == 'delete':
+        r = requests.delete('%s/%s/%s/delete' % (base_url, name, owner))
+    elif action == 'info':
+        r = requests.get('%s/%s/%s/info' % (base_url, name, owner))
+    else:
+        print "Invalid action"
+        sys.exit(1)
+    pretty_output(r)
+
+baker.run()
