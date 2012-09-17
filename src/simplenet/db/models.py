@@ -23,6 +23,8 @@ from sqlalchemy import event, Column, String, create_engine, ForeignKey, Table, 
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, backref
 
+from simplenet.common.config import config
+
 Base = declarative_base()
 
 class Datacenter(Base):
@@ -33,7 +35,7 @@ class Datacenter(Base):
     name = Column(String(255), unique=True)
     description = Column(String(255))
 
-    def __init__(self, name, description=""):
+    def __init__(self, name, description=''):
         self.id = str(uuid.uuid4())
         self.name = name
 
@@ -52,9 +54,9 @@ class Zone(Base):
     name = Column(String(255), unique=True)
     description = Column(String(255))
     datacenter_id = Column(String(255), ForeignKey('datacenters.id'))
-    datacenter = relationship("Datacenter")
+    datacenter = relationship('Datacenter')
 
-    def __init__(self, name, datacenter_id, description=""):
+    def __init__(self, name, datacenter_id, description=''):
         self.id = str(uuid.uuid4())
         self.name = name
         self.datacenter_id = datacenter_id
@@ -79,10 +81,10 @@ class Device(Base):
     name = Column(String(255), unique=True)
     description = Column(String(255))
     zone_id = Column(String(255), ForeignKey('zones.id'))
-    vlans_to_devices = relationship("Vlans_to_Device", cascade='all, delete-orphan')
-    zone = relationship("Zone")
+    vlans_to_devices = relationship('Vlans_to_Device', cascade='all, delete-orphan')
+    zone = relationship('Zone')
 
-    def __init__(self, name, zone_id, description=""):
+    def __init__(self, name, zone_id, description=''):
         self.id = str(uuid.uuid4())
         self.name = name
         self.zone_id = zone_id
@@ -107,9 +109,9 @@ class Vlan(Base):
     name = Column(String(255), unique=True)
     description = Column(String(255))
     zone_id = Column(String(255), ForeignKey('zones.id'))
-    zone = relationship("Zone")
+    zone = relationship('Zone')
 
-    def __init__(self, name, zone_id, description=""):
+    def __init__(self, name, zone_id, description=''):
         self.id = str(uuid.uuid4())
         self.name = name
         self.zone_id = zone_id
@@ -133,8 +135,8 @@ class Vlans_to_Device(Base):
     vlan_id = Column(String(255), ForeignKey('vlans.id'), primary_key=True)
     device_id = Column(String(255), ForeignKey('devices.id'), primary_key=True)
     description = Column(String(255))
-    vlan = relationship("Vlan")
-    device = relationship("Device")
+    vlan = relationship('Vlan')
+    device = relationship('Device')
 
     def to_dict(self):
         return {
@@ -153,9 +155,9 @@ class Subnet(Base):
     cidr = Column(String(255), unique=True)
     description = Column(String(255))
     vlan_id = Column(String(255), ForeignKey('vlans.id'))
-    vlan = relationship("Vlan")
+    vlan = relationship('Vlan')
 
-    def __init__(self, cidr, vlan_id, description=""):
+    def __init__(self, cidr, vlan_id, description=''):
         self.id = str(uuid.uuid4())
         self.cidr = cidr
         self.vlan_id = vlan_id
@@ -186,9 +188,9 @@ class Ip(Base):
     ip = Column(String(255), unique=True)
     description = Column(String(255))
     subnet_id = Column(String(255), ForeignKey('subnets.id'))
-    subnet = relationship("Subnet")
+    subnet = relationship('Subnet')
 
-    def __init__(self, ip, subnet_id, description=""):
+    def __init__(self, ip, subnet_id, description=''):
         self.id = str(uuid.uuid4())
         self.ip = ip
         self.subnet_id = subnet_id
@@ -217,7 +219,7 @@ class DatacenterPolicy(Base):
     table = Column(String(255), nullable=False)
     policy = Column(String(255), nullable=False)
     owner_id = Column(String(255), ForeignKey('datacenters.id'))
-    datacenter = relationship("Datacenter")
+    datacenter = relationship('Datacenter')
 
     def __init__(self, owner_id, proto, src, src_port, dst, dst_port, table, policy):
         self.id = str(uuid.uuid4())
@@ -255,7 +257,7 @@ class ZonePolicy(Base):
     table = Column(String(255), nullable=False)
     policy = Column(String(255), nullable=False)
     owner_id = Column(String(255), ForeignKey('zones.id'))
-    zone = relationship("Zone")
+    zone = relationship('Zone')
 
     def __init__(self, owner_id, proto, src, src_port, dst, dst_port, table, policy):
         self.id = str(uuid.uuid4())
@@ -294,7 +296,7 @@ class VlanPolicy(Base):
     table = Column(String(255), nullable=False)
     policy = Column(String(255), nullable=False)
     owner_id = Column(String(255), ForeignKey('vlans.id'))
-    vlan = relationship("Vlan")
+    vlan = relationship('Vlan')
 
     def __init__(self, owner_id, proto, src, src_port, dst, dst_port, table, policy):
         self.id = str(uuid.uuid4())
@@ -332,7 +334,7 @@ class SubnetPolicy(Base):
     table = Column(String(255), nullable=False)
     policy = Column(String(255), nullable=False)
     owner_id = Column(String(255), ForeignKey('subnets.id'))
-    subnet = relationship("Subnet")
+    subnet = relationship('Subnet')
 
     def __init__(self, owner_id, proto, src, src_port, dst, dst_port, table, policy):
         self.id = str(uuid.uuid4())
@@ -370,7 +372,7 @@ class IpPolicy(Base):
     table = Column(String(255), nullable=False)
     policy = Column(String(255), nullable=False)
     owner_id = Column(String(255), ForeignKey('ips.id'))
-    ip = relationship("Ip")
+    ip = relationship('Ip')
 
     def __init__(self, owner_id, proto, src, src_port, dst, dst_port, table, policy):
         self.id = str(uuid.uuid4())
@@ -396,9 +398,27 @@ class IpPolicy(Base):
                  'owner': self.ip.ip }
 
 
-def _fk_pragma_on_connect(dbapi_con, con_record):
-    dbapi_con.execute('pragma foreign_keys=ON')
+database_type = config.get('server', 'database_type')
+database_name = config.get('server', 'database_name')
 
-engine = create_engine('sqlite:////tmp/meh.db')
-event.listen(engine, 'connect', _fk_pragma_on_connect)
+engine = None
+if 'sqlite' in 'database_type':
+    def _fk_pragma_on_connect(dbapi_con, con_record):
+        dbapi_con.execute('pragma foreign_keys=ON')
+
+    engine = create_engine('%s:///%s' % (database_type, database_name))
+    event.listen(engine, 'connect', _fk_pragma_on_connect)
+else:
+    database_user = config.get('server', 'database_user')
+    database_pass = config.get('server', 'database_pass')
+    database_host = config.get('server', 'database_host')
+    engine = create_engine("{database_type}://{database_user}:{database_pass}"
+                           "@{database_host}/{database_name}").format(
+                                database_type=database_type,
+                                database_user=database_user,
+                                database_pass=database_pass,
+                                database_host=database_host,
+                                database_name=database_name
+                           )
+
 Base.metadata.create_all(engine)
