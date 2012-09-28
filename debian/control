@@ -1,0 +1,20 @@
+Source: simplenet-server
+Section: net
+Priority: extra
+Maintainer: Juliano Martinez <juliano.martinez@locaweb.com.br>
+Build-Depends: debhelper (>= 7.0.50~)
+Standards-Version: 3.8.4
+Homepage: https://git.locaweb.com.br/locastack/simplenet
+XS-Python-Version: 2.6
+
+Package: simplenet-server
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, python (>= 2.6), python-baker, python-kombu, python-bottle, python-sqlalchemy, python-sqlalchemy-ext
+Description: Network automation framework
+ Network automation framework
+
+Package: simplenet-firewall-agent
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, python (>= 2.6), python-kombu
+Description: Network automation firewall agent
+ Network automation firewall agent

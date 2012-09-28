@@ -1,10 +1,10 @@
 #!/usr/bin/python
 
-from setuptools import setup
+from setuptools import setup, find_packages
 from glob import glob as ls
 
 setup(
-    name = 'simplenet',
+    name = 'simplenet-server',
     version = '0.0.3',
     description = 'Network automation framework',
     long_description = 'Network automation framework',
@@ -16,6 +16,6 @@ setup(
     package_dir={'': 'src'},
     packages=find_packages('src'),
     licence = 'Apache',
-    data_files=[('/usr/sbin', ls('src/sbin/*')),
-                ('/etc/simplenet', ls('src/conf/*')]
+    data_files=[('/usr/sbin', ['src/sbin/simplenet-server'])
+                ('/etc/simplenet', ['src/conf/simplenet.cfg'])],
 )
