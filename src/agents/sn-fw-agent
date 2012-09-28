@@ -21,6 +21,7 @@ import os
 import sys
 import json
 import fcntl
+import ConfigParser
 
 from lockfile import FileLock, LockTimeout
 
@@ -38,10 +39,12 @@ myname = os.uname()[1]
 
 class Worker(ConsumerMixin):
 
-    def __init__(self, connection):
+    def __init__(self, connection, lockfile, iptables_file):
         self.connection = connection
-        if os.path.isfile('/var/run/firewall-agent.lock'):
-            os.unlink('/var/run/firewall-agent.lock')
+        self.lockfile = lockfile
+        self.iptables_file = iptables_file
+        if os.path.isfile(self.lockfile):
+            os.unlink(self.lockfile)
 
     def get_consumers(self, Consumer, channel):
         return [Consumer(queues=Queue(
@@ -53,14 +56,12 @@ class Worker(ConsumerMixin):
         self.iptables_save = []
         self.info("Received payload %s" % json.dumps(body, sort_keys=True, indent=4))
 
-        lock = FileLock('/var/run/firewall-agent')
+        lock = FileLock(self.lockfile.replace('.lock',''))
         lock.acquire()
-        #print json.dumps(body, sort_keys=True, indent=4)
         self._gen_iptables_save_(body)
         self.iptables_save.append('COMMIT')
-        open('/etc/iptables/rules', 'w').write("\n".join(self.iptables_save))
-        #print "\n".join(self.iptables_save)
-        self.info("Woke done")
+        open(self.iptables_file, 'w').write("\n".join(self.iptables_save))
+        self.info("Worke done")
         lock.release()
         message.ack()
 
@@ -170,10 +171,46 @@ class Worker(ConsumerMixin):
 
             self._add_rule(self._gen_rule_(rule))
 
-if __name__ == "__main__":
-    with BrokerConnection("amqp://guest:guest@localhost:5672//") as conn:
-        try:
-            Worker(conn).run()
-        except KeyboardInterrupt:
-            print("bye bye")
+def help():
+    print '%s::' % sys.argv[0]
+    print '   -a action <stop|start|status|foreground>'
+    print '   -u user <simplenet>'
+    print '   -c config </etc/simplenet/agents.conf>'
+
+def main(user, config_file):
+    config = ConfigParser.ConfigParser()
+    config.read(config_file)
+
+    with BrokerConnection(config.get('firewall','uri')) as conn:
+        Worker(conn, config.get('firewall','lockfile'), config.get('firewall','iptables_file')).run()
+
+if __name__ == '__main__':
+    try:
+        opts, args = getopt.getopt(sys.argv[1:], 'a:u:c:', ['action=', 'user=', 'config='])
+    except getopt.GetoptError, err:
+        help()
+
+    user = 'simplenet'
+    action = 'start'
+    config = '/etc/simplenet/agents.conf'
+    for o, a in opts:
+        if o in ('-a', '--action'):
+            action = a
+        elif o in ('-u', '--user'):
+            user = a
+        elif o in ('-c', '--config'):
+            config = a
+        else:
+            help()
+
+    daemon = Daemon(name='simplenet', catch_all_log='/var/log/simplenet.log')
+    if action == 'start':
+        daemon.start()
+        main(user, config)
+    elif action == 'status':
+        daemon.status()
+    elif action == 'stop':
+        daemon.stop()
+    elif action == 'foreground':
+        main(user, config)
 
