@@ -16,6 +16,6 @@ setup(
     package_dir={'': 'src'},
     packages=find_packages('src'),
     licence = 'Apache',
-    data_files=[('/usr/sbin', ['src/sbin/simplenet-server'])
+    data_files=[('/usr/sbin', ['src/sbin/simplenet-server']),
                 ('/etc/simplenet', ['src/conf/simplenet.cfg'])],
 )

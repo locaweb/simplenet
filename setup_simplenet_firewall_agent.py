@@ -3,7 +3,7 @@
 from setuptools import setup
 
 setup(
-    name = 'simplenet-cli',
+    name = 'simplenet-firewall-agent',
     version = '0.0.3',
     description = 'Network automation framework cli',
     long_description = 'Network automation framework cli',
@@ -13,6 +13,6 @@ setup(
     maintainer_email = 'juliano.martinez@locaweb.com.br',
     url = 'https://git.locaweb.com.br/locastack/simplenet',
     licence = 'Apache',
-    data_files=[('/usr/sbin', ['src/sbin/simplenet-cli']),
-                ('/etc/simplenet', ['src/conf/simplenet-cli.cfg'])],
+    data_files=[('/usr/sbin', ['src/agent/sn-fw-agent']),
+                ('/etc/simplenet', ['src/conf/agent.cfg'])],
 )

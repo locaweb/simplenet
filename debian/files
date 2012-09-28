@@ -1,1 +1,2 @@
-simplenet_0.0.3_amd64.deb net extra
+simplenet-server_0.0.3_amd64.deb net extra
+simplenet-firewall-agent_0.0.3_amd64.deb net extra
