@@ -402,7 +402,7 @@ database_type = config.get('server', 'database_type')
 database_name = config.get('server', 'database_name')
 
 engine = None
-if 'sqlite' in 'database_type':
+if 'sqlite' in database_type:
     def _fk_pragma_on_connect(dbapi_con, con_record):
         dbapi_con.execute('pragma foreign_keys=ON')
 
