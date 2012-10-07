@@ -28,9 +28,11 @@ from kombu import Exchange, BrokerConnection
 from kombu.common import maybe_declare
 from kombu.pools import producers
 
+import os
+myname = os.uname()[1]
+
 LOG = logging.getLogger(__name__)
 session = db_utils.get_database_session()
-
 
 class Net(SimpleNet):
 
@@ -52,7 +54,7 @@ class Net(SimpleNet):
 
         _data.update({'policy': policy_list})
         if policy_list:
-            event.EventManager().raise_event("kanti", _data)
+            event.EventManager().raise_event(myname, _data)
 
     def policy_list(self, owner_type):
         _model = getattr(models, "%sPolicy" % owner_type.capitalize())
