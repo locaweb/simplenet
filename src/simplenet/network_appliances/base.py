@@ -69,6 +69,7 @@ class SimpleNet(object):
         datacenter = self.datacenter_info(zone['datacenter_id'])
         return {
             'vlan': vlan['name'],
+            'vlan_id': vlan['id'],
             'zone': zone['name'],
             'zone_id': zone['id'],
             'datacenter': datacenter['name'],
@@ -81,6 +82,7 @@ class SimpleNet(object):
         datacenter = self.datacenter_info(zone['datacenter_id'])
         return {
             'zone': zone['name'],
+            'zone_id': zone['id'],
             'datacenter': datacenter['name'],
             'datacenter_id': datacenter['id'],
             'vlans': [ self._get_data_vlan_(vlan['id']) for vlan in self.vlan_list_by_zone(id) ]
@@ -236,6 +238,15 @@ class SimpleNet(object):
 
     def device_list_by_vlan(self, vlan_id):
         ss = session.query(models.Vlans_to_Device).filter_by(vlan_id=vlan_id).all()
+        devices = []
+        for relationship in ss:
+            devices.append(
+                relationship.to_dict()
+            )
+        return devices
+
+    def device_list_by_zone(self, zone_id):
+        ss = session.query(models.Device).filter_by(zone_id=zone_id).all()
         devices = []
         for relationship in ss:
             devices.append(

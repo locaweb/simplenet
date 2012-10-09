@@ -91,6 +91,19 @@ if [ $? -ne 1 ]; then
 fi
 echo
 
+echo "Reverse policy"
+echo "Creating and list policy ip"
+piid=$(./simplenet-cli policy create ip 192.168.0.1 --src 192.168.0.2 --proto udp --table FORWARD --policy REJECT | awk '/"id": / {gsub(/"|,/,"",$2) ; print $2}')
+
+echo "Creating and list policy subnet"
+psid=$(./simplenet-cli policy create subnet 192.168.0.0/24 --dst 192.168.0.2 --proto tcp --table OUTPUT --policy DROP | awk '/"id": / {gsub(/"|,/,"",$2) ; print $2}')
+
+echo "Creating and list policy vlan"
+pvid=$(./simplenet-cli policy create vlan vlan01 --dst_port 53 --proto udp --table INPUT --policy ACCEPT | awk '/"id": / {gsub(/"|,/,"",$2) ; print $2}')
+
+echo "Creating and list policy zone"
+pnid=$(./simplenet-cli policy create zone ita01 --src 192.168.0.1 --proto tcp --table INPUT --policy ACCEPT | awk '/"id": / {gsub(/"|,/,"",$2) ; print $2}')
+
 echo "Listing Vlans atteched with device"
 ./simplenet-cli device vlan_list firewall01 | ccze -A
 echo

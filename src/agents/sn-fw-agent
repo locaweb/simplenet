@@ -17,6 +17,11 @@
 #
 # @author: Juliano Martinez (ncode), Locaweb.
 
+import getopt, sys
+
+from supay import Daemon
+from datetime import datetime
+
 import os
 import sys
 import json
@@ -33,7 +38,15 @@ from kombu.mixins import ConsumerMixin
 from kombu.utils import kwdict, reprcall
 from kombu.utils.debug import setup_logging
 
+import difflib
+import logging
+
 setup_logging(loglevel="INFO")
+LOGGING_LEVELS = {'critical': logging.CRITICAL,
+                  'error': logging.ERROR,
+                  'warning': logging.WARNING,
+                  'info': logging.INFO,
+                  'debug': logging.DEBUG}
 
 myname = os.uname()[1]
 
@@ -53,17 +66,29 @@ class Worker(ConsumerMixin):
         callbacks=[self.process_task])]
 
     def process_task(self, body, message):
+        logging.debug("TASK")
+        a = datetime.now()
         self.iptables_save = []
-        self.info("Received payload %s" % json.dumps(body, sort_keys=True, indent=4))
+        #self.info("Received payload %s" % json.dumps(body, sort_keys=True, indent=4))
 
         lock = FileLock(self.lockfile.replace('.lock',''))
         lock.acquire()
         self._gen_iptables_save_(body)
         self.iptables_save.append('COMMIT')
+        old = open(self.iptables_file, 'r').readlines()
         open(self.iptables_file, 'w').write("\n".join(self.iptables_save))
-        self.info("Worke done")
+        new = open(self.iptables_file, 'r').readlines()
+
+        for line in difflib.unified_diff(old,new):
+            logging.debug(line.rstrip())
+
+        logging.info("Worke done")
         lock.release()
         message.ack()
+        b = datetime.now()
+        c = b - a
+
+        logging.debug(c)
 
     def _add_rule(self, rule):
         if not len(self.iptables_save):
@@ -180,6 +205,8 @@ def help():
 def main(user, config_file):
     config = ConfigParser.ConfigParser()
     config.read(config_file)
+
+    logging.basicConfig(level=LOGGING_LEVELS.get(config.get('firewall','logging')), filename='/var/log/simplenet.log')
 
     with BrokerConnection(config.get('firewall','uri')) as conn:
         Worker(conn, config.get('firewall','lockfile'), config.get('firewall','iptables_file')).run()

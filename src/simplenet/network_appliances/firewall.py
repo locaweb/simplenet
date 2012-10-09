@@ -29,6 +29,7 @@ from kombu.common import maybe_declare
 from kombu.pools import producers
 
 import os
+import json
 myname = os.uname()[1]
 
 LOG = logging.getLogger(__name__)
@@ -37,22 +38,46 @@ session = db_utils.get_database_session()
 class Net(SimpleNet):
 
     def _enqueue_rules_(self, owner_type, owner_id):
-        policy_list = self.policy_list_by_owner(owner_type, owner_id)
+        policy_list = []
         _get_data = getattr(self, "_get_data_%s_" % owner_type)
         _data = _get_data(owner_id)
         info_dependency = {
             'ip': ['datacenter', 'zone', 'vlan', 'subnet'],
             'subnet': ['datacenter', 'zone', 'vlan'],
-            'vlan': ['datacenter', 'zone' ],
+            'vlan': ['datacenter', 'zone'],
             'zone': ['datacenter']
         }
 
-        for field in info_dependency[owner_type]:
-            policy_list = policy_list + self.policy_list_by_owner(
-                field, _data['%s_id' % field]
-            )
+        print json.dumps(_data, sort_keys=True, indent=4)
+
+        devices = self.device_list_by_vlan(_data['vlan_id']) if (owner_type != 'zone') else self.device_list_by_zone(_data['zone_id'])
+
+        for device in devices:
+            zone_id = (_data['zone_id'])
+            dev_id = device['device_id'] if (owner_type != 'zone') else device['id']
+            print "Modified Device:", dev_id
+
+            policy_list = policy_list + self.policy_list_by_owner('zone', zone_id)
+            for vlan in self.vlan_list_by_device(dev_id): # Cascade thru the vlans of the device
+                print "Modified VLANs:", vlan['vlan_id']
+                _get_data = getattr(self, "_get_data_%s_" % 'vlan')
+                _data.update(_get_data(vlan['vlan_id']))
+                policy_list = policy_list + self.policy_list_by_owner('vlan', vlan['vlan_id'])
+                for subnet in self.subnet_list_by_vlan(vlan['vlan_id']): # Cascade thru the subnets of the vlan
+                    print "Modified subnet:", subnet['id']
+                    _get_data = getattr(self, "_get_data_%s_" % 'subnet')
+                    _data.update(_get_data(subnet['id']))
+                    policy_list = policy_list + self.policy_list_by_owner('subnet', subnet['id'])
+                    for ip in self.ip_list_by_subnet(subnet['id']): # Cascade thru the IPs of the subnet
+                        print "Modified IP:",  ip['id']
+                        _get_data = getattr(self, "_get_data_%s_" % 'ip')
+                        _data.update(_get_data(ip['id']))
+                        policy_list = policy_list + self.policy_list_by_owner('ip', ip['id'])
 
         _data.update({'policy': policy_list})
+
+        print json.dumps(_data, sort_keys=True, indent=4)
+
         if policy_list:
             event.EventManager().raise_event(myname, _data)
 
