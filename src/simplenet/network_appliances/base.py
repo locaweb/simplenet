@@ -236,6 +236,21 @@ class SimpleNet(object):
             raise Exception(e)
         return device.to_dict()
 
+    def device_add_anycast(self, device_id, data):
+        device = session.query(models.Device).get(device_id)
+        anycast = session.query(models.Anycast).get(data['anycast_id'])
+
+        session.begin(subtransactions=True)
+        try:
+            relationship = models.Anycasts_to_Device()
+            relationship.anycast = anycast
+            device.anycasts_to_devices.append(relationship)
+            session.commit()
+        except Exception, e:
+            session.rollback()
+            raise Exception(e)
+        return device.to_dict()
+
     def device_list_by_vlan(self, vlan_id):
         ss = session.query(models.Vlans_to_Device).filter_by(vlan_id=vlan_id).all()
         devices = []

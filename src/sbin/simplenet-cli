@@ -209,6 +209,7 @@ def ip(action, ip, subnet=None):
     params={ 'action': '<list all|create|delete|vlan_attach|vlan_create|vlan_list>',
              'name': 'device name',
              'zone': 'zone to create a new device',
+             'anycast': 'attach anycast to a device',
              'vlan': 'vlan to attach vlans to devices' }
 )
 def device(action, name, zone=None, vlan=None):
@@ -240,6 +241,16 @@ def device(action, name, zone=None, vlan=None):
         r = requests.post('%s/%s/vlans' %
             (base_url, fetch_id('devices', name)),
             data=json.dumps({'vlan_id': vlan_id})
+        )
+    elif action == 'anycast_attach':
+        if not anycast:
+            print 'Missing anycast to attach'
+            sys.exit(1)
+
+        anycast_id = fetch_id('anycasts', anycast)
+        r = requests.post('%s/%s/anycasts' %
+            (base_url, fetch_id('devices', name)),
+            data=json.dumps({'anycast_id': anycast_id})
         )
     elif action == 'vlan_detach':
         if not vlan:

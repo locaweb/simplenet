@@ -232,6 +232,27 @@ def device_add_vlan(device_id):
     response.set_header("Location", location)
     return device
 
+@post('/devices/<device_id>/anycasts')
+@validate_input(anycast_id=str)
+@reply_json
+def device_add_anycast(device_id):
+    """
+    ::
+
+      POST /devices/<device_id>/anycasts
+
+    Attach vlan to device
+    """
+    manager = create_manager('base')
+    data = request.body.readline()
+    if not data:
+        abort(400, 'No data received')
+    data = json.loads(data)
+    device = manager.device_add_anycast(device_id, data)
+    location = "devices/relationship/%s" % (device['id'])
+    response.set_header("Location", location)
+    return device
+
 
 @delete('/devices/<device_id>/vlans/<vlan_id>')
 @reply_json

@@ -82,6 +82,7 @@ class Device(Base):
     description = Column(String(255))
     zone_id = Column(String(255), ForeignKey('zones.id'))
     vlans_to_devices = relationship('Vlans_to_Device', cascade='all, delete-orphan')
+    anycasts_to_devices = relationship('Anycasts_to_Device', cascade='all, delete-orphan')
     zone = relationship('Zone')
 
     def __init__(self, name, zone_id, description=''):
@@ -146,6 +147,21 @@ class Vlans_to_Device(Base):
             'device': self.device.name,
         }
 
+class Anycasts_to_Device(Base):
+
+    __tablename__ = 'anycasts_to_devices'
+
+    anycast_id = Column(String(255), ForeignKey('anycasts.id'), primary_key=True)
+    device_id = Column(String(255), ForeignKey('devices.id'), primary_key=True)
+    description = Column(String(255))
+    device = relationship('Device')
+
+    def to_dict(self):
+        return {
+            'anycast_id': self.anycast_id,
+            'device_id': self.device_id,
+            'device': self.device.name,
+        }
 
 class Subnet(Base):
 
@@ -204,6 +220,61 @@ class Ip(Base):
             'ip': self.ip,
             'subnet': self.subnet.cidr,
             'subnet_id': self.subnet_id,
+        }
+
+
+class Anycast(Base):
+
+    __tablename__ = 'anycasts'
+
+    id = Column(String(255), primary_key=True)
+    cidr = Column(String(255), unique=True)
+    description = Column(String(255))
+
+    def __init__(self, cidr, description=''):
+        self.id = str(uuid.uuid4())
+        self.cidr = cidr
+
+    def to_ip(self):
+        return IPv4Network(self.cidr)
+
+    def contains(self, ip):
+        return self.to_ip().Contains(IPv4Address(ip))
+
+    def __repr__(self):
+       return "<Anycast('%s','%s')>" % (self.id, self.cidr)
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'cidr': self.cidr,
+        }
+
+
+class IpAnycast(Base):
+
+    __tablename__ = 'ipsanycast'
+
+    id = Column(String(255), primary_key=True)
+    ip = Column(String(255), unique=True)
+    description = Column(String(255))
+    anycast_id = Column(String(255), ForeignKey('anycasts.id'))
+    anycast = relationship('Anycast')
+
+    def __init__(self, ip, anycast_id, description=''):
+        self.id = str(uuid.uuid4())
+        self.ip = ip
+        self.anycast_id = anycast_id
+
+    def __repr__(self):
+       return "<IpAnycast('%s','%s')>" % (self.id, self.ip)
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'ip': self.ip,
+            'anycast': self.anycast.cidr,
+            'anycast_id': self.anycast_id,
         }
 
 

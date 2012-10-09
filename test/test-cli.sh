@@ -128,6 +128,8 @@ echo "Listing Ip"
 ./simplenet-cli ip list all | ccze -A
 echo
 
+exit
+
 echo "Delete vlan Zone"
 ./simplenet-cli policy delete zone $pnid
 echo
