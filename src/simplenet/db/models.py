@@ -154,11 +154,13 @@ class Anycasts_to_Device(Base):
     anycast_id = Column(String(255), ForeignKey('anycasts.id'), primary_key=True)
     device_id = Column(String(255), ForeignKey('devices.id'), primary_key=True)
     description = Column(String(255))
+    anycast = relationship('Anycast')
     device = relationship('Device')
 
     def to_dict(self):
         return {
             'anycast_id': self.anycast_id,
+            'anycast_cidr': self.anycast.cidr,
             'device_id': self.device_id,
             'device': self.device.name,
         }

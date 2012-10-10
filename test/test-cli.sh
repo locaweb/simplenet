@@ -36,10 +36,24 @@ echo "Creating Subnet"
 ./simplenet-cli subnet create 192.168.0.0/24 --vlan vlan01 | ccze -A
 echo
 
+echo "Creating Anycast Subnet"
+./simplenet-cli anycast create 192.168.168.0/24
+echo
+
 echo "Creating Ip"
 ./simplenet-cli ip create 192.168.0.1 --subnet 192.168.0.0/24 | ccze -A
 echo "Next ip creation must fail"
 ./simplenet-cli ip create 192.168.1.1 --subnet 192.168.0.0/24 | ccze -A
+if [ $? -ne 1 ]; then
+    echo "Return must FAIL but it has exited OK"
+    exit 1
+fi
+echo
+
+echo "Creating IpAnycast"
+./simplenet-cli ipanycast create 192.168.168.3 --anycast 192.168.168.0/24 | ccze -A
+echo "Next ip creation must fail"
+./simplenet-cli ipanycast create 192.168.0.3 --anycast 192.168.168.0/24 | ccze -A
 if [ $? -ne 1 ]; then
     echo "Return must FAIL but it has exited OK"
     exit 1
@@ -124,8 +138,16 @@ echo "Listing Subnets"
 ./simplenet-cli subnet list all | ccze -A
 echo
 
+echo "Listing Anycast Subnets"
+./simplenet-cli anycast list all | ccze -A
+echo
+
 echo "Listing Ip"
 ./simplenet-cli ip list all | ccze -A
+echo
+
+echo "Listing IpAnycast"
+./simplenet-cli ipanycast list all | ccze -A
 echo
 
 exit
@@ -160,8 +182,16 @@ echo "Deleting Ip"
 ./simplenet-cli ip delete 192.168.0.1
 echo
 
+echo "Deleting Ip"
+./simplenet-cli ip delete 192.168.168.3
+echo
+
 echo "Deleting Subnet"
 ./simplenet-cli subnet delete 192.168.0.0/24
+echo
+
+echo "Deleting Anycast Subnet"
+./simplenet-cli anycast delete 192.168.168.0/24
 echo
 
 echo "Deleting Device"

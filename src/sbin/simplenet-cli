@@ -33,11 +33,11 @@ config.read(config_file)
 server = 'http://127.0.0.1:8081'
 
 def fetch_id(_type, _data):
-    if (_type == 'subnets'):
+    if (_type == 'subnets') or (_type == 'anycasts'):
         data = requests.get('%s/%s/by-cidr/%s' %
             (server, _type, _data.replace('/','_'))
         )
-    elif (_type == 'ips'):
+    elif (_type == 'ips') or (_type == 'ipsanycast'):
         data = requests.get('%s/%s/by-ip/%s' % (server, _type, _data))
     else:
         data = requests.get('%s/%s/by-name/%s' % (server, _type, _data))
@@ -178,6 +178,33 @@ def subnet(action, cidr, vlan=None):
 
 @baker.command(
     params={ 'action': '<list all|create|delete|rename>',
+             'cidr': 'subnet cidr',}
+)
+def anycast(action, cidr):
+    base_url = '%s/anycasts' % (server)
+    r = None
+    if action == 'list':
+        r = requests.get('%s/list' %  base_url)
+    elif action == 'create':
+        r = requests.post('%s/anycasts' % (server),
+             data=json.dumps({'cidr': cidr})
+        )
+    elif action == 'delete':
+        r = requests.delete('%s/%s/delete' %
+            (base_url, fetch_id('anycasts', cidr))
+        )
+    elif action == 'info':
+        r = requests.get('%s/by-cidr/%s' %
+            (base_url, cidr.replace('/', '_'))
+        )
+    else:
+        print "Invalid action"
+        sys.exit(1)
+    pretty_output(r)
+
+
+@baker.command(
+    params={ 'action': '<list all|create|delete|rename>',
              'ip': 'ip address',
              'subnet': 'subnet cidr' }
 )
@@ -206,13 +233,42 @@ def ip(action, ip, subnet=None):
     pretty_output(r)
 
 @baker.command(
-    params={ 'action': '<list all|create|delete|vlan_attach|vlan_create|vlan_list>',
+    params={ 'action': '<list all|create|delete|rename>',
+             'ip': 'ip address',
+             'anycast': 'anycast cidr' }
+)
+def ipanycast(action, ip, anycast=None):
+    base_url = '%s/ipanycasts' % (server)
+    r = None
+    if action == 'list':
+        r = requests.get('%s/list' %  base_url)
+    elif action == 'create':
+        if not anycast:
+            print 'Missing anycast subnet to create'
+            sys.exit(1)
+
+        r = requests.post('%s/anycasts/%s/ipsanycast' % (server, fetch_id('anycasts', anycast)),
+            data=json.dumps({'ip': ip})
+        )
+    elif action == 'delete':
+        r = requests.delete('%s/%s/delete' %
+            (base_url, fetch_id('ipsanycast', ip))
+        )
+    elif action == 'info':
+        r = requests.get('%s/by-ip/%s' % (base_url, ip))
+    else:
+        print "Invalid action"
+        sys.exit(1)
+    pretty_output(r)
+
+@baker.command(
+    params={ 'action': '<list all|create|delete|vlan_attach|vlan_create|vlan_list|anycast_attach>',
              'name': 'device name',
              'zone': 'zone to create a new device',
              'anycast': 'attach anycast to a device',
              'vlan': 'vlan to attach vlans to devices' }
 )
-def device(action, name, zone=None, vlan=None):
+def device(action, name, zone=None, vlan=None, anycast=None):
     base_url = '%s/devices' % (server)
     r = None
     if action == 'list':

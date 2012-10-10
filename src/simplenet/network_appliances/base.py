@@ -260,6 +260,15 @@ class SimpleNet(object):
             )
         return devices
 
+    def device_list_by_anycast(self, anycast_id):
+        ss = session.query(models.Anycasts_to_Device).filter_by(anycast_id=anycast_id).all()
+        devices = []
+        for relationship in ss:
+            devices.append(
+                relationship.to_dict()
+            )
+        return devices
+
     def device_list_by_zone(self, zone_id):
         ss = session.query(models.Device).filter_by(zone_id=zone_id).all()
         devices = []
@@ -381,6 +390,15 @@ class SimpleNet(object):
             )
         return subnets
 
+    def anycast_list(self):
+        ss = session.query(models.Anycast).all()
+        anycasts = []
+        for anycast in ss:
+            anycasts.append(
+                anycast.to_dict()
+            )
+        return anycasts
+
     def subnet_list_by_vlan(self, vlan_id):
         ss = session.query(models.Subnet).filter_by(vlan_id=vlan_id).all()
         subnets = []
@@ -403,6 +421,27 @@ class SimpleNet(object):
             session.rollback()
             raise Exception(e)
         return self.subnet_info_by_cidr(data['cidr'])
+
+    def anycast_create(self, data):
+        session.begin(subtransactions=True)
+        try:
+            session.add(models.Anycast(cidr=data['cidr']))
+            session.commit()
+        except IntegrityError:
+            session.rollback()
+            forbidden_msg = "%s already exists" % data['cidr']
+            raise OperationNotPermited('Anycast', forbidden_msg)
+        except Exception, e:
+            session.rollback()
+            raise Exception(e)
+        return self.anycast_info_by_cidr(data['cidr'])
+
+    def anycast_info_by_cidr(self, cidr):
+        cidr = cidr.replace('_', '/')
+        ss = session.query(models.Anycast).filter_by(cidr=cidr).first()
+        if not ss:
+            raise EntityNotFound('Anycast', cidr)
+        return ss.to_dict()
 
     def subnet_info(self, id):
         ss = session.query(models.Subnet).get(id)
@@ -431,6 +470,17 @@ class SimpleNet(object):
             raise Exception(e)
         return True
 
+    def anycast_delete(self, id):
+        ss = session.query(models.Anycast).get(id)
+        session.begin(subtransactions=True)
+        try:
+            session.delete(ss)
+            session.commit()
+        except Exception, e:
+            session.rollback()
+            raise Exception(e)
+        return True
+
     def ip_list(self):
         ss = session.query(models.Ip).all()
         ips = []
@@ -442,6 +492,24 @@ class SimpleNet(object):
 
     def ip_list_by_subnet(self, subnet_id):
         ss = session.query(models.Ip).filter_by(subnet_id=subnet_id).all()
+        ips = []
+        for ip in ss:
+            ips.append(
+                ip.to_dict()
+            )
+        return ips
+
+    def ipanycast_list(self):
+        ss = session.query(models.IpAnycast).all()
+        ips = []
+        for ip in ss:
+            ips.append(
+                ip.to_dict(),
+            )
+        return ips
+
+    def ipanycast_list_by_anycast(self, anycast_id):
+        ss = session.query(models.IpAnycast).filter_by(anycast_id=anycast_id).all()
         ips = []
         for ip in ss:
             ips.append(
@@ -471,6 +539,28 @@ class SimpleNet(object):
             raise Exception(e)
         return self.ip_info_by_ip(data['ip'])
 
+    def ipanycast_create(self, anycast_id, data):
+        anycast = session.query(models.Anycast).get(anycast_id)
+        if not anycast.contains(data['ip']):
+            raise OperationNotPermited(
+                'Ip', "%s address must be contained in %s" % (
+                        data['ip'],
+                        anycast.cidr
+                )
+            )
+        session.begin(subtransactions=True)
+        try:
+            session.add(models.IpAnycast(ip=data['ip'], anycast_id=anycast_id))
+            session.commit()
+        except IntegrityError:
+            session.rollback()
+            forbidden_msg = "%s already exists" % data['ip']
+            raise OperationNotPermited('IpAnycast', forbidden_msg)
+        except Exception, e:
+            session.rollback()
+            raise Exception(e)
+        return self.ipanycast_info_by_ip(data['ip'])
+
     def ip_info(self, id):
         ss = session.query(models.Ip).get(id)
         if not ss:
@@ -481,6 +571,12 @@ class SimpleNet(object):
         ss = session.query(models.Ip).filter_by(ip=ip).first()
         if not ss:
             raise EntityNotFound('Ip', ip)
+        return ss.to_dict()
+
+    def ipanycast_info_by_ip(self, ip):
+        ss = session.query(models.IpAnycast).filter_by(ip=ip).first()
+        if not ss:
+            raise EntityNotFound('IpAnycast', ip)
         return ss.to_dict()
 
     def ip_update(self, *args, **kawrgs):

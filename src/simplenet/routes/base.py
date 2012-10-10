@@ -269,6 +269,28 @@ def device_remove_vlan(device_id, vlan_id):
     return device
 
 
+@post('/anycasts')
+@validate_input(cidr=str)
+@reply_json
+def anycast_create():
+    """
+    ::
+
+      POST /anycasts
+
+    Create a new anycast range
+    """
+    manager = create_manager('base')
+    data = request.body.readline()
+    if not data:
+        abort(400, 'No data received')
+    data = json.loads(data)
+    anycast = manager.anycast_create(data)
+    location = "anycasts/%s" % (anycast['id'])
+    response.set_header("Location", location)
+    return anycast
+
+
 @post('/vlans/<vlan_id>/subnets')
 @validate_input(cidr=str)
 @reply_json
@@ -289,6 +311,28 @@ def vlan_subnet_create(vlan_id):
     location = "subnets/%s" % (subnet['id'])
     response.set_header("Location", location)
     return subnet
+
+
+@post('/anycasts/<anycast_id>/ipsanycast')
+@validate_input(ip=str)
+@reply_json
+def anycast_ipanycast_create(anycast_id):
+    """
+    ::
+
+      POST /anycasts/<anycast_id>/ipsanycast
+
+    Create a new ip in anycast subnet
+    """
+    manager = create_manager('base')
+    data = request.body.readline()
+    if not data:
+        abort(400, 'No data received')
+    data = json.loads(data)
+    ip = manager.ipanycast_create(anycast_id, data)
+    location = "ipsanycast/%s" % (ip['id'])
+    response.set_header("Location", location)
+    return ip
 
 
 @post('/subnets/<subnet_id>/ips')
