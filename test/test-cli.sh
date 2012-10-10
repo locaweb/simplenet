@@ -107,16 +107,16 @@ echo
 
 echo "Reverse policy"
 echo "Creating and list policy ip"
-piid=$(./simplenet-cli policy create ip 192.168.0.1 --src 192.168.0.2 --proto udp --table FORWARD --policy REJECT | awk '/"id": / {gsub(/"|,/,"",$2) ; print $2}')
+revpiid=$(./simplenet-cli policy create ip 192.168.0.1 --src 192.168.0.2 --proto udp --table FORWARD --policy REJECT | awk '/"id": / {gsub(/"|,/,"",$2) ; print $2}')
 
 echo "Creating and list policy subnet"
-psid=$(./simplenet-cli policy create subnet 192.168.0.0/24 --dst 192.168.0.2 --proto tcp --table OUTPUT --policy DROP | awk '/"id": / {gsub(/"|,/,"",$2) ; print $2}')
+revpsid=$(./simplenet-cli policy create subnet 192.168.0.0/24 --dst 192.168.0.2 --proto tcp --table OUTPUT --policy DROP | awk '/"id": / {gsub(/"|,/,"",$2) ; print $2}')
 
 echo "Creating and list policy vlan"
-pvid=$(./simplenet-cli policy create vlan vlan01 --dst_port 53 --proto udp --table INPUT --policy ACCEPT | awk '/"id": / {gsub(/"|,/,"",$2) ; print $2}')
+revpvid=$(./simplenet-cli policy create vlan vlan01 --dst_port 53 --proto udp --table INPUT --policy ACCEPT | awk '/"id": / {gsub(/"|,/,"",$2) ; print $2}')
 
 echo "Creating and list policy zone"
-pnid=$(./simplenet-cli policy create zone ita01 --src 192.168.0.1 --proto tcp --table INPUT --policy ACCEPT | awk '/"id": / {gsub(/"|,/,"",$2) ; print $2}')
+revpnid=$(./simplenet-cli policy create zone ita01 --src 192.168.0.1 --proto tcp --table INPUT --policy ACCEPT | awk '/"id": / {gsub(/"|,/,"",$2) ; print $2}')
 
 echo "Listing Vlans atteched with device"
 ./simplenet-cli device vlan_list firewall01 | ccze -A
@@ -150,13 +150,15 @@ echo "Listing IpAnycast"
 ./simplenet-cli ipanycast list all | ccze -A
 echo
 
-exit
+#exit
 
 echo "Delete vlan Zone"
 ./simplenet-cli policy delete zone $pnid
+./simplenet-cli policy delete zone $revpnid
 echo
 
 echo "Delete vlan policy"
+./simplenet-cli policy delete vlan $revpvid
 ./simplenet-cli policy delete vlan $pvid
 ./simplenet-cli policy delete vlan $pvid2
 ./simplenet-cli policy delete vlan $pvid3
@@ -164,12 +166,14 @@ echo
 
 echo "Delete subnet policy"
 ./simplenet-cli policy delete subnet $psid
+./simplenet-cli policy delete subnet $revpsid
 ./simplenet-cli policy delete subnet $psid2
 ./simplenet-cli policy delete subnet $psid3
 echo
 
 echo "Delete ip policy"
 ./simplenet-cli policy delete ip $piid
+./simplenet-cli policy delete ip $revpiid
 ./simplenet-cli policy delete ip $piid2
 ./simplenet-cli policy delete ip $piid3
 echo
@@ -182,8 +186,8 @@ echo "Deleting Ip"
 ./simplenet-cli ip delete 192.168.0.1
 echo
 
-echo "Deleting Ip"
-./simplenet-cli ip delete 192.168.168.3
+echo "Deleting IpAnycast"
+./simplenet-cli ipanycast delete 192.168.168.3
 echo
 
 echo "Deleting Subnet"

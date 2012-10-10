@@ -37,7 +37,7 @@ def fetch_id(_type, _data):
         data = requests.get('%s/%s/by-cidr/%s' %
             (server, _type, _data.replace('/','_'))
         )
-    elif (_type == 'ips') or (_type == 'ipsanycast'):
+    elif (_type == 'ips') or (_type == 'ipsanycasts'):
         data = requests.get('%s/%s/by-ip/%s' % (server, _type, _data))
     else:
         data = requests.get('%s/%s/by-name/%s' % (server, _type, _data))
@@ -252,7 +252,7 @@ def ipanycast(action, ip, anycast=None):
         )
     elif action == 'delete':
         r = requests.delete('%s/%s/delete' %
-            (base_url, fetch_id('ipsanycast', ip))
+            (base_url, fetch_id('ipsanycasts', ip))
         )
     elif action == 'info':
         r = requests.get('%s/by-ip/%s' % (base_url, ip))

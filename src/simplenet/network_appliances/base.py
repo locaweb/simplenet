@@ -573,7 +573,7 @@ class SimpleNet(object):
             raise EntityNotFound('Ip', ip)
         return ss.to_dict()
 
-    def ipanycast_info_by_ip(self, ip):
+    def ipsanycast_info_by_ip(self, ip):
         ss = session.query(models.IpAnycast).filter_by(ip=ip).first()
         if not ss:
             raise EntityNotFound('IpAnycast', ip)
@@ -584,6 +584,17 @@ class SimpleNet(object):
 
     def ip_delete(self, id):
         ss = session.query(models.Ip).get(id)
+        session.begin(subtransactions=True)
+        try:
+            session.delete(ss)
+            session.commit()
+        except Exception, e:
+            session.rollback()
+            raise Exception(e)
+        return True
+
+    def ipanycast_delete(self, id):
+        ss = session.query(models.IpAnycast).get(id)
         session.begin(subtransactions=True)
         try:
             session.delete(ss)
