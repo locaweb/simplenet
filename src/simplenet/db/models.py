@@ -145,6 +145,7 @@ class Vlans_to_Device(Base):
             'device_id': self.device_id,
             'vlan': self.vlan.name,
             'device': self.device.name,
+            'zone_id': self.device.zone_id,
         }
 
 class Anycasts_to_Device(Base):
@@ -163,6 +164,7 @@ class Anycasts_to_Device(Base):
             'anycast_cidr': self.anycast.cidr,
             'device_id': self.device_id,
             'device': self.device.name,
+            'zone_id': self.device.zone_id,
         }
 
 class Subnet(Base):
@@ -253,7 +255,7 @@ class Anycast(Base):
         }
 
 
-class IpAnycast(Base):
+class Ipanycast(Base):
 
     __tablename__ = 'ipsanycast'
 
@@ -269,7 +271,7 @@ class IpAnycast(Base):
         self.anycast_id = anycast_id
 
     def __repr__(self):
-       return "<IpAnycast('%s','%s')>" % (self.id, self.ip)
+       return "<Ipanycast('%s','%s')>" % (self.id, self.ip)
 
     def to_dict(self):
         return {
@@ -395,6 +397,45 @@ class VlanPolicy(Base):
                  'owner': self.vlan.name }
 
 
+class AnycastPolicy(Base):
+
+    __tablename__ = 'anycast_policies'
+
+    id = Column(String(255), primary_key=True)
+    proto = Column(String(255), nullable=True)
+    src = Column(String(255), nullable=True)
+    src_port = Column(String(255), nullable=True)
+    dst = Column(String(255), nullable=True)
+    dst_port = Column(String(255), nullable=True)
+    table = Column(String(255), nullable=False)
+    policy = Column(String(255), nullable=False)
+    owner_id = Column(String(255), ForeignKey('anycasts.id'))
+    anycast = relationship('Anycast')
+
+    def __init__(self, owner_id, proto, src, src_port, dst, dst_port, table, policy):
+        self.id = str(uuid.uuid4())
+        self.proto = proto
+        self.src = src
+        self.src_port = src_port
+        self.dst = dst
+        self.dst_port = dst_port
+        self.table = table
+        self.policy = policy
+        self.owner_id = owner_id
+
+    def to_dict(self):
+        return { 'id': self.id,
+                 'owner_id': self.owner_id,
+                 'proto': self.proto,
+                 'src': self.src,
+                 'src_port': self.src_port,
+                 'dst': self.dst,
+                 'dst_port': self.dst_port,
+                 'table': self.table,
+                 'policy': self.policy,
+                 'owner': self.anycast.cidr }
+
+
 class SubnetPolicy(Base):
 
     __tablename__ = 'subnet_policies'
@@ -431,6 +472,44 @@ class SubnetPolicy(Base):
                  'table': self.table,
                  'policy': self.policy,
                  'owner': self.subnet.cidr }
+
+
+class IpanycastPolicy(Base):
+
+    __tablename__ = 'ipanycast_policies'
+    id = Column(String(255), primary_key=True)
+    proto = Column(String(255), nullable=True)
+    src = Column(String(255), nullable=True)
+    src_port = Column(String(255), nullable=True)
+    dst = Column(String(255), nullable=True)
+    dst_port = Column(String(255), nullable=True)
+    table = Column(String(255), nullable=False)
+    policy = Column(String(255), nullable=False)
+    owner_id = Column(String(255), ForeignKey('ipsanycast.id'))
+    ip = relationship('Ipanycast')
+
+    def __init__(self, owner_id, proto, src, src_port, dst, dst_port, table, policy):
+        self.id = str(uuid.uuid4())
+        self.proto = proto
+        self.src = src
+        self.src_port = src_port
+        self.dst = dst
+        self.dst_port = dst_port
+        self.table = table
+        self.policy = policy
+        self.owner_id = owner_id
+
+    def to_dict(self):
+        return { 'id': self.id,
+                 'owner_id': self.owner_id,
+                 'proto': self.proto,
+                 'src': self.src,
+                 'src_port': self.src_port,
+                 'dst': self.dst,
+                 'dst_port': self.dst_port,
+                 'table': self.table,
+                 'policy': self.policy,
+                 'owner': self.ip.ip }
 
 
 class IpPolicy(Base):

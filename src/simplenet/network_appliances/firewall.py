@@ -50,10 +50,15 @@ class Net(SimpleNet):
 
         print json.dumps(_data, sort_keys=True, indent=4)
 
-        devices = self.device_list_by_vlan(_data['vlan_id']) if (owner_type != 'zone') else self.device_list_by_zone(_data['zone_id'])
+        if (owner_type != 'zone') and ('vlan_id' in _data):
+            devices = self.device_list_by_vlan(_data['vlan_id'])
+        elif ('anycast_id' in _data):
+            devices = self.device_list_by_anycast(_data['anycast_id'])
+        else:
+            devices = self.device_list_by_zone(_data['zone_id'])
 
         for device in devices:
-            zone_id = (_data['zone_id'])
+            zone_id = device['zone_id']
             dev_id = device['device_id'] if (owner_type != 'zone') else device['id']
             print "Modified Device:", dev_id
 
@@ -73,6 +78,18 @@ class Net(SimpleNet):
                         _get_data = getattr(self, "_get_data_%s_" % 'ip')
                         _data.update(_get_data(ip['id']))
                         policy_list = policy_list + self.policy_list_by_owner('ip', ip['id'])
+
+            if ('anycast_id' in _data):
+                for anycast in self.anycast_list_by_device(dev_id): # Cascade thru the anycasts of the device
+                    print "Modified Anycast:", _data['anycast']
+                    _get_data = getattr(self, "_get_data_%s_" % 'anycast')
+                    _data.update(_get_data(_data['anycast_id']))
+                    policy_list = policy_list + self.policy_list_by_owner('anycast', _data['anycast_id'])
+                    for ip in self.ip_list_by_anycast(_data['anycast_id']): # Cascade thru the IPs of the anycast subnet
+                        print "Modified IP Anycast:",  ip['id']
+                        _get_data = getattr(self, "_get_data_%s_" % 'ipanycast')
+                        _data.update(_get_data(ip['id']))
+                        policy_list = policy_list + self.policy_list_by_owner('Ipanycast', ip['id'])
 
         _data.update({'policy': policy_list})
 

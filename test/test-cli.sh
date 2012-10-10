@@ -87,6 +87,9 @@ psid3=$(./simplenet-cli policy create subnet 192.168.0.0/24 --dst 192.168.0.2 --
 ./simplenet-cli policy info subnet all | ccze -A
 echo
 
+echo "Creating and list policy anycast subnet"
+paid=$(./simplenet-cli policy create anycast 192.168.168.0/24 --dst 192.168.168.3 --proto tcp --table OUTPUT --policy DROP | awk '/"id": / {gsub(/"|,/,"",$2) ; print $2}')
+
 echo "Creating and list policy ip"
 piid=$(./simplenet-cli policy create ip 192.168.0.1 --src 192.168.0.2 --proto udp --table FORWARD --policy REJECT | awk '/"id": / {gsub(/"|,/,"",$2) ; print $2}')
 piid2=$(./simplenet-cli policy create ip 192.168.0.1 --src 192.168.0.3 --proto udp --table FORWARD --policy REJECT | awk '/"id": / {gsub(/"|,/,"",$2) ; print $2}')
@@ -94,6 +97,9 @@ piid3=$(./simplenet-cli policy create ip 192.168.0.1 --src 192.168.0.4 --proto u
 ./simplenet-cli policy info ip $piid | ccze -A
 ./simplenet-cli policy info ip all | ccze -A
 echo
+
+echo "Creating and list policy anycast ip"
+paid2=$(./simplenet-cli policy create ipanycast 192.168.168.3 --src 192.168.0.2 --proto udp --table FORWARD --policy REJECT | awk '/"id": / {gsub(/"|,/,"",$2) ; print $2}')
 
 echo "Attaching Vlan to Device"
 ./simplenet-cli device vlan_attach firewall01 --vlan vlan01 | ccze -A
@@ -108,6 +114,12 @@ echo
 echo "Reverse policy"
 echo "Creating and list policy ip"
 revpiid=$(./simplenet-cli policy create ip 192.168.0.1 --src 192.168.0.2 --proto udp --table FORWARD --policy REJECT | awk '/"id": / {gsub(/"|,/,"",$2) ; print $2}')
+
+echo "Creating and list policy anycast ip"
+revpaid2=$(./simplenet-cli policy create ipanycast 192.168.168.3 --src 192.168.0.2 --proto udp --table FORWARD --policy REJECT | awk '/"id": / {gsub(/"|,/,"",$2) ; print $2}')
+
+echo "Creating and list policy anycast subnet"
+revpaid=$(./simplenet-cli policy create anycast 192.168.168.0/24 --dst 192.168.168.3 --proto tcp --table OUTPUT --policy DROP | awk '/"id": / {gsub(/"|,/,"",$2) ; print $2}')
 
 echo "Creating and list policy subnet"
 revpsid=$(./simplenet-cli policy create subnet 192.168.0.0/24 --dst 192.168.0.2 --proto tcp --table OUTPUT --policy DROP | awk '/"id": / {gsub(/"|,/,"",$2) ; print $2}')
@@ -150,7 +162,7 @@ echo "Listing IpAnycast"
 ./simplenet-cli ipanycast list all | ccze -A
 echo
 
-#exit
+exit
 
 echo "Delete vlan Zone"
 ./simplenet-cli policy delete zone $pnid
@@ -163,6 +175,14 @@ echo "Delete vlan policy"
 ./simplenet-cli policy delete vlan $pvid2
 ./simplenet-cli policy delete vlan $pvid3
 echo
+
+echo "Delete anycast policy"
+./simplenet-cli policy delete anycast $paid2
+./simplenet-cli policy delete anycast $revpaid2
+
+echo "Delete anycast policy"
+./simplenet-cli policy delete anycast $paid
+./simplenet-cli policy delete anycast $revpaid
 
 echo "Delete subnet policy"
 ./simplenet-cli policy delete subnet $psid

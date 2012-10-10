@@ -47,6 +47,15 @@ class SimpleNet(object):
             'datacenter_id': datacenter['id'],
         }
 
+    def _get_data_ipanycast_(self, id):
+        ip = self.ipanycast_info(id)
+        anycast = self.anycast_info(ip['anycast_id'])
+        return {
+            'ip': ip['ip'],
+            'anycast': anycast['cidr'],
+            'anycast_id': anycast['id'],
+        }
+
     def _get_data_subnet_(self, id):
         subnet = self.subnet_info(id)
         vlan = self.vlan_info(subnet['vlan_id'])
@@ -61,6 +70,14 @@ class SimpleNet(object):
             'datacenter': datacenter['name'],
             'datacenter_id': datacenter['id'],
             'ips': self.ip_list_by_subnet(id)
+        }
+
+    def _get_data_anycast_(self, id):
+        anycast = self.anycast_info(id)
+        return {
+            'anycast_id': anycast['id'],
+            'anycast': anycast['cidr'],
+            'ips': self.ipsanycast_list_by_anycast(id)
         }
 
     def _get_data_vlan_(self, id):
@@ -399,6 +416,15 @@ class SimpleNet(object):
             )
         return anycasts
 
+    def anycast_list_by_device(self, device_id):
+        ss = session.query(models.Anycasts_to_Device).filter_by(device_id=device_id).all()
+        anycasts = []
+        for relationship in ss:
+            anycasts.append(
+                relationship.to_dict()
+            )
+        return anycasts
+
     def subnet_list_by_vlan(self, vlan_id):
         ss = session.query(models.Subnet).filter_by(vlan_id=vlan_id).all()
         subnets = []
@@ -447,6 +473,12 @@ class SimpleNet(object):
         ss = session.query(models.Subnet).get(id)
         if not ss:
             raise EntityNotFound('Subnet', id)
+        return ss.to_dict()
+
+    def anycast_info(self, id):
+        ss = session.query(models.Anycast).get(id)
+        if not ss:
+            raise EntityNotFound('Anycast', id)
         return ss.to_dict()
 
     def subnet_info_by_cidr(self, cidr):
@@ -499,8 +531,17 @@ class SimpleNet(object):
             )
         return ips
 
+    def ip_list_by_anycast(self, anycast_id):
+        ss = session.query(models.Ipanycast).filter_by(anycast_id=anycast_id).all()
+        ips = []
+        for ip in ss:
+            ips.append(
+                ip.to_dict()
+            )
+        return ips
+
     def ipanycast_list(self):
-        ss = session.query(models.IpAnycast).all()
+        ss = session.query(models.Ipanycast).all()
         ips = []
         for ip in ss:
             ips.append(
@@ -508,8 +549,8 @@ class SimpleNet(object):
             )
         return ips
 
-    def ipanycast_list_by_anycast(self, anycast_id):
-        ss = session.query(models.IpAnycast).filter_by(anycast_id=anycast_id).all()
+    def ipsanycast_list_by_anycast(self, anycast_id):
+        ss = session.query(models.Ipanycast).filter_by(anycast_id=anycast_id).all()
         ips = []
         for ip in ss:
             ips.append(
@@ -550,12 +591,12 @@ class SimpleNet(object):
             )
         session.begin(subtransactions=True)
         try:
-            session.add(models.IpAnycast(ip=data['ip'], anycast_id=anycast_id))
+            session.add(models.Ipanycast(ip=data['ip'], anycast_id=anycast_id))
             session.commit()
         except IntegrityError:
             session.rollback()
             forbidden_msg = "%s already exists" % data['ip']
-            raise OperationNotPermited('IpAnycast', forbidden_msg)
+            raise OperationNotPermited('Ipanycast', forbidden_msg)
         except Exception, e:
             session.rollback()
             raise Exception(e)
@@ -567,18 +608,29 @@ class SimpleNet(object):
             raise EntityNotFound('Ip', id)
         return ss.to_dict()
 
+    def ipanycast_info(self, id):
+        ss = session.query(models.Ipanycast).get(id)
+        if not ss:
+            raise EntityNotFound('Ipanycast', id)
+        return ss.to_dict()
+
     def ip_info_by_ip(self, ip):
         ss = session.query(models.Ip).filter_by(ip=ip).first()
         if not ss:
             raise EntityNotFound('Ip', ip)
         return ss.to_dict()
 
-    def ipsanycast_info_by_ip(self, ip):
-        ss = session.query(models.IpAnycast).filter_by(ip=ip).first()
+    def ipanycast_info_by_ip(self, ip):
+        ss = session.query(models.Ipanycast).filter_by(ip=ip).first()
         if not ss:
-            raise EntityNotFound('IpAnycast', ip)
+            raise EntityNotFound('Ipanycast', ip)
         return ss.to_dict()
 
+    def ipsanycast_info_by_ip(self, ip):
+        ss = session.query(models.Ipanycast).filter_by(ip=ip).first()
+        if not ss:
+            raise EntityNotFound('Ipanycast', ip)
+        return ss.to_dict()
     def ip_update(self, *args, **kawrgs):
         raise FeatureNotImplemented()
 
@@ -594,7 +646,7 @@ class SimpleNet(object):
         return True
 
     def ipanycast_delete(self, id):
-        ss = session.query(models.IpAnycast).get(id)
+        ss = session.query(models.Ipanycast).get(id)
         session.begin(subtransactions=True)
         try:
             session.delete(ss)
