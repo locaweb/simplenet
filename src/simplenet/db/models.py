@@ -17,7 +17,7 @@
 
 import uuid
 
-from ipaddr import IPv4Network, IPv4Address
+from ipaddr import IPv4Network, IPv4Address, IPv6Network, IPv6Address
 
 from sqlalchemy import event, Column, String, create_engine, ForeignKey, Table, Integer, Enum
 from sqlalchemy.ext.declarative import declarative_base
@@ -183,10 +183,16 @@ class Subnet(Base):
         self.vlan_id = vlan_id
 
     def to_ip(self):
-        return IPv4Network(self.cidr)
+        try:
+            return IPv4Network(self.cidr)
+        except:
+            return IPv6Network(self.cidr)
 
     def contains(self, ip):
-        return self.to_ip().Contains(IPv4Address(ip))
+        try:
+            return self.to_ip().Contains(IPv4Address(ip))
+        except:
+            return self.to_ip().Contains(IPv6Address(ip))
 
     def __repr__(self):
        return "<Subnet('%s','%s')>" % (self.id, self.cidr)
