@@ -63,6 +63,8 @@ echo
 echo "Creating Device"
 ./simplenet-cli device create firewall01 --zone ita01 | ccze -A
 ./simplenet-cli device create firewall02 --zone ita02 | ccze -A
+./simplenet-cli device create fireany01 --zone ita01 | ccze -A
+./simplenet-cli device create fireany02 --zone ita01 | ccze -A
 echo
 
 echo "Creating and list policy zone"
@@ -89,6 +91,9 @@ echo
 
 echo "Creating and list policy anycast subnet"
 paid=$(./simplenet-cli policy create anycast 192.168.168.0/24 --dst 192.168.168.3 --proto tcp --table OUTPUT --policy DROP | awk '/"id": / {gsub(/"|,/,"",$2) ; print $2}')
+
+#./simplenet-cli device anycast_attach fireany01 --anycast 192.168.168.0/24 | ccze -A
+#./simplenet-cli device anycast_attach fireany02 --anycast 192.168.168.0/24 | ccze -A
 
 echo "Creating and list policy ip"
 piid=$(./simplenet-cli policy create ip 192.168.0.1 --src 192.168.0.2 --proto udp --table FORWARD --policy REJECT | awk '/"id": / {gsub(/"|,/,"",$2) ; print $2}')

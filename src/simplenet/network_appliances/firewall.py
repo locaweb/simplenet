@@ -48,7 +48,7 @@ class Net(SimpleNet):
             'zone': ['datacenter']
         }
 
-        print json.dumps(_data, sort_keys=True, indent=4)
+        #print json.dumps(_data, sort_keys=True, indent=4)
 
         if (owner_type != 'zone') and ('vlan_id' in _data):
             devices = self.device_list_by_vlan(_data['vlan_id'])
@@ -60,8 +60,10 @@ class Net(SimpleNet):
         for device in devices:
             zone_id = device['zone_id']
             dev_id = device['device_id'] if (owner_type != 'zone') else device['id']
-            print "Modified Device:", dev_id
+            if not 'name' in device:
+                device['name'] = device['device']
 
+            print "Modified Device:", device['name']
             policy_list = policy_list + self.policy_list_by_owner('zone', zone_id)
             for vlan in self.vlan_list_by_device(dev_id): # Cascade thru the vlans of the device
                 print "Modified VLANs:", vlan['vlan_id']
@@ -91,12 +93,12 @@ class Net(SimpleNet):
                         _data.update(_get_data(ip['id']))
                         policy_list = policy_list + self.policy_list_by_owner('Ipanycast', ip['id'])
 
-        _data.update({'policy': policy_list})
+            _data.update({'policy': policy_list})
 
-        print json.dumps(_data, sort_keys=True, indent=4)
+            print json.dumps(_data, sort_keys=True, indent=4)
 
-        if policy_list:
-            event.EventManager().raise_event(myname, _data)
+            if policy_list:
+                event.EventManager().raise_event(device['name'], _data)
 
     def policy_list(self, owner_type):
         _model = getattr(models, "%sPolicy" % owner_type.capitalize())

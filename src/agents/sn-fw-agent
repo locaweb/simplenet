@@ -186,6 +186,16 @@ class Worker(ConsumerMixin):
                 [self._gen_jumps_(rule['table'], data['subnet'], ip['ip'], ip['ip']) for ip in data['ips']]
 
             if 'ip' in data:
+                #### Exceptions for anycast IP ####
+                if not 'datacenter' in data:
+                    data['datacenter'] = ''
+                if not 'subnet' in data:
+                    data['subnet'] = ''
+                if not 'zone' in data:
+                    data['zone'] = ''
+                if not 'vlan' in data:
+                    data['vlan'] = ''
+                ##################################
                 infos = {'table': rule['table'],
                          'datacenter': data['datacenter'],
                          'cidr': data['subnet'],
