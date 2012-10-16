@@ -77,7 +77,7 @@ class SimpleNet(object):
         return {
             'anycast_id': anycast['id'],
             'anycast': anycast['cidr'],
-            'ips': self.ipsanycast_list_by_anycast(id)
+            'ipsanycast': self.ipsanycast_list_by_anycast(id)
         }
 
     def _get_data_vlan_(self, id):
