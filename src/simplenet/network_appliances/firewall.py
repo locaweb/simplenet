@@ -55,8 +55,6 @@ class Net(SimpleNet):
             print 'Loop start'
             zone_id = device['zone_id']
             dev_id = device['device_id'] if (owner_type != 'zone') else device['id']
-            if not 'name' in device:
-                device['name'] = device['device']
 
             print "Device:", device['name']
             print "Zone:", device['zone']

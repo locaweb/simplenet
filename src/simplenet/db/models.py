@@ -144,8 +144,9 @@ class Vlans_to_Device(Base):
             'vlan_id': self.vlan_id,
             'device_id': self.device_id,
             'vlan': self.vlan.name,
-            'device': self.device.name,
+            'name': self.device.name,
             'zone_id': self.device.zone_id,
+            'zone': self.device.zone.name,
         }
 
 class Anycasts_to_Device(Base):
@@ -163,8 +164,9 @@ class Anycasts_to_Device(Base):
             'anycast_id': self.anycast_id,
             'anycast_cidr': self.anycast.cidr,
             'device_id': self.device_id,
-            'device': self.device.name,
+            'name': self.device.name,
             'zone_id': self.device.zone_id,
+            'zone': self.device.zone.name,
         }
 
 class Subnet(Base):
