@@ -119,25 +119,26 @@ class Worker(ConsumerMixin):
         except ValueError:
             pass
 
-        self._add_rule(":%s-%s - [0:0]" % (table, nextjump))
-        jump = "-{action} {name} -{direction} {cidr} -j {table}-{nextjump}"
-        directions = {
-            'FORWARD': ['s', 'd'],
-            'INPUT': ['d'],
-            'OUTPUT': ['s']
-        }
+        if table and name and cidr and nextjump:
+            self._add_rule(":%s-%s - [0:0]" % (table, nextjump))
+            jump = "-{action} {name} -{direction} {cidr} -j {table}-{nextjump}"
+            directions = {
+                'FORWARD': ['s', 'd'],
+                'INPUT': ['d'],
+                'OUTPUT': ['s']
+            }
 
-        name = table if datacenter else "%s-%s" % (table, name)
-        for direction in directions[table]:
-            self._add_rule(
-                jump.format(action='A',
-                            table=table,
-                            name=name,
-                            direction=direction,
-                            cidr=cidr,
-                            nextjump=nextjump
+            name = table if datacenter else "%s-%s" % (table, name)
+            for direction in directions[table]:
+                self._add_rule(
+                    jump.format(action='A',
+                                table=table,
+                                name=name,
+                                direction=direction,
+                                cidr=cidr,
+                                nextjump=nextjump
+                    )
                 )
-            )
 
     def _gen_rule_(self, rule):
         iptables = []

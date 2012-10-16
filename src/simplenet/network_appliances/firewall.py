@@ -58,37 +58,38 @@ class Net(SimpleNet):
             if not 'name' in device:
                 device['name'] = device['device']
 
-            print "Modified Device:", device['name']
+            print "Device:", device['name']
+            print "Zone:", device['zone']
+
             policy_list = policy_list + self.policy_list_by_owner('zone', zone_id)
             _data.update({'policy': self.policy_list_by_owner('zone', zone_id)})
             for vlan in self.vlan_list_by_device(dev_id): # Cascade thru the vlans of the device
-                print "Modified VLANs:", vlan['vlan_id']
+                print "VLANs:", vlan['vlan_id']
                 _get_data = getattr(self, "_get_data_%s_" % 'vlan')
                 _data.update(_get_data(vlan['vlan_id']))
                 policy_list = policy_list + self.policy_list_by_owner('vlan', vlan['vlan_id'])
                 for subnet in self.subnet_list_by_vlan(vlan['vlan_id']): # Cascade thru the subnets of the vlan
-                    print "Modified subnet:", subnet['id']
+                    print "Subnet:", subnet['id']
                     _get_data = getattr(self, "_get_data_%s_" % 'subnet')
                     _data.update(_get_data(subnet['id']))
                     policy_list = policy_list + self.policy_list_by_owner('subnet', subnet['id'])
                     for ip in self.ip_list_by_subnet(subnet['id']): # Cascade thru the IPs of the subnet
-                        print "Modified IP:",  ip['id']
+                        print "IP:",  ip['id']
                         _get_data = getattr(self, "_get_data_%s_" % 'ip')
                         _data.update(_get_data(ip['id']))
                         policy_list = policy_list + self.policy_list_by_owner('ip', ip['id'])
 
             print 'Start Anycast'
-            if ('anycast_id' in _data):
-                for anycast in self.anycast_list_by_device(dev_id): # Cascade thru the anycasts of the device
-                    print "Modified Anycast:", _data['anycast']
-                    _get_data = getattr(self, "_get_data_%s_" % 'anycast')
-                    _data.update(_get_data(_data['anycast_id']))
-                    policy_list = policy_list + self.policy_list_by_owner('anycast', _data['anycast_id'])
-                    for ip in self.ip_list_by_anycast(_data['anycast_id']): # Cascade thru the IPs of the anycast subnet
-                        print "Modified IP Anycast:",  ip['id']
-                        _get_data = getattr(self, "_get_data_%s_" % 'ipanycast')
-                        _data.update(_get_data(ip['id']))
-                        policy_list = policy_list + self.policy_list_by_owner('Ipanycast', ip['id'])
+            for anycast in self.anycast_list_by_device(dev_id): # Cascade thru the anycasts of the device
+                print "Anycast:", anycast['anycast_cidr']
+                _get_data = getattr(self, "_get_data_%s_" % 'anycast')
+                _data.update(_get_data(anycast['anycast_id']))
+                policy_list = policy_list + self.policy_list_by_owner('anycast', anycast['anycast_id'])
+                for ip in self.ip_list_by_anycast(anycast['anycast_id']): # Cascade thru the IPs of the anycast subnet
+                    print "IP Anycast:",  ip['ip']
+                    _get_data = getattr(self, "_get_data_%s_" % 'ipanycast')
+                    _data.update(_get_data(ip['id']))
+                    policy_list = policy_list + self.policy_list_by_owner('Ipanycast', ip['id'])
 
             print 'End Anycast'
             _data.update({'policy': policy_list})
