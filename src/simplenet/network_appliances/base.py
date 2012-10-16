@@ -29,6 +29,17 @@ session = db_utils.get_database_session()
 
 class SimpleNet(object):
 
+    def _get_data_device_(self, id):
+        device = self.device_info(id)
+        zone = self.zone_info(device['zone_id'])
+        datacenter = self.datacenter_info(zone['datacenter_id'])
+        return {
+            'zone': zone['name'],
+            'zone_id': zone['id'],
+            'datacenter': datacenter['name'],
+            'datacenter_id': datacenter['id'],
+        }
+
     def _get_data_ip_(self, id):
         ip = self.ip_info(id)
         subnet = self.subnet_info(ip['subnet_id'])
@@ -51,7 +62,7 @@ class SimpleNet(object):
         ip = self.ipanycast_info(id)
         anycast = self.anycast_info(ip['anycast_id'])
         return {
-            'ip': ip['ip'],
+            'ipanycast': ip['ip'],
             'anycast': anycast['cidr'],
             'anycast_id': anycast['id'],
         }

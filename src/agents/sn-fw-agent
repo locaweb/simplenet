@@ -244,6 +244,19 @@ class Worker(ConsumerMixin):
 
             self._add_rule(self._gen_rule_(rule))
 
+            if 'ipanycast' in data:
+                print 'IP Chain'
+                #print json.dumps(data, sort_keys=True, indent=4)
+                infos = {'table': rule['table'],
+                         'datacenter': data['datacenter'],
+                         'cidr': data['anycast'],
+                         'zone': data['zone'],
+                         'vlan': 'anycast'}
+                rule_dzvs_block(infos)
+                self._gen_jumps_(rule['table'], data['anycast'], data['ipanycast'], data['anycast'])
+
+            self._add_rule(self._gen_rule_(rule))
+
 def help():
     print '%s::' % sys.argv[0]
     print '   -a action <stop|start|status|foreground>'

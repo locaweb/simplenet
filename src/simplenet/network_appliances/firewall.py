@@ -52,6 +52,9 @@ class Net(SimpleNet):
             devices = self.device_list_by_zone(_data['zone_id'])
 
         for device in devices:
+            _get_data = getattr(self, "_get_data_%s_" % 'device')
+            _data.update(_get_data(device['id']))
+
             print 'Loop start'
             zone_id = device['zone_id']
             dev_id = device['device_id'] if (owner_type != 'zone') else device['id']

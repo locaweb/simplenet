@@ -141,6 +141,7 @@ class Vlans_to_Device(Base):
 
     def to_dict(self):
         return {
+            'id': self.device.id,
             'vlan_id': self.vlan_id,
             'device_id': self.device_id,
             'vlan': self.vlan.name,
@@ -161,6 +162,7 @@ class Anycasts_to_Device(Base):
 
     def to_dict(self):
         return {
+            'id': self.device.id,
             'anycast_id': self.anycast_id,
             'anycast_cidr': self.anycast.cidr,
             'device_id': self.device_id,
