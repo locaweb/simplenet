@@ -81,6 +81,7 @@ class Worker(ConsumerMixin):
 
         for line in difflib.unified_diff(old,new):
             logging.debug(line.rstrip())
+            print (line.rstrip())
 
         logging.info("Worke done")
         lock.release()
@@ -139,6 +140,7 @@ class Worker(ConsumerMixin):
         return "".join(iptables)
 
     def _gen_iptables_save_(self, data):
+        #print json.dumps(data, sort_keys=True, indent=4)
         def rule_dzvs_block(infos):
             self._gen_jumps_(infos['table'], infos['datacenter'], infos['cidr'], infos['datacenter'], datacenter=True)
             self._gen_jumps_(infos['table'], infos['datacenter'], infos['cidr'], infos['zone'])
@@ -215,6 +217,10 @@ def help():
 def main(user, config_file):
     config = ConfigParser.ConfigParser()
     config.read(config_file)
+
+    if config.has_option('firewall','hostname'):
+        global myname
+        myname = config.get('firewall','hostname')
 
     logging.basicConfig(level=LOGGING_LEVELS.get(config.get('firewall','logging')), filename='/var/log/simplenet.log')
 

@@ -58,6 +58,7 @@ class Net(SimpleNet):
             devices = self.device_list_by_zone(_data['zone_id'])
 
         for device in devices:
+            _data = _get_data(owner_id)
             zone_id = device['zone_id']
             dev_id = device['device_id'] if (owner_type != 'zone') else device['id']
             if not 'name' in device:
@@ -65,6 +66,7 @@ class Net(SimpleNet):
 
             print "Modified Device:", device['name']
             policy_list = policy_list + self.policy_list_by_owner('zone', zone_id)
+            _data.update({'zonepolicy': self.policy_list_by_owner('zone', zone_id)})
             for vlan in self.vlan_list_by_device(dev_id): # Cascade thru the vlans of the device
                 print "Modified VLANs:", vlan['vlan_id']
                 _get_data = getattr(self, "_get_data_%s_" % 'vlan')
@@ -95,7 +97,7 @@ class Net(SimpleNet):
 
             _data.update({'policy': policy_list})
 
-            print json.dumps(_data, sort_keys=True, indent=4)
+            #print json.dumps(_data, sort_keys=True, indent=4)
 
             if policy_list:
                 event.EventManager().raise_event(device['name'], _data)
