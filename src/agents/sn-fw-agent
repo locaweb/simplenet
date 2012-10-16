@@ -28,6 +28,8 @@ import json
 import fcntl
 import ConfigParser
 
+from ipaddr import IPv4Network, IPv4Address, IPv6Network, IPv6Address, IPNetwork, IPAddress
+
 from lockfile import FileLock, LockTimeout
 
 from kombu import Exchange, Queue
@@ -96,6 +98,7 @@ class Worker(ConsumerMixin):
             self.iptables_save.append('*filter')
 
         if rule not in self.iptables_save:
+            print rule
             self.iptables_save.append(rule)
 
     def _gen_jumps_(self, table, name, cidr, nextjump, datacenter=False):
@@ -149,17 +152,20 @@ class Worker(ConsumerMixin):
 
         for rule in [ rule for rule in data.get('policy') if 'table' in rule ]:
             if ('datacenter' in data) and ('zones' in data):
+                print 'DC chain'
                 for zone in data['zones']:
                     for vlan in zone['vlans']:
                         for subnet in vlan['subnets']:
-                            infos = {'table': rule['table'],
-                                     'datacenter': data['datacenter'],
-                                     'cidr': subnet['cidr'],
-                                     'zone': zone['zone'],
-                                     'vlan': vlan['vlan']}
+                            if IPNetwork(subnet).version == 4:
+                                infos = {'table': rule['table'],
+                                         'datacenter': data['datacenter'],
+                                         'cidr': subnet['cidr'],
+                                         'zone': zone['zone'],
+                                         'vlan': vlan['vlan']}
                             rule_dzvs_block(infos)
 
             if ('zone' in data) and ('vlans' in data):
+                print 'Zone chain'
                 for vlan in data['vlans']:
                     for subnet in vlan['subnets']:
                         infos = {'table': rule['table'],
@@ -170,6 +176,7 @@ class Worker(ConsumerMixin):
                         rule_dzvs_block(infos)
 
             if ('vlan' in data) and ('subnets' in data):
+                print 'VLAN chain'
                 for subnet in data['subnets']:
                     infos = {'table': rule['table'],
                              'datacenter': data['datacenter'],
@@ -179,6 +186,7 @@ class Worker(ConsumerMixin):
                     rule_dzvs_block(infos)
 
             if ('subnet' in data) and ('ips' in data) :
+                print 'Subnet chain'
                 infos = {'table': rule['table'],
                          'datacenter': data['datacenter'],
                          'cidr': data['subnet'],
@@ -188,6 +196,7 @@ class Worker(ConsumerMixin):
                 [self._gen_jumps_(rule['table'], data['subnet'], ip['ip'], ip['ip']) for ip in data['ips']]
 
             if 'ip' in data:
+                print 'IP Chain'
                 #### Exceptions for anycast IP ####
                 if not 'datacenter' in data:
                     data['datacenter'] = ''
