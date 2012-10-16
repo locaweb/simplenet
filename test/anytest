@@ -1,0 +1,9 @@
+./simplenet-cli anycast create 192.168.168.0/24
+./simplenet-cli ipanycast create 192.168.168.3 --anycast 192.168.168.0/24 | ccze -A
+./simplenet-cli datacenter create ita | sed 's/,\|"//g' | ccze -A
+./simplenet-cli zone create ita01 --datacenter ita | sed 's/,\|"//g' | ccze -A
+./simplenet-cli device create fireany01 --zone ita01 | ccze -A
+./simplenet-cli device create fireany02 --zone ita01 | ccze -A
+./simplenet-cli device anycast_attach fireany01 --anycast 192.168.168.0/24 | ccze -A
+./simplenet-cli device anycast_attach fireany02 --anycast 192.168.168.0/24 | ccze -A
+./simplenet-cli policy create anycast 192.168.168.0/24 --dst 192.168.168.3 --proto tcp --table OUTPUT --policy DROP

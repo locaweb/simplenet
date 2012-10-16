@@ -48,7 +48,7 @@ class Net(SimpleNet):
             'zone': ['datacenter']
         }
 
-        #print json.dumps(_data, sort_keys=True, indent=4)
+        print json.dumps(_data, sort_keys=True, indent=4)
 
         if (owner_type != 'zone') and ('vlan_id' in _data):
             devices = self.device_list_by_vlan(_data['vlan_id'])

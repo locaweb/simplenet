@@ -1,0 +1,8 @@
+./simplenet-cli datacenter create ita | sed 's/,\|"//g' | ccze -A
+./simplenet-cli zone create ita01 --datacenter ita | sed 's/,\|"//g' | ccze -A
+./simplenet-cli vlan create vlan01 --zone ita01 | sed 's/,\|"//g' | ccze -A
+./simplenet-cli device create fireany01 --zone ita01 | ccze -A
+./simplenet-cli device vlan_attach fireany01 --vlan vlan01 | ccze -A
+./simplenet-cli subnet create 2804:218::2001:c62c:3ff:fe02:adcd/64 --vlan vlan01
+./simplenet-cli ip create 2804:218::2001:c62c:3ff:fe02:1 --subnet 2804:218::2001:c62c:3ff:fe02:adcd/64 | ccze -A
+./simplenet-cli policy create subnet 2804:218::2001:c62c:3ff:fe02:adcd/64 --dst 2804:218::2001:c62c:3ff:fe02:ffff --proto tcp --table OUTPUT --policy DROP
