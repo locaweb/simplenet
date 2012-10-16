@@ -37,7 +37,7 @@ def fetch_id(_type, _data):
         data = requests.get('%s/%s/by-cidr/%s' %
             (server, _type, _data.replace('/','_'))
         )
-    elif (_type == 'ips') or (_type == 'ipsanycasts') or (_type == 'ipanycasts'):
+    elif _type in ('ips', 'ipsanycasts', 'ipanycasts'):
         data = requests.get('%s/%s/by-ip/%s' % (server, _type, _data))
     else:
         data = requests.get('%s/%s/by-name/%s' % (server, _type, _data))

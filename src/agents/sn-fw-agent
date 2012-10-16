@@ -22,6 +22,7 @@ import getopt, sys
 from supay import Daemon
 from datetime import datetime
 
+import md5
 import os
 import sys
 import json
@@ -76,7 +77,7 @@ class Worker(ConsumerMixin):
         lock = FileLock(self.lockfile.replace('.lock',''))
         lock.acquire()
         self._gen_iptables_save_(body)
-        self.iptables_save.append('COMMIT')
+        self.iptables_save.append('COMMIT\n')
         old = open(self.iptables_file, 'r').readlines()
         open(self.iptables_file, 'w').write("\n".join(self.iptables_save))
         new = open(self.iptables_file, 'r').readlines()
@@ -102,6 +103,22 @@ class Worker(ConsumerMixin):
             self.iptables_save.append(rule)
 
     def _gen_jumps_(self, table, name, cidr, nextjump, datacenter=False):
+        #print 'Table' + table
+        #print 'Name' + name
+        #print 'CIDR' + cidr
+        #print 'Next' + nextjump
+        try:
+            if IPNetwork(nextjump).version == 6:
+                netid = md5.new()
+                netid.update(nextjump)
+                nextjump = netid.hexdigest()[:15]
+            if IPNetwork(name).version == 6:
+                netid = md5.new()
+                netid.update(name)
+                name = netid.hexdigest()[:15]
+        except ValueError:
+            pass
+
         self._add_rule(":%s-%s - [0:0]" % (table, nextjump))
         jump = "-{action} {name} -{direction} {cidr} -j {table}-{nextjump}"
         directions = {
@@ -124,6 +141,14 @@ class Worker(ConsumerMixin):
 
     def _gen_rule_(self, rule):
         iptables = []
+        try:
+            if IPNetwork(rule['owner']).version == 6:
+                netid = md5.new()
+                netid.update(rule['owner'])
+                rule['owner'] = netid.hexdigest()[:15]
+        except ValueError:
+            pass
+
         if ('table' in rule) and ('owner' in rule):
             iptables.append('-I {table}-{owner}'.format(table=rule['table'], owner=rule['owner']))
             field_maps = {
