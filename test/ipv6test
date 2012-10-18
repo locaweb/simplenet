@@ -6,3 +6,4 @@
 ./simplenet-cli subnet create 2804:218::2001:c62c:3ff:fe02:adcd/64 --vlan vlan01
 ./simplenet-cli ip create 2804:218::2001:c62c:3ff:fe02:1 --subnet 2804:218::2001:c62c:3ff:fe02:adcd/64 | ccze -A
 ./simplenet-cli policy create subnet 2804:218::2001:c62c:3ff:fe02:adcd/64 --dst 2804:218::2001:c62c:3ff:fe02:ffff --proto tcp --table OUTPUT --policy DROP
+./simplenet-cli policy create ip 2804:218::2001:c62c:3ff:fe02:1 --dst 2804:218::2001:c62c:3ff:fe02:ffff --proto tcp --table OUTPUT --policy DROP
