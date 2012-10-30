@@ -22,7 +22,7 @@ import getopt, sys
 from supay import Daemon
 from datetime import datetime
 
-import md5
+import hashlib
 import os
 import sys
 import json
@@ -84,7 +84,6 @@ class Worker(ConsumerMixin):
 
         for line in difflib.unified_diff(old,new):
             logging.debug(line.rstrip())
-            print (line.rstrip())
 
         logging.info("Worke done")
         lock.release()
@@ -99,7 +98,7 @@ class Worker(ConsumerMixin):
             self.iptables_save.append('*filter')
 
         if rule not in self.iptables_save:
-            print rule
+            logging.debug(rule)
             self.iptables_save.append(rule)
 
     def _gen_jumps_(self, table, name, cidr, nextjump, datacenter=False):
@@ -109,11 +108,11 @@ class Worker(ConsumerMixin):
         #print 'Next' + nextjump
         try:
             if IPNetwork(nextjump).version == 6:
-                netid = md5.new()
+                netid = hashlib.md5()
                 netid.update(nextjump)
                 nextjump = netid.hexdigest()[:15]
             if IPNetwork(name).version == 6:
-                netid = md5.new()
+                netid = hashlib.md5()
                 netid.update(name)
                 name = netid.hexdigest()[:15]
         except ValueError:
@@ -144,7 +143,7 @@ class Worker(ConsumerMixin):
         iptables = []
         try:
             if IPNetwork(rule['owner']).version == 6:
-                netid = md5.new()
+                netid = hashlib.md5()
                 netid.update(rule['owner'])
                 rule['owner'] = netid.hexdigest()[:15]
         except ValueError:
@@ -169,7 +168,7 @@ class Worker(ConsumerMixin):
         return "".join(iptables)
 
     def _gen_iptables_save_(self, data):
-        print json.dumps(data, sort_keys=True, indent=4)
+        logging.debug(json.dumps(data, sort_keys=True, indent=4))
         def rule_dzvs_block(infos):
             self._gen_jumps_(infos['table'], infos['datacenter'], infos['cidr'], infos['datacenter'], datacenter=True)
             self._gen_jumps_(infos['table'], infos['datacenter'], infos['cidr'], infos['zone'])
@@ -178,7 +177,7 @@ class Worker(ConsumerMixin):
 
         for rule in [ rule for rule in data.get('policy') if 'table' in rule ]:
             if ('datacenter' in data) and ('zones' in data):
-                print 'DC chain'
+                logging.debug('DC chain')
                 for zone in data['zones']:
                     for vlan in zone['vlans']:
                         for subnet in vlan['subnets']:
@@ -191,7 +190,7 @@ class Worker(ConsumerMixin):
                             rule_dzvs_block(infos)
 
             if ('zone' in data) and ('vlans' in data):
-                print 'Zone chain'
+                logging.debug('Zone chain')
                 for vlan in data['vlans']:
                     for subnet in vlan['subnets']:
                         infos = {'table': rule['table'],
@@ -202,7 +201,7 @@ class Worker(ConsumerMixin):
                         rule_dzvs_block(infos)
 
             if ('vlan' in data) and ('subnets' in data):
-                print 'VLAN chain'
+                logging.debug('VLAN chain')
                 for subnet in data['subnets']:
                     infos = {'table': rule['table'],
                              'datacenter': data['datacenter'],
@@ -212,7 +211,7 @@ class Worker(ConsumerMixin):
                     rule_dzvs_block(infos)
 
             if ('subnet' in data) and ('ips' in data):
-                print 'Subnet chain'
+                logging.debug('Subnet chain')
                 infos = {'table': rule['table'],
                          'datacenter': data['datacenter'],
                          'cidr': data['subnet'],
@@ -222,7 +221,7 @@ class Worker(ConsumerMixin):
                 [self._gen_jumps_(rule['table'], data['subnet'], ip['ip'], ip['ip']) for ip in data['ips']]
 
             if ('anycast' in data) and ('ipsanycast' in data) :
-                print 'Anycast chain'
+                logging.debug('Anycast chain')
                 infos = {'table': rule['table'],
                          'datacenter': data['datacenter'],
                          'cidr': data['anycast'],
@@ -232,7 +231,7 @@ class Worker(ConsumerMixin):
                 [self._gen_jumps_(rule['table'], data['anycast'], ip['ip'], ip['ip']) for ip in data['ipsanycast']]
 
             if 'ip' in data:
-                print 'IP Chain'
+                logging.debug('IP Chain')
                 #print json.dumps(data, sort_keys=True, indent=4)
                 infos = {'table': rule['table'],
                          'datacenter': data['datacenter'],
@@ -245,7 +244,7 @@ class Worker(ConsumerMixin):
             self._add_rule(self._gen_rule_(rule))
 
             if 'ipanycast' in data:
-                print 'IP Chain'
+                logging.debug('IP Chain')
                 #print json.dumps(data, sort_keys=True, indent=4)
                 infos = {'table': rule['table'],
                          'datacenter': data['datacenter'],

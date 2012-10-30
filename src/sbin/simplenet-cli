@@ -63,7 +63,7 @@ def pretty_output(r):
     params={ 'action': '<list all|create|delete|rename>',
              'name': 'datacenter name'}
 )
-def datacenter(action, name):
+def datacenter(action=None, name=None):
     base_url = '%s/datacenters' % (server)
     r = None
     if action == 'list':
@@ -77,7 +77,7 @@ def datacenter(action, name):
     elif action == 'info':
         r = requests.get('%s/by-name/%s' % (base_url, name))
     else:
-        print "Invalid action"
+        baker.usage(sys._getframe().f_code.co_name)
         sys.exit(1)
     pretty_output(r)
 
@@ -85,7 +85,7 @@ def datacenter(action, name):
     params={ 'action': '<list all|create|delete|rename>',
              'name': 'zone name'}
 )
-def zone(action, name, datacenter=None):
+def zone(action=None, name=None, datacenter=None):
     base_url = '%s/zones' % (server)
     r = None
     if action == 'list':
@@ -106,7 +106,7 @@ def zone(action, name, datacenter=None):
     elif action == 'info':
         r = requests.get('%s/by-name/%s' % (base_url, name))
     else:
-        print "Invalid action"
+        baker.usage(sys._getframe().f_code.co_name)
         sys.exit(1)
     pretty_output(r)
 
@@ -116,7 +116,7 @@ def zone(action, name, datacenter=None):
              'name': 'vlan name',
              'zone': 'zone_id to create a new vlan'}
 )
-def vlan(action, name, zone=None):
+def vlan(action=None, name=None, zone=None):
     base_url = '%s/vlans' % (server)
     r = None
     if action == 'list':
@@ -139,7 +139,7 @@ def vlan(action, name, zone=None):
     elif action == 'device_list':
         r = requests.get('%s/devices/list-by-vlan/%s' % (server, fetch_id('vlans', name)))
     else:
-        print "Invalid action"
+        baker.usage(sys._getframe().f_code.co_name)
         sys.exit(1)
     pretty_output(r)
 
@@ -148,7 +148,7 @@ def vlan(action, name, zone=None):
              'cidr': 'subnet cidr',
              'vlan': 'vlan to create a new subnet' }
 )
-def subnet(action, cidr, vlan=None):
+def subnet(action=None, cidr=None, vlan=None):
     base_url = '%s/subnets' % (server)
     r = None
     if action == 'list':
@@ -171,7 +171,7 @@ def subnet(action, cidr, vlan=None):
             (base_url, cidr.replace('/', '_'))
         )
     else:
-        print "Invalid action"
+        baker.usage(sys._getframe().f_code.co_name)
         sys.exit(1)
     pretty_output(r)
 
@@ -180,7 +180,7 @@ def subnet(action, cidr, vlan=None):
     params={ 'action': '<list all|create|delete|rename>',
              'cidr': 'subnet cidr',}
 )
-def anycast(action, cidr):
+def anycast(action=None, cidr=None):
     base_url = '%s/anycasts' % (server)
     r = None
     if action == 'list':
@@ -198,7 +198,7 @@ def anycast(action, cidr):
             (base_url, cidr.replace('/', '_'))
         )
     else:
-        print "Invalid action"
+        baker.usage(sys._getframe().f_code.co_name)
         sys.exit(1)
     pretty_output(r)
 
@@ -208,7 +208,7 @@ def anycast(action, cidr):
              'ip': 'ip address',
              'subnet': 'subnet cidr' }
 )
-def ip(action, ip, subnet=None):
+def ip(action=None, ip=None, subnet=None):
     base_url = '%s/ips' % (server)
     r = None
     if action == 'list':
@@ -228,7 +228,7 @@ def ip(action, ip, subnet=None):
     elif action == 'info':
         r = requests.get('%s/by-ip/%s' % (base_url, ip))
     else:
-        print "Invalid action"
+        baker.usage(sys._getframe().f_code.co_name)
         sys.exit(1)
     pretty_output(r)
 
@@ -237,7 +237,7 @@ def ip(action, ip, subnet=None):
              'ip': 'ip address',
              'anycast': 'anycast cidr' }
 )
-def ipanycast(action, ip, anycast=None):
+def ipanycast(action=None, ip=None, anycast=None):
     base_url = '%s/ipanycasts' % (server)
     r = None
     if action == 'list':
@@ -257,7 +257,7 @@ def ipanycast(action, ip, anycast=None):
     elif action == 'info':
         r = requests.get('%s/by-ip/%s' % (base_url, ip))
     else:
-        print "Invalid action"
+        baker.usage(sys._getframe().f_code.co_name)
         sys.exit(1)
     pretty_output(r)
 
@@ -268,7 +268,7 @@ def ipanycast(action, ip, anycast=None):
              'anycast': 'attach anycast to a device',
              'vlan': 'vlan to attach vlans to devices' }
 )
-def device(action, name, zone=None, vlan=None, anycast=None):
+def device(action=None, name=None, zone=None, vlan=None, anycast=None):
     base_url = '%s/devices' % (server)
     r = None
     if action == 'list':
@@ -321,7 +321,7 @@ def device(action, name, zone=None, vlan=None, anycast=None):
             (server, fetch_id('devices', name))
         )
     else:
-        print "Invalid action"
+        baker.usage(sys._getframe().f_code.co_name)
         sys.exit(1)
     pretty_output(r)
 
@@ -338,7 +338,7 @@ def device(action, name, zone=None, vlan=None, anycast=None):
              'table': 'table to apply the policy <INPUT|FORWARD|OUTPUT>',
              'policy': 'policy to use <ACCEPT|REJECT|DROP>' }
 )
-def policy(action, name, owner, dst=None, src=None, dst_port=None,
+def policy(action=None, name=None, owner=None, dst=None, src=None, dst_port=None,
            src_port=None, proto=None, table=None, policy=None):
     base_url = '%s/firewall/policy' % server
     r = None
@@ -371,7 +371,7 @@ def policy(action, name, owner, dst=None, src=None, dst_port=None,
     elif action == 'info':
         r = requests.get('%s/%s/%s/info' % (base_url, name, owner))
     else:
-        print "Invalid action"
+        baker.usage(sys._getframe().f_code.co_name)
         sys.exit(1)
     pretty_output(r)
 
