@@ -4,7 +4,7 @@ from setuptools import setup
 
 setup(
     name = 'simplenet-cli',
-    version = '0.0.3',
+    version = '0.0.5',
     description = 'Network automation framework cli',
     long_description = 'Network automation framework cli',
     author = 'Juliano Martinez',

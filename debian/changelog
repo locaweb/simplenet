@@ -1,3 +1,15 @@
+simplenet-server (0.0.5) unstable; urgency=low
+
+  * Release
+
+ -- root <root@ubuntu>  Fri, 19 Oct 2012 13:32:28 -0300
+
+simplenet-server (0.0.4) unstable; urgency=low
+
+  * Release
+
+ -- root <root@ubuntu>  Thu, 18 Oct 2012 13:57:12 -0300
+
 simplenet-server (0.0.3) unstable; urgency=low
 
   * Initial Release.
