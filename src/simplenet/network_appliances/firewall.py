@@ -14,6 +14,7 @@
 #    limitations under the License.
 #
 # @author: Juliano Martinez (ncode), Locaweb.
+# @author: Luiz Ozaki, Locaweb.
 
 import logging
 

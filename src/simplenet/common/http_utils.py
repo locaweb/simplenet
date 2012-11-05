@@ -15,6 +15,7 @@
 #
 # @author: Eduardo Scarpelini (odraude), Locaweb.
 # @author: Juliano Martinez (ncode), Locaweb.
+# @author: Luiz Ozaki, Locaweb.
 
 import os
 import logging
