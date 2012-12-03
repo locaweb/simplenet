@@ -581,13 +581,11 @@ else:
     database_user = config.get('server', 'database_user')
     database_pass = config.get('server', 'database_pass')
     database_host = config.get('server', 'database_host')
-    engine = create_engine("{database_type}://{database_user}:{database_pass}"
-                           "@{database_host}/{database_name}").format(
-                                database_type=database_type,
-                                database_user=database_user,
-                                database_pass=database_pass,
-                                database_host=database_host,
-                                database_name=database_name
-                           )
+    engine = create_engine("%s://%s:%s@%s/%s" % (database_type,
+                                database_user,
+                                database_pass,
+                                database_host,
+                                database_name
+                           ))
 
 Base.metadata.create_all(engine)
