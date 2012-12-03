@@ -4,7 +4,7 @@ from setuptools import setup
 
 setup(
     name = 'simplenet-firewall-agent',
-    version = '0.0.5',
+    version = '0.0.6',
     description = 'Network automation framework cli',
     long_description = 'Network automation framework cli',
     author = 'Juliano Martinez',
