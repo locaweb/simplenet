@@ -21,16 +21,23 @@ import logging
 
 from bottle import delete, put, get, post
 from bottle import abort, request, response
+from simplenet.common.http_auth import cas_authenticate, authorize
 
-from simplenet.common.config import config
+from simplenet.common.config import config, get_rolesdb
 from simplenet.common.http_utils import (
     reply_json, create_manager
 )
 
 LOG = logging.getLogger('simplenet.server')
 
+cas_endpoint = config.get("authentication", "cas_endpoint")
+cas_sys_endpoint = config.get("authentication", "cas_sys_endpoint")
+cas_service  = config.get("authentication", "cas_service")
+user_roles = get_rolesdb()
 
 @get('/<network_appliance>/policy/<owner_type>/<policy_id>/info')
+@cas_authenticate(servers=[cas_endpoint, cas_sys_endpoint], service=cas_service)
+@authorize(user_roles, "ro")
 @reply_json
 def policy_info(network_appliance, owner_type, policy_id):
     """
@@ -45,6 +52,8 @@ def policy_info(network_appliance, owner_type, policy_id):
 
 
 @post('/<network_appliance>/policy/<owner_type>/<owner_id>')
+@cas_authenticate(servers=[cas_endpoint, cas_sys_endpoint], service=cas_service)
+@authorize(user_roles, "rw")
 @reply_json
 def policy_create(network_appliance, owner_type, owner_id):
     """
@@ -66,6 +75,8 @@ def policy_create(network_appliance, owner_type, owner_id):
 
 
 @delete('/<network_appliance>/policy/<owner_type>/<policy_id>/delete')
+@cas_authenticate(servers=[cas_endpoint, cas_sys_endpoint], service=cas_service)
+@authorize(user_roles, "rw")
 @reply_json
 def policy_delete(network_appliance, owner_type, policy_id):
     """
@@ -80,6 +91,8 @@ def policy_delete(network_appliance, owner_type, policy_id):
 
 
 @get('/<network_appliance>/policy/by-type/<owner_type>/list')
+@cas_authenticate(servers=[cas_endpoint, cas_sys_endpoint], service=cas_service)
+@authorize(user_roles, "ro")
 @reply_json
 def policy_list(network_appliance, owner_type):
     """
@@ -94,6 +107,8 @@ def policy_list(network_appliance, owner_type):
 
 
 @get('/<network_appliance>/policy/by-owner/<owner_type>/<owner_id>/list')
+@cas_authenticate(servers=[cas_endpoint, cas_sys_endpoint], service=cas_service)
+@authorize(user_roles, "ro")
 @reply_json
 def policy_list_by_owner(network_appliance, owner_type, owner_id):
     """

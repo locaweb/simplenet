@@ -24,24 +24,67 @@ import json
 import baker
 import requests
 import ConfigParser
+from locautils import cas
+from getpass import getpass
 
-config_file = ('/etc/simplenet/simplenet.cfg' if not 'SIMPLENET_CFG'
-                in os.environ else os.environ['SIMPLENET_CFG'])
+config_file = '/etc/simplenet/simplenet-cli.cfg'
 
 config = ConfigParser.ConfigParser()
 config.read(config_file)
 
-server = 'http://127.0.0.1:8081'
+server              = config.get("server", "api_endpoint")
+CAS_ENDPOINT        = config.get("authentication", "cas_endpoint")
+CAS_SERVICE         = config.get("authentication", "cas_service")
+__cas_username    = ""
+__cas_passwd      = ""
+
+def __authpair_prompt():
+    global __cas_username, __cas_passwd
+    if not __cas_username:
+        __cas_username = raw_input("Type your CAS username: ").strip()
+    if not __cas_passwd:
+        __cas_passwd = getpass("Type your CAS password: ")
+    print ""
+
+def __gen_authtk():
+    try:
+        f = open(os.path.expanduser("~/.simplecli"), "r")
+    except:
+        __authpair_prompt()
+        try:
+            cas_cli = cas.CASClient(server=CAS_ENDPOINT, username=__cas_username, password=__cas_passwd)
+            cas_tk  = cas_cli.generate_ticket(service=CAS_SERVICE)
+        except cas.CasTGTError:
+            return
+        f = open(os.path.expanduser("~/.simplecli"), "w+")
+        f.write(cas_tk)
+        return cas_tk
+
+    return f.read()
+
+def __api_call(method, url, data=None):
+    if (method == 'get'):
+        ret = requests.get(url + "?ticket=" + __gen_authtk())
+    elif (method == 'post'):
+        ret = requests.post(url + "?ticket=" + __gen_authtk(), data=data)
+    elif (method == 'delete'):
+        ret = requests.delete(url + "?ticket=" + __gen_authtk())
+
+    if ret.status_code == 403:
+        os.remove(os.path.expanduser("~/.simplecli"))
+        sys.exit(1)
+
+    return ret
 
 def fetch_id(_type, _data):
     if (_type == 'subnets') or (_type == 'anycasts'):
-        data = requests.get('%s/%s/by-cidr/%s' %
+        data = __api_call("get", '%s/%s/by-cidr/%s' %
             (server, _type, _data.replace('/','_'))
         )
     elif _type in ('ips', 'ipsanycasts', 'ipanycasts'):
-        data = requests.get('%s/%s/by-ip/%s' % (server, _type, _data))
+        data = __api_call("get", '%s/%s/by-ip/%s' % (server, _type, _data))
     else:
-        data = requests.get('%s/%s/by-name/%s' % (server, _type, _data))
+        data = __api_call("get", '%s/%s/by-name/%s' % (server, _type, _data))
 
     try:
         return json.loads(data.text)['id']
@@ -68,15 +111,15 @@ def datacenter(action=None, name=None):
     base_url = '%s/datacenters' % (server)
     r = None
     if action == 'list':
-        r = requests.get('%s/list' % base_url)
+        r = __api_call("get", '%s/list' % base_url)
     elif action == 'create':
-        r = requests.post(base_url, data=json.dumps({'name': name}))
+        r = __api_call("post", base_url, data=json.dumps({'name': name}))
     elif action == 'delete':
-        r = requests.delete('%s/%s/delete' %
+        r = __api_call("delete", '%s/%s/delete' %
             (base_url, fetch_id('datacenters', name))
         )
     elif action == 'info':
-        r = requests.get('%s/by-name/%s' % (base_url, name))
+        r = __api_call("get", '%s/by-name/%s' % (base_url, name))
     else:
         baker.usage(sys._getframe().f_code.co_name)
         sys.exit(1)
@@ -90,22 +133,22 @@ def zone(action=None, name=None, datacenter=None):
     base_url = '%s/zones' % (server)
     r = None
     if action == 'list':
-        r = requests.get('%s/list' % base_url)
+        r = __api_call("get", '%s/list' % base_url)
     elif action == 'create':
         if not datacenter:
             print 'Missing datacenter_id to create'
             sys.exit(1)
 
         datacenter_id = fetch_id('datacenters', datacenter)
-        r = requests.post('%s/datacenters/%s/zones' % (server, datacenter_id),
+        r = __api_call("post", '%s/datacenters/%s/zones' % (server, datacenter_id),
             data=json.dumps({'name': name, 'datacenter_id': datacenter_id})
         )
     elif action == 'delete':
-        r = requests.delete('%s/%s/delete' %
+        r = __api_call("delete", '%s/%s/delete' %
             (base_url, fetch_id('zones', name))
         )
     elif action == 'info':
-        r = requests.get('%s/by-name/%s' % (base_url, name))
+        r = __api_call("get", '%s/by-name/%s' % (base_url, name))
     else:
         baker.usage(sys._getframe().f_code.co_name)
         sys.exit(1)
@@ -121,24 +164,24 @@ def vlan(action=None, name=None, zone=None):
     base_url = '%s/vlans' % (server)
     r = None
     if action == 'list':
-        r = requests.get('%s/list' % base_url)
+        r = __api_call("get", '%s/list' % base_url)
     elif action == 'create':
         if not zone:
             print 'Missing zone to create'
             sys.exit(1)
 
         zone_id = fetch_id('zones', zone)
-        r = requests.post('%s/zones/%s/vlans' % (server, zone_id),
+        r = __api_call("post", '%s/zones/%s/vlans' % (server, zone_id),
             data=json.dumps({'name': name})
         )
     elif action == 'delete':
-        r = requests.delete('%s/%s/delete' %
+        r = __api_call("delete", '%s/%s/delete' %
             (base_url, fetch_id('vlans', name))
         )
     elif action == 'info':
-        r = requests.get('%s/by-name/%s' % (base_url, name))
+        r = __api_call("get", '%s/by-name/%s' % (base_url, name))
     elif action == 'device_list':
-        r = requests.get('%s/devices/list-by-vlan/%s' % (server, fetch_id('vlans', name)))
+        r = __api_call("get", '%s/devices/list-by-vlan/%s' % (server, fetch_id('vlans', name)))
     else:
         baker.usage(sys._getframe().f_code.co_name)
         sys.exit(1)
@@ -153,22 +196,22 @@ def subnet(action=None, cidr=None, vlan=None):
     base_url = '%s/subnets' % (server)
     r = None
     if action == 'list':
-        r = requests.get('%s/list' %  base_url)
+        r = __api_call("get", '%s/list' %  base_url)
     elif action == 'create':
         if not vlan:
             print 'Missing vlan to create'
             sys.exit(1)
 
         vlan_id = fetch_id('vlans', vlan)
-        r = requests.post('%s/vlans/%s/subnets' % (server, vlan_id),
+        r = __api_call("post", '%s/vlans/%s/subnets' % (server, vlan_id),
              data=json.dumps({'cidr': cidr})
         )
     elif action == 'delete':
-        r = requests.delete('%s/%s/delete' %
+        r = __api_call("delete", '%s/%s/delete' %
             (base_url, fetch_id('subnets', cidr))
         )
     elif action == 'info':
-        r = requests.get('%s/by-cidr/%s' %
+        r = __api_call("get", '%s/by-cidr/%s' %
             (base_url, cidr.replace('/', '_'))
         )
     else:
@@ -185,17 +228,17 @@ def anycast(action=None, cidr=None):
     base_url = '%s/anycasts' % (server)
     r = None
     if action == 'list':
-        r = requests.get('%s/list' %  base_url)
+        r = __api_call("get", '%s/list' %  base_url)
     elif action == 'create':
-        r = requests.post('%s/anycasts' % (server),
+        r = __api_call("post", '%s/anycasts' % (server),
              data=json.dumps({'cidr': cidr})
         )
     elif action == 'delete':
-        r = requests.delete('%s/%s/delete' %
+        r = __api_call("delete", '%s/%s/delete' %
             (base_url, fetch_id('anycasts', cidr))
         )
     elif action == 'info':
-        r = requests.get('%s/by-cidr/%s' %
+        r = __api_call("get", '%s/by-cidr/%s' %
             (base_url, cidr.replace('/', '_'))
         )
     else:
@@ -213,21 +256,21 @@ def ip(action=None, ip=None, subnet=None):
     base_url = '%s/ips' % (server)
     r = None
     if action == 'list':
-        r = requests.get('%s/list' %  base_url)
+        r = __api_call("get", '%s/list' %  base_url)
     elif action == 'create':
         if not subnet:
             print 'Missing subnet to create'
             sys.exit(1)
 
-        r = requests.post('%s/subnets/%s/ips' % (server, fetch_id('subnets', subnet)),
+        r = __api_call("post", '%s/subnets/%s/ips' % (server, fetch_id('subnets', subnet)),
             data=json.dumps({'ip': ip})
         )
     elif action == 'delete':
-        r = requests.delete('%s/%s/delete' %
+        r = __api_call("delete", '%s/%s/delete' %
             (base_url, fetch_id('ips', ip))
         )
     elif action == 'info':
-        r = requests.get('%s/by-ip/%s' % (base_url, ip))
+        r = __api_call("get", '%s/by-ip/%s' % (base_url, ip))
     else:
         baker.usage(sys._getframe().f_code.co_name)
         sys.exit(1)
@@ -242,21 +285,21 @@ def ipanycast(action=None, ip=None, anycast=None):
     base_url = '%s/ipanycasts' % (server)
     r = None
     if action == 'list':
-        r = requests.get('%s/list' %  base_url)
+        r = __api_call("get", '%s/list' %  base_url)
     elif action == 'create':
         if not anycast:
             print 'Missing anycast subnet to create'
             sys.exit(1)
 
-        r = requests.post('%s/anycasts/%s/ipsanycast' % (server, fetch_id('anycasts', anycast)),
+        r = __api_call("post", '%s/anycasts/%s/ipsanycast' % (server, fetch_id('anycasts', anycast)),
             data=json.dumps({'ip': ip})
         )
     elif action == 'delete':
-        r = requests.delete('%s/%s/delete' %
+        r = __api_call("delete", '%s/%s/delete' %
             (base_url, fetch_id('ipsanycasts', ip))
         )
     elif action == 'info':
-        r = requests.get('%s/by-ip/%s' % (base_url, ip))
+        r = __api_call("get", '%s/by-ip/%s' % (base_url, ip))
     else:
         baker.usage(sys._getframe().f_code.co_name)
         sys.exit(1)
@@ -273,29 +316,29 @@ def device(action=None, name=None, zone=None, vlan=None, anycast=None):
     base_url = '%s/devices' % (server)
     r = None
     if action == 'list':
-        r = requests.get('%s/list' % base_url)
+        r = __api_call("get", '%s/list' % base_url)
     elif action == 'create':
         if not zone:
             print 'Missing zone to create'
             sys.exit(1)
 
         zone_id = fetch_id('zones', zone)
-        r = requests.post('%s/zones/%s/devices' %
+        r = __api_call("post", '%s/zones/%s/devices' %
             (server, zone_id), data=json.dumps({'name': name})
         )
     elif action == 'delete':
-        r = requests.delete('%s/%s/delete' % (
+        r = __api_call("delete", '%s/%s/delete' % (
             base_url, fetch_id('devices', name))
         )
     elif action == 'info':
-        r = requests.get('%s/by-name/%s' % (base_url, name))
+        r = __api_call("get", '%s/by-name/%s' % (base_url, name))
     elif action == 'vlan_attach':
         if not vlan:
             print 'Missing vlan to attach'
             sys.exit(1)
 
         vlan_id = fetch_id('vlans', vlan)
-        r = requests.post('%s/%s/vlans' %
+        r = __api_call("post", '%s/%s/vlans' %
             (base_url, fetch_id('devices', name)),
             data=json.dumps({'vlan_id': vlan_id})
         )
@@ -305,7 +348,7 @@ def device(action=None, name=None, zone=None, vlan=None, anycast=None):
             sys.exit(1)
 
         anycast_id = fetch_id('anycasts', anycast)
-        r = requests.post('%s/%s/anycasts' %
+        r = __api_call("post", '%s/%s/anycasts' %
             (base_url, fetch_id('devices', name)),
             data=json.dumps({'anycast_id': anycast_id})
         )
@@ -314,11 +357,11 @@ def device(action=None, name=None, zone=None, vlan=None, anycast=None):
             print 'Missing vlan to attach'
             sys.exit(1)
 
-        r = requests.delete('%s/%s/vlans/%s' % (
+        r = __api_call("delete", '%s/%s/vlans/%s' % (
             base_url, fetch_id('devices', name), fetch_id('vlans', vlan))
         )
     elif action == 'vlan_list':
-        r = requests.get('%s/vlans/list-by-device/%s' %
+        r = __api_call("get", '%s/vlans/list-by-device/%s' %
             (server, fetch_id('devices', name))
         )
     else:
@@ -345,9 +388,9 @@ def policy(action=None, name=None, owner=None, dst=None, src=None, dst_port=None
     r = None
     if action == 'list':
         if owner == 'all':
-            r = requests.get('%s/by-type/%s/list' % (base_url, name))
+            r = __api_call("get", '%s/by-type/%s/list' % (base_url, name))
         else:
-            r = requests.get('%s/by-owner/%s/%s/list' % (base_url, name, fetch_id('%ss' % name, owner)))
+            r = __api_call("get", '%s/by-owner/%s/%s/list' % (base_url, name, fetch_id('%ss' % name, owner)))
     elif action == 'create':
         owner_id = fetch_id('%ss' % name, owner)
         if not table:
@@ -364,13 +407,13 @@ def policy(action=None, name=None, owner=None, dst=None, src=None, dst_port=None
             if key != None:
                 data.update({key: value})
         print '%s/%s/%s' % (base_url, name, owner_id)
-        r = requests.post('%s/%s/%s' %
+        r = __api_call("post", '%s/%s/%s' %
             (base_url, name, owner_id), data=json.dumps(data)
         )
     elif action == 'delete':
-        r = requests.delete('%s/%s/%s/delete' % (base_url, name, owner))
+        r = __api_call("delete", '%s/%s/%s/delete' % (base_url, name, owner))
     elif action == 'info':
-        r = requests.get('%s/%s/%s/info' % (base_url, name, owner))
+        r = __api_call("get", '%s/%s/%s/info' % (base_url, name, owner))
     else:
         baker.usage(sys._getframe().f_code.co_name)
         sys.exit(1)

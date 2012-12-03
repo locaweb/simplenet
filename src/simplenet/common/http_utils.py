@@ -46,13 +46,6 @@ def reply_json(f):
 
 
 def create_manager(network_appliance):
-    auth_type = config.get('server', 'auth_type')
-    if not 'disabled' in auth_type:
-        _auth_ = 'simplenet.auth_methods.%s' % auth_type
-        auth = __import__(_auth_)
-        auth = getattr(_auth_, auth_type)
-        auth.Policy(request)
-
     _module_ = "simplenet.network_appliances.%s" % network_appliance
     module = __import__(_module_)
     module = getattr(module.network_appliances, network_appliance)

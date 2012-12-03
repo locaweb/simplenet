@@ -52,3 +52,18 @@ def set_logger():
 
     handler.setFormatter(formatter)
     root_logger.addHandler(handler)
+
+def section(cfg, cfg_section):
+    r = {}
+    for k in cfg.options(cfg_section):
+        r[k] = cfg.get(cfg_section, k)
+    return(r)
+
+def get_rolesdb():
+    cfg = ConfigParser.ConfigParser()
+    cfg.read(config_file)
+    roles = section(cfg, "roles")
+    roles["ro"] = filter(None, [u.strip() for u in roles["ro"].split(",")])
+    roles["rw"] = filter(None, [u.strip() for u in roles["rw"].split(",")])
+    roles["ro"].extend(roles["rw"])
+    return roles

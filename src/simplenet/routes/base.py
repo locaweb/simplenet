@@ -21,16 +21,24 @@ import logging
 
 from bottle import delete, put, get, post
 from bottle import request, response
+from simplenet.common.http_auth import cas_authenticate, authorize
 
-from simplenet.common.config import config, set_logger
+from simplenet.common.config import config, set_logger, get_rolesdb
 from simplenet.common.http_utils import (
     reply_json, create_manager, validate_input
 )
 
 LOG = logging.getLogger('simplenet.server')
 
+cas_endpoint = config.get("authentication", "cas_endpoint")
+cas_sys_endpoint = config.get("authentication", "cas_sys_endpoint")
+cas_service  = config.get("authentication", "cas_service")
+user_roles = get_rolesdb()
+
 ## Generic Resource List
 @get('/<resource>/list')
+@cas_authenticate(servers=[cas_endpoint, cas_sys_endpoint], service=cas_service)
+@authorize(user_roles, "ro")
 @reply_json
 def generic_resources_list(resource):
     """
@@ -50,6 +58,8 @@ def generic_resources_list(resource):
 
 ## Generic Resource Info
 @get('/<resource>/<resource_id>/info')
+@cas_authenticate(servers=[cas_endpoint, cas_sys_endpoint], service=cas_service)
+@authorize(user_roles, "ro")
 @reply_json
 def generic_resource_info(resource, resource_id):
     """
@@ -69,6 +79,8 @@ def generic_resource_info(resource, resource_id):
 
 ## Generic Resource Info by name, cidr, ip
 @get('/<resource>/by-<resource_type>/<resource_value>')
+@cas_authenticate(servers=[cas_endpoint, cas_sys_endpoint], service=cas_service)
+@authorize(user_roles, "ro")
 @reply_json
 def generic_resource_info_by_field(resource, resource_type, resource_value):
     """
@@ -88,6 +100,8 @@ def generic_resource_info_by_field(resource, resource_type, resource_value):
 
 # Generic list by parent
 @get('/<resource>/list-by-<relationship_type>/<relationship_value>')
+@cas_authenticate(servers=[cas_endpoint, cas_sys_endpoint], service=cas_service)
+@authorize(user_roles, "ro")
 @reply_json
 def generic_resource_list_by_relationship(resource, relationship_type, relationship_value):
     """
@@ -107,6 +121,8 @@ def generic_resource_list_by_relationship(resource, relationship_type, relations
 
 ## Generic Resource Deletion
 @delete('/<resource>/<resource_id>/delete')
+@cas_authenticate(servers=[cas_endpoint, cas_sys_endpoint], service=cas_service)
+@authorize(user_roles, "rw")
 @reply_json
 def generic_resource_delete(resource, resource_id):
     """
@@ -125,6 +141,8 @@ def generic_resource_delete(resource, resource_id):
 
 
 @post('/datacenters')
+@cas_authenticate(servers=[cas_endpoint, cas_sys_endpoint], service=cas_service)
+@authorize(user_roles, "rw")
 @validate_input(name=str)
 @reply_json
 def datacenter_create():
@@ -147,6 +165,8 @@ def datacenter_create():
 
 
 @post('/datacenters/<datacenter_id>/zones')
+@cas_authenticate(servers=[cas_endpoint, cas_sys_endpoint], service=cas_service)
+@authorize(user_roles, "rw")
 @validate_input(name=str)
 @reply_json
 def datacenter_zone_create(datacenter_id):
@@ -169,6 +189,8 @@ def datacenter_zone_create(datacenter_id):
 
 
 @post('/zones/<zone_id>/devices')
+@cas_authenticate(servers=[cas_endpoint, cas_sys_endpoint], service=cas_service)
+@authorize(user_roles, "rw")
 @validate_input(name=str)
 @reply_json
 def zone_device_create(zone_id):
@@ -191,6 +213,8 @@ def zone_device_create(zone_id):
 
 
 @post('/zones/<zone_id>/vlans')
+@cas_authenticate(servers=[cas_endpoint, cas_sys_endpoint], service=cas_service)
+@authorize(user_roles, "rw")
 @validate_input(name=str)
 @reply_json
 def zone_vlan_create(zone_id):
@@ -213,6 +237,8 @@ def zone_vlan_create(zone_id):
 
 
 @post('/devices/<device_id>/vlans')
+@cas_authenticate(servers=[cas_endpoint, cas_sys_endpoint], service=cas_service)
+@authorize(user_roles, "rw")
 @validate_input(vlan_id=str)
 @reply_json
 def device_add_vlan(device_id):
@@ -234,6 +260,8 @@ def device_add_vlan(device_id):
     return device
 
 @post('/devices/<device_id>/anycasts')
+@cas_authenticate(servers=[cas_endpoint, cas_sys_endpoint], service=cas_service)
+@authorize(user_roles, "rw")
 @validate_input(anycast_id=str)
 @reply_json
 def device_add_anycast(device_id):
@@ -256,6 +284,8 @@ def device_add_anycast(device_id):
 
 
 @delete('/devices/<device_id>/vlans/<vlan_id>')
+@cas_authenticate(servers=[cas_endpoint, cas_sys_endpoint], service=cas_service)
+@authorize(user_roles, "rw")
 @reply_json
 def device_remove_vlan(device_id, vlan_id):
     """
@@ -271,6 +301,8 @@ def device_remove_vlan(device_id, vlan_id):
 
 
 @post('/anycasts')
+@cas_authenticate(servers=[cas_endpoint, cas_sys_endpoint], service=cas_service)
+@authorize(user_roles, "rw")
 @validate_input(cidr=str)
 @reply_json
 def anycast_create():
@@ -293,6 +325,8 @@ def anycast_create():
 
 
 @post('/vlans/<vlan_id>/subnets')
+@cas_authenticate(servers=[cas_endpoint, cas_sys_endpoint], service=cas_service)
+@authorize(user_roles, "rw")
 @validate_input(cidr=str)
 @reply_json
 def vlan_subnet_create(vlan_id):
@@ -315,6 +349,8 @@ def vlan_subnet_create(vlan_id):
 
 
 @post('/anycasts/<anycast_id>/ipsanycast')
+@cas_authenticate(servers=[cas_endpoint, cas_sys_endpoint], service=cas_service)
+@authorize(user_roles, "rw")
 @validate_input(ip=str)
 @reply_json
 def anycast_ipanycast_create(anycast_id):
@@ -337,6 +373,8 @@ def anycast_ipanycast_create(anycast_id):
 
 
 @post('/subnets/<subnet_id>/ips')
+@cas_authenticate(servers=[cas_endpoint, cas_sys_endpoint], service=cas_service)
+@authorize(user_roles, "rw")
 @validate_input(ip=str)
 @reply_json
 def subnet_ip_create(subnet_id):
