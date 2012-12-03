@@ -9,7 +9,7 @@ XS-Python-Version: 2.6
 
 Package: simplenet-server
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}, python (>= 2.6), python-baker, python-kombu, python-bottle, python-sqlalchemy, python-sqlalchemy-ext
+Depends: ${shlibs:Depends}, ${misc:Depends}, python (>= 2.6), python-baker, python-kombu, python-bottle, python-sqlalchemy, python-sqlalchemy-ext, python-mysqldb, python-gevent
 Description: Network automation framework
  Network automation framework
 

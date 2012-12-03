@@ -1,0 +1,5 @@
+#!/bin/bash
+
+set -e
+
+id simplestack 1>/dev/null 2>&1 || ( addgroup --system simplestack && adduser --system --disabled-login --home /var/run/simplenet-server --no-create-home --disabled-password --ingroup simplestack simplestack )
