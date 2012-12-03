@@ -5,7 +5,7 @@ from glob import glob as ls
 
 setup(
     name = 'simplenet-server',
-    version = '0.0.6',
+    version = '0.0.7',
     description = 'Network automation framework',
     long_description = 'Network automation framework',
     author = 'Juliano Martinez',

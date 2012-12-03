@@ -1,3 +1,9 @@
+simplenet-server (0.0.7) stable; urgency=low
+
+  * Package fix 
+
+ -- root <root@ubuntu>  Mon, 03 Dec 2012 13:57:26 -0200
+
 simplenet-server (0.0.6) stable; urgency=low
 
   * Mysql fix
