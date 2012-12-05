@@ -15,7 +15,7 @@ NAME=sn-fw-agent
 
 DAEMON=sn-fw-agent
 DAEMON_BIN=/usr/sbin/sn-fw-agent
-DAEMON_PIDFILE=/var/run/sn-fw-agent.pid
+DAEMON_PIDFILE=/var/run/snfwagent.pid
 SCRIPTNAME=/etc/init.d/$NAME
 
 # Exit if the package is not installed

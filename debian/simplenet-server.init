@@ -15,7 +15,7 @@ NAME=simplenet-server
 
 DAEMON=simplenet-server
 DAEMON_BIN=/usr/sbin/simplenet-server
-DAEMON_PIDFILE=/var/run/simplenet-server.pid
+DAEMON_PIDFILE=/var/run/simplenet.pid
 SCRIPTNAME=/etc/init.d/$NAME
 
 # Exit if the package is not installed
