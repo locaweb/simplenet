@@ -22,6 +22,7 @@ from gevent import monkey
 monkey.patch_all()
 
 import os
+import sys
 import grp
 import pwd
 import json
@@ -42,7 +43,7 @@ app = bottle.app()
 LOG = logging.getLogger('simplenet.server')
 
 
-def main():
+def start():
     os.setgid(grp.getgrnam('nogroup')[2])
     os.setuid(pwd.getpwnam(config.get("server", "user"))[2])
     debug(config.getboolean("server", "debug"))
@@ -52,5 +53,32 @@ def main():
     LOG.info("Starting Simplestack server")
     run(host=bind_addr, port=port, server="gevent")
 
+def main(action="foreground"):
+    from supay import Daemon
+    daemon = Daemon(name="simplenet")
+
+    if action ==  "start":
+        daemon.start()
+        start()
+    elif action == "foreground":
+        start()
+    elif action == "stop":
+        daemon.stop()
+    elif action == "status":
+        daemon.status()
+    else:
+        cli_help()
+
+def cli_help():
+    print "Usage: %s <start|stop|status|foreground>" % sys.argv[0]
+    sys.exit(1)
+
+
+def cli():
+    if len(sys.argv) < 2:
+        cli_help()
+    main(action=sys.argv[1])
+
+
 if __name__ == '__main__':
-    main()
+    cli()
