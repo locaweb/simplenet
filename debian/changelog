@@ -1,3 +1,9 @@
+simplenet-server (0.0.8) stable; urgency=low
+
+  * Daemonize
+
+ -- root <root@ubuntu>  Wed, 05 Dec 2012 19:35:13 -0200
+
 simplenet-server (0.0.7) stable; urgency=low
 
   * Package fix 
