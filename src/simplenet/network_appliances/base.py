@@ -124,6 +124,10 @@ class SimpleNet(object):
             'zones': self.zone_list_by_datacenter(id),
         }
 
+    def prober(self):
+        ss = session.query(models.Prober).all()
+        return ss
+
     def datacenter_list(self):
         ss = session.query(models.Datacenter).all()
         datacenters = []

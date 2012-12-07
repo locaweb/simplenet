@@ -28,6 +28,11 @@ from simplenet.common.config import config
 
 Base = declarative_base()
 
+class Prober(Base):
+    __tablename__ = 'prober'
+    id = Column(String(255), primary_key=True)
+    foo = Column(String(1))
+
 class Datacenter(Base):
 
     __tablename__ = 'datacenters'

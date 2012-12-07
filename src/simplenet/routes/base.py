@@ -35,6 +35,24 @@ cas_sys_endpoint = config.get("authentication", "cas_sys_endpoint")
 cas_service  = config.get("authentication", "cas_service")
 user_roles = get_rolesdb()
 
+
+@get('/prober')
+@reply_json
+def generic_resources_list():
+    """
+    ::
+
+      GET /prober
+
+    Do a SQL query for DB status
+    """
+    manager = create_manager('base')
+    try:
+        _list = getattr(manager, 'prober')
+        return _list()
+    except AttributeError:
+        raise FeatureNotAvailable()
+
 ## Generic Resource List
 @get('/<resource>/list')
 @cas_authenticate(servers=[cas_endpoint, cas_sys_endpoint], service=cas_service)
