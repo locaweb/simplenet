@@ -59,16 +59,18 @@ def __gen_authtk():
         f = open(os.path.expanduser("~/.simplecli"), "w+")
         f.write(cas_tk)
         return cas_tk
-
     return f.read()
 
 def __api_call(method, url, data=None):
     if (method == 'get'):
-        ret = requests.get(url + "?ticket=" + __gen_authtk())
+        # ret = requests.get(url + "?ticket=" + __gen_authtk())
+        ret = requests.get(url)
     elif (method == 'post'):
-        ret = requests.post(url + "?ticket=" + __gen_authtk(), data=data)
+        # ret = requests.post(url + "?ticket=" + __gen_authtk(), data=data)
+        ret = requests.post(url, data=data)
     elif (method == 'delete'):
-        ret = requests.delete(url + "?ticket=" + __gen_authtk())
+        # ret = requests.delete(url + "?ticket=" + __gen_authtk())
+        ret = requests.delete(url)
 
     if ret.status_code == 403:
         os.remove(os.path.expanduser("~/.simplecli"))
