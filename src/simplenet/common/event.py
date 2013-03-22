@@ -23,7 +23,7 @@ from kombu import BrokerConnection, Exchange, Queue
 
 from simplenet.common.config import config, get_logger
 
-logger = config.get_logger()
+logger = get_logger()
 
 class EventManager(object):
     def __init__(self):

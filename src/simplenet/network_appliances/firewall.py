@@ -28,7 +28,7 @@ from kombu import Exchange, BrokerConnection
 from kombu.common import maybe_declare
 from kombu.pools import producers
 
-logger = config.get_logger()
+logger = get_logger()
 session = db_utils.get_database_session()
 
 class Net(SimpleNet):

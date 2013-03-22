@@ -40,7 +40,7 @@ from simplenet.common.http_utils import reply_json, validate_input
 from simplenet.routes import base, policy, errors
 
 app = bottle.app()
-logger = config.get_logger()
+logger = get_logger()
 
 def start():
     os.setgid(grp.getgrnam('nogroup')[2])
