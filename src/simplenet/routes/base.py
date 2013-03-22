@@ -332,7 +332,7 @@ def vlan_subnet_create(vlan_id):
     """
     ::
 
-      POST /vlan/<vlan_id>/subnets
+      POST /vlans/<vlan_id>/subnets
 
     Create a new subnet in vlan
     """

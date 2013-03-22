@@ -51,7 +51,7 @@ class SimpleNet(object):
         except Exception, e:
             session.rollback()
             raise Exception(e)
-        logger.debug("Successful deletetion of %s from %s" % (id, name))
+        logger.debug("Successful deletion of %s from %s" % (id, name))
         return True
 
     def _generic_info_(self, name, model, id):
@@ -510,7 +510,7 @@ class SimpleNet(object):
     def ip_list_by_subnet(self, subnet_id):
         return self._genreric_info_by_something_("ip info by subnet", models.Ip, {'subnet_id': subnet_id})
 
-    def ipanycast_list_by_anycast(self, anycast_id):
+    def ipsanycast_list_by_anycast(self, anycast_id):
         return self._genreric_list_by_something_("ip info by anycast", models.Ipanycast, {'anycast_id': anycast_id})
 
     def ipanycast_list(self):
@@ -570,18 +570,18 @@ class SimpleNet(object):
         logger.debug("Created ip on anycast: %s using data: %s" %
             (anycast_id, data)
         )
-        return self.ipanycast_info_by_ip(data['ip'])
+        return self.ipsanycast_info_by_ip(data['ip'])
 
     def ip_info(self, id):
         return self._generic_info_("ip", models.Ip, id)
 
-    def ipanycast_info(self, id):
+    def ipsanycast_info(self, id):
         return self._generic_info_("ip anycast", models.Ipanycast, id)
 
     def ip_info_by_ip(self, ip):
         return self._genreric_info_by_something_("ip", models.Ip, {'ip': ip})
 
-    def ipanycast_info_by_ip(self, ip):
+    def ipsanycast_info_by_ip(self, ip):
         return self._genreric_info_by_something_("ip anycast", models.Ipanycast, {'ip': ip})
 
     def ip_update(self, *args, **kawrgs):
@@ -590,7 +590,7 @@ class SimpleNet(object):
     def ip_delete(self, id):
         return self._generic_delete_("ip", models.Ip, id)
 
-    def ipanycast_delete(self, id):
+    def ipsanycast_delete(self, id):
         return self._generic_delete_("ip anycast", models.Ipanycast, id)
 
     def policy_list(self, *args, **kawrgs):

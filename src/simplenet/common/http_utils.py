@@ -24,6 +24,10 @@ from functools import wraps
 from bottle import response, request, abort
 
 from simplenet.common.config import config, get_logger
+from simplenet.exceptions import (
+    FeatureNotImplemented, EntityNotFound,
+    OperationNotPermited, FeatureNotAvailable
+)
 
 
 try:
