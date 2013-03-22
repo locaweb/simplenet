@@ -18,6 +18,7 @@
 
 from sqlalchemy.orm import sessionmaker
 from simplenet.db import models
+from simplenet.common.config import config, get_logger
 
 logger = get_logger()
 
