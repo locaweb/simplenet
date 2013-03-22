@@ -42,12 +42,14 @@ function run_test(){
 echo "::::: Starting Datacenter Tests "
 run_test "datacenter create datacenter01" '"name": "datacenter01"'
 run_test "datacenter create datacenter01" '"message": "Datacenter:datacenter01 already exists Forbidden"'
+run_test "datacenter info datacenter01" '"name": "datacenter01"'
 run_test "datacenter delete datacenter01" ''
 
 echo -e "\n::::: Starting Zone Tests "
 run_test "datacenter create datacenter01" '"name": "datacenter01"'
 run_test "zone create zone01 --datacenter datacenter01" '"name": "zone01"'
 run_test "zone create zone01 --datacenter datacenter01" '"message": "Zone:zone01 already exists Forbidden"'
+run_test "zone info zone01" '"name": "zone01"'
 run_test "zone delete zone01" ''
 run_test "datacenter delete datacenter01" ''
 
@@ -55,7 +57,8 @@ echo -e "\n::::: Starting Device Tests "
 run_test "datacenter create datacenter01" '"name": "datacenter01"'
 run_test "zone create zone01 --datacenter datacenter01" '"name": "zone01"'
 run_test "device create firewall01 --zone zone01" '"name": "firewall01"'
-run_test "device create firewall01 --zone zone01" '"name": "firewall01"'
+run_test "device create firewall01 --zone zone01" '"message": "Device:firewall01 already exists Forbidden"'
+run_test "device info firewall01" '"name": "firewall01"'
 run_test "device delete firewall01" ''
 run_test "zone create zone01 --datacenter datacenter01" '"message": "Zone:zone01 already exists Forbidden"'
 run_test "zone delete zone01" ''
@@ -66,6 +69,7 @@ run_test "datacenter create datacenter01" '"name": "datacenter01"'
 run_test "zone create zone01 --datacenter datacenter01" '"name": "zone01"'
 run_test "vlan create vlan01 --zone zone01" '"name": "vlan01"'
 run_test "vlan create vlan01 --zone zone01" '"message": "Vlan:vlan01 already exists Forbidden"'
+run_test "vlan info vlan01" '"name": "vlan01"'
 run_test "vlan delete vlan01" ''
 run_test "zone delete zone01" ''
 run_test "datacenter delete datacenter01" ''
@@ -79,6 +83,8 @@ run_test "vlan create vlan02 --zone zone02" '"name": "vlan02"'
 run_test "subnet create 192.168.0.0/24 --vlan vlan01" '"cidr": "192.168.0.0/24"'
 run_test "subnet create 192.168.0.0/24 --vlan vlan01" '"message": "Subnet:192.168.0.0/24 already exists Forbidden"'
 run_test "subnet create 192.168.0.1/24 --vlan vlan02" '"cidr": "192.168.0.1/24"'
+run_test "subnet info 192.168.0.0/24" '"cidr": "192.168.0.0/24"'
+run_test "subnet info 192.168.0.1/24" '"cidr": "192.168.0.1/24"'
 run_test "subnet delete 192.168.0.0/24" ''
 run_test "subnet delete 192.168.0.1/24" ''
 run_test "vlan delete vlan01" ''
@@ -89,6 +95,7 @@ run_test "datacenter delete datacenter01" ''
 
 echo -e "\n::::: Starting Anycast Tests "
 run_test "anycast create 192.168.168.0/24" '"cidr": "192.168.168.0/24"'
+run_test "anycast info 192.168.168.0/24" '"cidr": "192.168.168.0/24"'
 run_test "anycast delete 192.168.168.0/24" ''
 
 echo -e "\n::::: Starting Ip Tests "
@@ -101,6 +108,8 @@ run_test "subnet create 192.168.0.0/24 --vlan vlan01" '"cidr": "192.168.0.0/24"'
 run_test "subnet create 192.168.0.1/24 --vlan vlan02" '"cidr": "192.168.0.1/24"'
 run_test "ip create 192.168.0.1 --subnet 192.168.0.0/24" '"ip": "192.168.0.1"'
 run_test "ip create 192.168.1.1 --subnet 192.168.0.1/24" '"message": "Ip:192.168.1.1 address must be contained in 192.168.0.1/24 Forbidden"'
+run_test "ip info 192.168.0.1" '"ip": "192.168.0.1"'
+run_test "ip info 192.168.1.1" '"ip": "192.168.1.1"'
 run_test "ip delete 192.168.0.1" ''
 run_test "ip delete 192.168.1.1" ''
 run_test "subnet delete 192.168.0.0/24" ''
@@ -113,19 +122,13 @@ run_test "datacenter delete datacenter01" ''
 
 echo -e "\n::::: Starting IpAnycast Tests "
 run_test "anycast create 192.168.168.0/24" '"cidr": "192.168.168.0/24"'
-run_test "ipanycast create 192.168.168.3 --anycast 192.168.168.0/24" '"ip": "192.168.168.1"'
+run_test "ipanycast create 192.168.168.3 --anycast 192.168.168.0/24" '"ip": "192.168.168.3"'
 run_test "ipanycast create 192.168.0.3 --anycast 192.168.168.0/24" '"message": "Ip:192.168.0.3 address must be contained in 192.168.168.0/24 Forbidden"'
+run_test "ipanycast info 192.168.168.3" '"ip": "192.168.168.3"'
 run_test "ipanycast delete 192.168.168.3" ''
 run_test "anycast delete 192.168.168.0/24" ''
 
 exit
-
-echo "Creating Device"
-./simplenet-cli device create firewall01 --zone ita01 | ccze -A
-./simplenet-cli device create firewall02 --zone ita02 | ccze -A
-./simplenet-cli device create fireany01 --zone ita01 | ccze -A
-./simplenet-cli device create fireany02 --zone ita01 | ccze -A
-echo
 
 echo "Creating and list policy zone"
 pnid=$(./simplenet-cli policy create zone ita01 --src 192.168.0.1 --proto tcp --table INPUT --policy ACCEPT | awk '/"id": / {gsub(/"|,/,"",$2) ; print $2}')
@@ -194,74 +197,6 @@ revpvid=$(./simplenet-cli policy create vlan vlan01 --dst_port 53 --proto udp --
 
 echo "Creating and list policy zone"
 revpnid=$(./simplenet-cli policy create zone ita01 --src 192.168.0.1 --proto tcp --table INPUT --policy ACCEPT | awk '/"id": / {gsub(/"|,/,"",$2) ; print $2}')
-
-echo "Listing Vlans atteched with device"
-./simplenet-cli device vlan_list firewall01 | ccze -A
-echo
-
-echo "Listing Devices"
-./simplenet-cli device list all | ccze -A
-echo
-
-echo "Listing Zones"
-./simplenet-cli zone list all | ccze -A
-echo
-
-echo "Listing Vlans"
-./simplenet-cli vlan list all | ccze -A
-echo
-
-echo "Listing Subnets"
-./simplenet-cli subnet list all | ccze -A
-echo
-
-echo "Listing Anycast Subnets"
-./simplenet-cli anycast list all | ccze -A
-echo
-
-echo "Listing Ip"
-./simplenet-cli ip list all | ccze -A
-echo
-
-echo "Listing IpAnycast"
-./simplenet-cli ipanycast list all | ccze -A
-echo
-
-exit
-
-echo "Delete vlan Zone"
-./simplenet-cli policy delete zone $pnid
-./simplenet-cli policy delete zone $revpnid
-echo
-
-echo "Delete vlan policy"
-./simplenet-cli policy delete vlan $revpvid
-./simplenet-cli policy delete vlan $pvid
-./simplenet-cli policy delete vlan $pvid2
-./simplenet-cli policy delete vlan $pvid3
-echo
-
-echo "Delete anycast policy"
-./simplenet-cli policy delete anycast $paid2
-./simplenet-cli policy delete anycast $revpaid2
-
-echo "Delete anycast policy"
-./simplenet-cli policy delete anycast $paid
-./simplenet-cli policy delete anycast $revpaid
-
-echo "Delete subnet policy"
-./simplenet-cli policy delete subnet $psid
-./simplenet-cli policy delete subnet $revpsid
-./simplenet-cli policy delete subnet $psid2
-./simplenet-cli policy delete subnet $psid3
-echo
-
-echo "Delete ip policy"
-./simplenet-cli policy delete ip $piid
-./simplenet-cli policy delete ip $revpiid
-./simplenet-cli policy delete ip $piid2
-./simplenet-cli policy delete ip $piid3
-echo
 
 echo "Detaching Device"
 ./simplenet-cli device vlan_detach firewall01 --vlan vlan01
