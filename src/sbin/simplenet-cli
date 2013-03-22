@@ -106,7 +106,7 @@ def pretty_output(r):
     sys.exit(0)
 
 @baker.command(
-    params={ 'action': '<list all|create|delete|rename>',
+    params={ 'action': '<list all|info|create|delete>',
              'name': 'datacenter name'}
 )
 def datacenter(action=None, name=None):
@@ -128,7 +128,7 @@ def datacenter(action=None, name=None):
     pretty_output(r)
 
 @baker.command(
-    params={ 'action': '<list all|create|delete|rename>',
+    params={ 'action': '<list all|info|create|delete>',
              'name': 'zone name'}
 )
 def zone(action=None, name=None, datacenter=None):
