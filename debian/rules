@@ -23,8 +23,3 @@ override_dh_auto_install:
 	python setup_simplenet_cli.py build -b $(BUILDDIR)/simplenet-cli install --force --root=${DEBIAN}/simplenet-cli/ --no-compile -O0 --install-layout=deb
 	python setup_simplenet_server.py build -b $(BUILDDIR)/simplenet-server install --force --root=${DEBIAN}/simplenet-server/ --no-compile -O0 --install-layout=deb
 	python setup_simplenet_firewall_agent.py build -b $(BUILDDIR)/simplenet-firewall-agent install --force --root=${DEBIAN}/simplenet-firewall-agent/ --no-compile -O0 --install-layout=deb
-
-#override_dh_installinit:
-#	dh_installinit --name=netl2ws
-#	dh_installinit --name=netl2inventoryd
-
