@@ -18,47 +18,97 @@
 # @author: Juliano Martinez (ncode), Locaweb.
 set -o pipefail
 
-echo "Creating Datacenter"
-./simplenet-cli datacenter create ita | sed 's/,\|"//g' | ccze -A
-echo
+function run_test(){
+    local cmd="$1"
+    local to_find="$2"
+    simplenet="../src/sbin/simplenet-cli"
+    echo "::  Running ${simplenet/*\//} $cmd"
+    echo -n "::: Status ->  "
+    result=$($simplenet $cmd 2>&1)
+    if !( echo "$result" | grep -qw "$to_find" ) ; then
+        echo -e "\033[01;31m[ FAIL ]\033[00m"
+        echo "Unable to $cmd"
+        echo "Expected: $to_find"
+        echo "Got $result"
+    else
+        if [ "$to_find" != '' ] ; then
+            echo -e "\033[01;32m[ OK ]\033[00m Result: $to_find"
+        else
+            echo -e "\033[01;32m[ OK ]\033[00m Result: $to_find"
+        fi
+    fi
+}
 
-echo "Creating Zone"
-./simplenet-cli zone create ita01 --datacenter ita | sed 's/,\|"//g' | ccze -A
-./simplenet-cli zone create ita02 --datacenter ita | sed 's/,\|"//g' | ccze -A
-echo
+echo "::::: Starting Datacenter Tests "
+run_test "datacenter create datacenter01" '"name": "datacenter01"'
+run_test "datacenter create datacenter01" '"message": "Datacenter:datacenter01 already exists Forbidden"'
+run_test "datacenter delete datacenter01" ''
 
-echo "Creating Vlan"
-./simplenet-cli vlan create vlan01 --zone ita01 | ccze -A
-./simplenet-cli vlan create vlan02 --zone ita02 | ccze -A
-echo
+echo -e "\n::::: Starting Zone Tests "
+run_test "datacenter create datacenter01" '"name": "datacenter01"'
+run_test "zone create zone01 --datacenter datacenter01" '"name": "zone01"'
+run_test "zone create zone01 --datacenter datacenter01" '"message": "Zone:zone01 already exists Forbidden"'
+run_test "zone delete zone01" ''
+run_test "datacenter delete datacenter01" ''
 
-echo "Creating Subnet"
-./simplenet-cli subnet create 192.168.0.0/24 --vlan vlan01 | ccze -A
-echo
+echo -e "\n::::: Starting Vlan Tests "
+run_test "datacenter create datacenter01" '"name": "datacenter01"'
+run_test "zone create zone01 --datacenter datacenter01" '"name": "zone01"'
+run_test "vlan create vlan01 --zone zone01" '"name": "vlan01"'
+run_test "vlan create vlan01 --zone zone01" '"message": "Vlan:vlan01 already exists Forbidden"'
+run_test "vlan delete vlan01" ''
+run_test "zone delete zone01" ''
+run_test "datacenter delete datacenter01" ''
 
-echo "Creating Anycast Subnet"
-./simplenet-cli anycast create 192.168.168.0/24
-echo
+echo -e "\n::::: Starting Subnet Tests "
+run_test "datacenter create datacenter01" '"name": "datacenter01"'
+run_test "zone create zone01 --datacenter datacenter01" '"name": "zone01"'
+run_test "zone create zone02 --datacenter datacenter01" '"name": "zone02"'
+run_test "vlan create vlan01 --zone zone01" '"name": "vlan01"'
+run_test "vlan create vlan02 --zone zone02" '"name": "vlan02"'
+run_test "subnet create 192.168.0.0/24 --vlan vlan01" '"cidr": "192.168.0.0/24"'
+run_test "subnet create 192.168.0.0/24 --vlan vlan01" '"message": "Subnet:192.168.0.0/24 already exists Forbidden"'
+run_test "subnet create 192.168.0.1/24 --vlan vlan02" '"cidr": "192.168.0.1/24"'
+run_test "subnet delete 192.168.0.0/24" ''
+run_test "subnet delete 192.168.0.1/24" ''
+run_test "vlan delete vlan01" ''
+run_test "vlan delete vlan02" ''
+run_test "zone delete zone01" ''
+run_test "zone delete zone02" ''
+run_test "datacenter delete datacenter01" ''
 
-echo "Creating Ip"
-./simplenet-cli ip create 192.168.0.1 --subnet 192.168.0.0/24 | ccze -A
-echo "Next ip creation must fail"
-./simplenet-cli ip create 192.168.1.1 --subnet 192.168.0.0/24 | ccze -A
-if [ $? -ne 1 ]; then
-    echo "Return must FAIL but it has exited OK"
-    exit 1
-fi
-echo
+echo -e "\n::::: Starting Anycast Tests "
+run_test "anycast create 192.168.168.0/24" '"cidr": "192.168.168.0/24"'
+run_test "anycast delete 192.168.168.0/24" ''
 
-echo "Creating IpAnycast"
-./simplenet-cli ipanycast create 192.168.168.3 --anycast 192.168.168.0/24 | ccze -A
-echo "Next ip creation must fail"
-./simplenet-cli ipanycast create 192.168.0.3 --anycast 192.168.168.0/24 | ccze -A
-if [ $? -ne 1 ]; then
-    echo "Return must FAIL but it has exited OK"
-    exit 1
-fi
-echo
+echo -e "\n::::: Starting Ip Tests "
+run_test "datacenter create datacenter01" '"name": "datacenter01"'
+run_test "zone create zone01 --datacenter datacenter01" '"name": "zone01"'
+run_test "zone create zone02 --datacenter datacenter01" '"name": "zone02"'
+run_test "vlan create vlan01 --zone zone01" '"name": "vlan01"'
+run_test "vlan create vlan02 --zone zone02" '"name": "vlan02"'
+run_test "subnet create 192.168.0.0/24 --vlan vlan01" '"cidr": "192.168.0.0/24"'
+run_test "subnet create 192.168.0.1/24 --vlan vlan02" '"cidr": "192.168.0.1/24"'
+run_test "ip create 192.168.0.1 --subnet 192.168.0.0/24" '"ip": "192.168.0.1"'
+run_test "ip create 192.168.1.1 --subnet 192.168.0.1/24" '"message": "Ip:192.168.1.1 address must be contained in 192.168.0.1/24 Forbidden"'
+run_test "ip delete 192.168.0.1" ''
+run_test "ip delete 192.168.1.1" ''
+run_test "subnet delete 192.168.0.0/24" ''
+run_test "subnet delete 192.168.0.1/24" ''
+run_test "vlan delete vlan01" ''
+run_test "vlan delete vlan02" ''
+run_test "zone delete zone01" ''
+run_test "zone delete zone02" ''
+run_test "datacenter delete datacenter01" ''
+
+echo -e "\n::::: Starting IpAnycast Tests "
+run_test "anycast create 192.168.168.0/24" '"cidr": "192.168.168.0/24"'
+run_test "ipanycast create 192.168.168.3 --anycast 192.168.168.0/24" '"ip": "192.168.168.1"'
+run_test "ipanycast create 192.168.0.3 --anycast 192.168.168.0/24" '"message": "Ip:192.168.0.3 address must be contained in 192.168.168.0/24 Forbidden"'
+run_test "ipanycast delete 192.168.168.3" ''
+run_test "anycast delete 192.168.168.0/24" ''
+
+exit
 
 echo "Creating Device"
 ./simplenet-cli device create firewall01 --zone ita01 | ccze -A
@@ -205,39 +255,4 @@ echo
 
 echo "Detaching Device"
 ./simplenet-cli device vlan_detach firewall01 --vlan vlan01
-echo
-
-echo "Deleting Ip"
-./simplenet-cli ip delete 192.168.0.1
-echo
-
-echo "Deleting IpAnycast"
-./simplenet-cli ipanycast delete 192.168.168.3
-echo
-
-echo "Deleting Subnet"
-./simplenet-cli subnet delete 192.168.0.0/24
-echo
-
-echo "Deleting Anycast Subnet"
-./simplenet-cli anycast delete 192.168.168.0/24
-echo
-
-echo "Deleting Device"
-./simplenet-cli device delete firewall01
-./simplenet-cli device delete firewall02
-echo
-
-echo "Deleting Vlan"
-./simplenet-cli vlan delete vlan01
-./simplenet-cli vlan delete vlan02
-echo
-
-echo "Deleting Zone"
-./simplenet-cli zone delete ita01
-./simplenet-cli zone delete ita02
-echo
-
-echo "Deleting Datacenter"
-./simplenet-cli datacenter delete ita
 echo
