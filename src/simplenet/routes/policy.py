@@ -23,6 +23,10 @@ from bottle import abort, request, response
 
 from simplenet.common.auth import handle_auth
 from simplenet.common.config import config, get_logger
+from simplenet.exceptions import (
+    FeatureNotImplemented, EntityNotFound,
+    OperationNotPermited, FeatureNotAvailable
+)
 from simplenet.common.http_utils import (
     reply_json, create_manager
 )
