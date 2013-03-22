@@ -113,7 +113,7 @@ class SimpleNet(object):
         vlan = self.vlan_info(subnet['vlan_id'])
         zone = self.zone_info(vlan['zone_id'])
         datacenter = self.datacenter_info(zone['datacenter_id'])
-        logger.debug("Received subnet: %s vlan: %s zone: %s dc: %s from [%s]" % (
+        logger.debug("Received subnet: %s vlan: %s zone: %s dc: %s from [%s]" %
             (subnet, vlan, zone, datacenter, id)
         )
         return {
@@ -130,7 +130,7 @@ class SimpleNet(object):
     def _get_data_anycast_(self, id):
         logger.debug("Getting anycast data %s" % id)
         anycast = self.anycast_info(id)
-        logger.debug("Received anycast: %s from [%s]" % (
+        logger.debug("Received anycast: %s from [%s]" %
             (anycast, id)
         )
         return {
@@ -144,7 +144,7 @@ class SimpleNet(object):
         vlan = self.vlan_info(id)
         zone = self.zone_info(vlan['zone_id'])
         datacenter = self.datacenter_info(zone['datacenter_id'])
-        logger.debug("Received vlan: %s zone: %s dc: %s from [%s]" % (
+        logger.debug("Received vlan: %s zone: %s dc: %s from [%s]" %
             (vlan, zone, datacenter, id)
         )
         return {
@@ -161,7 +161,7 @@ class SimpleNet(object):
         logger.debug("Getting zone data %s" % id)
         zone = self.zone_info(id)
         datacenter = self.datacenter_info(zone['datacenter_id'])
-        logger.debug("Received zone: %s dc: %s from [%s]" % (
+        logger.debug("Received zone: %s dc: %s from [%s]" %
             (zone, datacenter, id)
         )
         return {
@@ -175,7 +175,7 @@ class SimpleNet(object):
     def _get_data_datacenter_(self, id):
         logger.debug("Getting dc data %s" % id)
         datacenter = self.datacenter_info(id)
-        logger.debug("Received dc: %s from [%s]" % (
+        logger.debug("Received dc: %s from [%s]" %
             (datacenter, id)
         )
         return {
@@ -393,7 +393,7 @@ class SimpleNet(object):
         return devices
 
     def device_remove_vlan(self, device_id, vlan_id):
-        logger.debug("Removing vlan from device: %s vlan: %s" % (
+        logger.debug("Removing vlan from device: %s vlan: %s" %
             (device_id, vlan_id)
         )
         session.begin(subtransactions=True)
