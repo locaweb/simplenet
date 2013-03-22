@@ -71,6 +71,19 @@ def __api_call(method, url, data=None):
     elif (method == 'delete'):
         # ret = requests.delete(url + "?ticket=" + __gen_authtk())
         ret = requests.delete(url)
+        if ret.status_code == 200:
+            class result(object):
+                status_code = None
+                text = None
+            _ret = result()
+            _ret.status_code = ret.status_code
+            _ret.text = json.dumps(
+                {'message':
+                    {'message': 'Successful deletetion'},
+                 'status': 200
+                }
+            )
+            ret = _ret
 
     #if ret.status_code == 403:
     #    os.remove(os.path.expanduser("~/.simplecli"))
@@ -91,7 +104,7 @@ def fetch_id(_type, _data):
     try:
         return json.loads(data.text)['id']
     except:
-        print 'Invalid input name, cidr or ip'
+        pretty_output(data)
         sys.exit(1)
 
 def pretty_output(r):

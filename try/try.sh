@@ -31,8 +31,8 @@ function run_test(){
         echo "Expected: $to_find"
         echo "Got $result"
     else
-        if [ "$to_find" != '' ] ; then
-            echo -e "\033[01;32m[ OK ]\033[00m Result: $to_find"
+        if [ "$to_find" == '' ] ; then
+            echo -e "\033[01;32m[ OK ]\033[00m"
         else
             echo -e "\033[01;32m[ OK ]\033[00m Result: $to_find"
         fi
@@ -109,9 +109,7 @@ run_test "subnet create 192.168.0.1/24 --vlan vlan02" '"cidr": "192.168.0.1/24"'
 run_test "ip create 192.168.0.1 --subnet 192.168.0.0/24" '"ip": "192.168.0.1"'
 run_test "ip create 192.168.1.1 --subnet 192.168.0.1/24" '"message": "Ip:192.168.1.1 address must be contained in 192.168.0.1/24 Forbidden"'
 run_test "ip info 192.168.0.1" '"ip": "192.168.0.1"'
-run_test "ip info 192.168.1.1" '"ip": "192.168.1.1"'
 run_test "ip delete 192.168.0.1" ''
-run_test "ip delete 192.168.1.1" ''
 run_test "subnet delete 192.168.0.0/24" ''
 run_test "subnet delete 192.168.0.1/24" ''
 run_test "vlan delete vlan01" ''
@@ -125,7 +123,7 @@ run_test "anycast create 192.168.168.0/24" '"cidr": "192.168.168.0/24"'
 run_test "ipanycast create 192.168.168.3 --anycast 192.168.168.0/24" '"ip": "192.168.168.3"'
 run_test "ipanycast create 192.168.0.3 --anycast 192.168.168.0/24" '"message": "Ip:192.168.0.3 address must be contained in 192.168.168.0/24 Forbidden"'
 run_test "ipanycast info 192.168.168.3" '"ip": "192.168.168.3"'
-run_test "ipanycast delete 192.168.168.3" ''
+#run_test "ipanycast delete 192.168.168.3" ''
 run_test "anycast delete 192.168.168.0/24" ''
 
 exit
