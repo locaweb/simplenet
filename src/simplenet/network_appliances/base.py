@@ -36,7 +36,7 @@ class SimpleNet(object):
             _values.append(
                 _value.to_dict(),
             )
-        logger.debug("Received %s: %s" % name)
+        logger.debug("Received %s: %s" % (name, _values))
         return _values
 
     def _generic_info_(self, name, model, id):
