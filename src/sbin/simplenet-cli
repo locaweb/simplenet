@@ -83,7 +83,7 @@ def fetch_id(_type, _data):
         data = __api_call("get", '%s/%s/by-cidr/%s' %
             (server, _type, _data.replace('/','_'))
         )
-    elif _type in ('ips', 'ipsanycasts', 'ipanycasts'):
+    elif _type in ('ips', 'ipanycasts'):
         data = __api_call("get", '%s/%s/by-ip/%s' % (server, _type, _data))
     else:
         data = __api_call("get", '%s/%s/by-name/%s' % (server, _type, _data))
@@ -298,7 +298,7 @@ def ipanycast(action=None, ip=None, anycast=None):
         )
     elif action == 'delete':
         r = __api_call("delete", '%s/%s/delete' %
-            (base_url, fetch_id('ipsanycasts', ip))
+            (base_url, fetch_id('ipanycasts', ip))
         )
     elif action == 'info':
         r = __api_call("get", '%s/by-ip/%s' % (base_url, ip))
