@@ -51,6 +51,16 @@ run_test "zone create zone01 --datacenter datacenter01" '"message": "Zone:zone01
 run_test "zone delete zone01" ''
 run_test "datacenter delete datacenter01" ''
 
+echo -e "\n::::: Starting Device Tests "
+run_test "datacenter create datacenter01" '"name": "datacenter01"'
+run_test "zone create zone01 --datacenter datacenter01" '"name": "zone01"'
+run_test "device create firewall01 --zone zone01" '"name": "firewall01"'
+run_test "device create firewall01 --zone zone01" '"name": "firewall01"'
+run_test "device delete firewall01" ''
+run_test "zone create zone01 --datacenter datacenter01" '"message": "Zone:zone01 already exists Forbidden"'
+run_test "zone delete zone01" ''
+run_test "datacenter delete datacenter01" ''
+
 echo -e "\n::::: Starting Vlan Tests "
 run_test "datacenter create datacenter01" '"name": "datacenter01"'
 run_test "zone create zone01 --datacenter datacenter01" '"name": "zone01"'
