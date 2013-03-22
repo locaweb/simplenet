@@ -190,7 +190,7 @@ class SimpleNet(object):
         return ss
 
     def datacenter_list(self):
-        return self._generic_list_(self, "datacenters", models.Datacenter)
+        return self._generic_list_("datacenters", models.Datacenter)
 
     def datacenter_create(self, data):
         logger.debug("Creating dc using data: %s" % data)
@@ -212,7 +212,7 @@ class SimpleNet(object):
         raise FeatureNotImplemented()
 
     def datacenter_info(self, id):
-        self._generic_info_(self, "datacenter", models.Datacenter, id)
+        self._generic_info_("datacenter", models.Datacenter, id)
 
     def datacenter_info_by_name(self, name):
         logger.debug("Getting dc info by name %s" % name)
@@ -237,7 +237,7 @@ class SimpleNet(object):
         return True
 
     def zone_list(self):
-        return self._generic_list_(self, "zones", models.Zone)
+        return self._generic_list_("zones", models.Zone)
 
     def zone_create(self, datacenter_id, data):
         logger.debug("Creating zone on dc: %s using data: %s" %
@@ -288,7 +288,7 @@ class SimpleNet(object):
         return True
 
     def device_list(self):
-        return self._generic_list_(self, "devices", models.Device)
+        return self._generic_list_("devices", models.Device)
 
     def device_create(self, zone_id, data):
         logger.debug("Creating device on zone: %s using data: %s" %
@@ -407,7 +407,7 @@ class SimpleNet(object):
         return True
 
     def device_info(self, id):
-        self._generic_info_(self, "device", models.Device, id)
+        self._generic_info_("device", models.Device, id)
 
     def device_info_by_name(self, name):
         logger.debug("Getting zone info by name %s" % name)
@@ -435,7 +435,7 @@ class SimpleNet(object):
         return True
 
     def vlan_list(self):
-        return self._generic_list_(self, "vlans", models.Vlan)
+        return self._generic_list_("vlans", models.Vlan)
 
     def vlan_list_by_device(self, device_id):
         logger.debug("Listing vlans by device [%s]" % device_id)
@@ -480,7 +480,7 @@ class SimpleNet(object):
         return self.vlan_info_by_name(data['name'])
 
     def vlan_info(self, id):
-        self._generic_info_(self, "vlan", models.Vlan, id)
+        self._generic_info_("vlan", models.Vlan, id)
 
     def vlan_info_by_name(self, name):
         logger.debug("Getting vlan info by name %s" % name)
@@ -508,10 +508,10 @@ class SimpleNet(object):
         return True
 
     def subnet_list(self):
-        return self._generic_list_(self, "subnets", models.Subnet)
+        return self._generic_list_("subnets", models.Subnet)
 
     def anycast_list(self):
-        return self._generic_list_(self, "anycasts", models.Anycast)
+        return self._generic_list_("anycasts", models.Anycast)
 
     def anycast_list_by_device(self, device_id):
         logger.debug("Listing anycasts by device [%s]" % device_id)
@@ -576,10 +576,10 @@ class SimpleNet(object):
         return data
 
     def subnet_info(self, id):
-        self._generic_info_(self, "subnet", models.Subnet, id)
+        self._generic_info_("subnet", models.Subnet, id)
 
     def anycast_info(self, id):
-        self._generic_info_(self, "anycast", models.Anycast, id)
+        self._generic_info_("anycast", models.Anycast, id)
 
     def subnet_info_by_cidr(self, cidr):
         logger.debug("Getting subnet info from %s" % id)
@@ -619,7 +619,7 @@ class SimpleNet(object):
         return True
 
     def ip_list(self):
-        return self._generic_list_(self, "ips", models.Ip)
+        return self._generic_list_("ips", models.Ip)
 
     def ip_list_by_subnet(self, subnet_id):
         logger.debug("Getting ip info by subnet %s" % subnet_id)
@@ -644,7 +644,7 @@ class SimpleNet(object):
         return ips
 
     def ipanycast_list(self):
-        return self._generic_list_(self, "ips anycast", models.Ipanycast)
+        return self._generic_list_("ips anycast", models.Ipanycast)
 
     def ip_create(self, subnet_id, data):
         logger.debug("Creating ip on zone: %s using data: %s" %
@@ -703,10 +703,10 @@ class SimpleNet(object):
         return self.ipanycast_info_by_ip(data['ip'])
 
     def ip_info(self, id):
-        self._generic_info_(self, "ip", models.Ip, id)
+        self._generic_info_("ip", models.Ip, id)
 
     def ipanycast_info(self, id):
-        self._generic_info_(self, "ip anycast", models.Ipanycast, id)
+        self._generic_info_("ip anycast", models.Ipanycast, id)
 
     def ip_info_by_ip(self, ip):
         logger.debug("Getting ip info by ip %s" % id)
