@@ -164,7 +164,6 @@ run_test "device anycast_attach firewall01 --anycast 192.168.168.0/24" '"name": 
 run_test "device anycast_detach firewall01 --anycast 192.168.168.0/24" '"message": "Successful deletetion"'
 run_test "anycastip delete 192.168.168.3" '"message": "Successful deletetion"'
 run_test "anycast delete 192.168.168.0/24" '"message": "Successful deletetion"'
-run_test "vlan delete vlan01" '"message": "Successful deletetion"'
 run_test "device delete firewall01" '"message": "Successful deletetion"'
 run_test "zone delete zone01" '"message": "Successful deletetion"'
 run_test "datacenter delete datacenter01" '"message": "Successful deletetion"'
