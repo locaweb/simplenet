@@ -79,9 +79,9 @@ class Net(SimpleNet):
                 _data.update(_get_data(anycast['anycast_id']))
                 policy_list = policy_list + self.policy_list_by_owner('anycast', anycast['anycast_id'])
                 for ip in self.ip_list_by_anycast(anycast['anycast_id']): # Cascade thru the IPs of the anycast subnet
-                    _get_data = getattr(self, "_get_data_%s_" % 'ipanycast')
+                    _get_data = getattr(self, "_get_data_%s_" % 'anycastip')
                     _data.update(_get_data(ip['id']))
-                    policy_list = policy_list + self.policy_list_by_owner('Ipanycast', ip['id'])
+                    policy_list = policy_list + self.policy_list_by_owner('Anycastip', ip['id'])
 
             _data.update({'policy': policy_list})
             logger.debug("Received rules: %s from %s with id %s and device %s" % (

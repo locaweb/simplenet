@@ -221,7 +221,7 @@ class Worker(ConsumerMixin):
                 rule_dzvs_block(infos)
                 [self._gen_jumps_(rule['table'], data['subnet'], ip['ip'], ip['ip']) for ip in data['ips']]
 
-            if ('anycast' in data) and ('ipsanycast' in data) :
+            if ('anycast' in data) and ('anycastips' in data) :
                 logging.debug('Anycast chain')
                 infos = {'table': rule['table'],
                          'datacenter': data['datacenter'],
@@ -229,7 +229,7 @@ class Worker(ConsumerMixin):
                          'zone': data['zone'],
                          'vlan': 'anycast'}
                 rule_dzvs_block(infos)
-                [self._gen_jumps_(rule['table'], data['anycast'], ip['ip'], ip['ip']) for ip in data['ipsanycast']]
+                [self._gen_jumps_(rule['table'], data['anycast'], ip['ip'], ip['ip']) for ip in data['anycastips']]
 
             if 'ip' in data:
                 logging.debug('IP Chain')
@@ -244,7 +244,7 @@ class Worker(ConsumerMixin):
 
             self._add_rule(self._gen_rule_(rule))
 
-            if 'ipanycast' in data:
+            if 'anycastip' in data:
                 logging.debug('IP Chain')
                 #print json.dumps(data, sort_keys=True, indent=4)
                 infos = {'table': rule['table'],
@@ -253,7 +253,7 @@ class Worker(ConsumerMixin):
                          'zone': data['zone'],
                          'vlan': 'anycast'}
                 rule_dzvs_block(infos)
-                self._gen_jumps_(rule['table'], data['anycast'], data['ipanycast'], data['anycast'])
+                self._gen_jumps_(rule['table'], data['anycast'], data['anycastip'], data['anycast'])
 
             self._add_rule(self._gen_rule_(rule))
 

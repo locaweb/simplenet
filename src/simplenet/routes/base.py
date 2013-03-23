@@ -351,15 +351,15 @@ def vlan_subnet_create(vlan_id):
     return subnet
 
 
-@post('/anycasts/<anycast_id>/ipsanycast')
+@post('/anycasts/<anycast_id>/anycastips')
 @handle_auth
 @validate_input(ip=str)
 @reply_json
-def anycast_ipanycast_create(anycast_id):
+def anycast_anycastip_create(anycast_id):
     """
     ::
 
-      POST /anycasts/<anycast_id>/ipsanycast
+      POST /anycasts/<anycast_id>/anycastips
 
     Create a new ip in anycast subnet
     """
@@ -368,8 +368,8 @@ def anycast_ipanycast_create(anycast_id):
     if not data:
         abort(400, 'No data received')
     data = json.loads(data)
-    ip = manager.ipanycast_create(anycast_id, data)
-    location = "ipsanycast/%s" % (ip['id'])
+    ip = manager.anycastip_create(anycast_id, data)
+    location = "anycastips/%s" % (ip['id'])
     response.set_header("Location", location)
     return ip
 

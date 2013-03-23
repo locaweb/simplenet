@@ -148,12 +148,12 @@ run_test "datacenter delete datacenter01" '"message": "Successful deletetion"'
 
 echo -e "\n::::: Starting IpAnycast Tests "
 run_test "anycast create 192.168.168.0/24" '"cidr": "192.168.168.0/24"'
-run_test "ipanycast create 192.168.168.3 --anycast 192.168.168.0/24" '"ip": "192.168.168.3"'
-run_test "ipanycast create 192.168.0.3 --anycast 192.168.168.0/24" '"message": "Ip:192.168.0.3 address must be contained in 192.168.168.0/24 Forbidden"'
+run_test "anycastip create 192.168.168.3 --anycast 192.168.168.0/24" '"ip": "192.168.168.3"'
+run_test "anycastip create 192.168.0.3 --anycast 192.168.168.0/24" '"message": "Ip:192.168.0.3 address must be contained in 192.168.168.0/24 Forbidden"'
 run_policy_test "policy create" "anycast" "192.168.168.0/24 --dst 192.168.168.3 --proto tcp --table OUTPUT --policy DROP"
 exit
-run_test "ipanycast info 192.168.168.3" '"ip": "192.168.168.3"'
-run_test "ipanycast delete 192.168.168.3" '"message": "Successful deletetion"'
+run_test "anycastip info 192.168.168.3" '"ip": "192.168.168.3"'
+run_test "anycastip delete 192.168.168.3" '"message": "Successful deletetion"'
 run_test "anycast delete 192.168.168.0/24" '"message": "Successful deletetion"'
 
 exit
@@ -173,7 +173,7 @@ piid3=$(./simplenet-cli policy create ip 192.168.0.1 --src 192.168.0.4 --proto u
 echo
 
 echo "Creating and list policy anycast ip"
-paid2=$(./simplenet-cli policy create ipanycast 192.168.168.3 --src 192.168.0.2 --proto udp --table FORWARD --policy REJECT | awk '/"id": / {gsub(/"|,/,"",$2) ; print $2}')
+paid2=$(./simplenet-cli policy create anycastip 192.168.168.3 --src 192.168.0.2 --proto udp --table FORWARD --policy REJECT | awk '/"id": / {gsub(/"|,/,"",$2) ; print $2}')
 
 echo "Attaching Vlan to Device"
 ./simplenet-cli device vlan_attach firewall01 --vlan vlan01 | ccze -A
@@ -190,7 +190,7 @@ echo "Creating and list policy ip"
 revpiid=$(./simplenet-cli policy create ip 192.168.0.1 --src 192.168.0.2 --proto udp --table FORWARD --policy REJECT | awk '/"id": / {gsub(/"|,/,"",$2) ; print $2}')
 
 echo "Creating and list policy anycast ip"
-revpaid2=$(./simplenet-cli policy create ipanycast 192.168.168.3 --src 192.168.0.2 --proto udp --table FORWARD --policy REJECT | awk '/"id": / {gsub(/"|,/,"",$2) ; print $2}')
+revpaid2=$(./simplenet-cli policy create anycastip 192.168.168.3 --src 192.168.0.2 --proto udp --table FORWARD --policy REJECT | awk '/"id": / {gsub(/"|,/,"",$2) ; print $2}')
 
 echo "Creating and list policy anycast subnet"
 revpaid=$(./simplenet-cli policy create anycast 192.168.168.0/24 --dst 192.168.168.3 --proto tcp --table OUTPUT --policy DROP | awk '/"id": / {gsub(/"|,/,"",$2) ; print $2}')
