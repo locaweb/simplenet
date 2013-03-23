@@ -375,8 +375,20 @@ def device(action=None, name=None, zone=None, vlan=None, anycast=None):
         r = __api_call("delete", '%s/%s/vlans/%s' % (
             base_url, fetch_id('devices', name), fetch_id('vlans', vlan))
         )
+    elif action == 'anycast_detach':
+        if not anycast:
+            print 'Missing anycast to attach'
+            sys.exit(1)
+
+        r = __api_call("delete", '%s/%s/anycasts/%s' % (
+            base_url, fetch_id('devices', name), fetch_id('anycasts', vlan))
+        )
     elif action == 'vlan_list':
         r = __api_call("get", '%s/vlans/list-by-device/%s' %
+            (server, fetch_id('devices', name))
+        )
+    elif action == 'anycast_list':
+        r = __api_call("get", '%s/anycasts/list-by-device/%s' %
             (server, fetch_id('devices', name))
         )
     else:
