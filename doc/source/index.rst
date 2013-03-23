@@ -3,9 +3,6 @@ SimpleNet
 
 Network made easy
 
-High-level API
---------------
-
 Basic network management API
 ----------------------------
 

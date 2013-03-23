@@ -29,15 +29,15 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'$PROJETO'
-copyright = u'2013, $PROJETO'
+project = u'SimpleNet'
+copyright = u'2013, Locaweb'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
 # built documents.
 #
 # The short X.Y version.
-version = '0.0.1'
+version = '0.0.10'
 # The full version, including alpha/beta/rc tags.
 release = '0.0.1'
 
@@ -87,7 +87,7 @@ html_theme = 'sphinx-bootstrap'
 # documentation.
 html_theme_options = {
     'analytics_code': 'UA-00000000-1',
-    'home_url': 'http://code.locaweb.com.br/$GRUPO/$PROJETO',
+    'home_url': 'https://code.locaweb.com.br/iaas/simplenet',
     'bootstrap_theme': 'http://bootswatch.com/united/bootstrap.min.css'
 }
 
@@ -157,7 +157,7 @@ html_static_path = ['_static']
 #html_file_suffix = None
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = '$PROJETO-apidoc'
+htmlhelp_basename = 'simplenet-apidoc'
 
 
 # -- Options for LaTeX output --------------------------------------------------
@@ -176,8 +176,8 @@ latex_elements = {
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title, author, documentclass [howto/manual]).
 latex_documents = [
-  ('index', '$PROJETO-api.tex', u'Documentation',
-   u'$PROJETO', 'manual'),
+  ('index', 'simplenet-api.tex', u'Documentation',
+   u'simplenet', 'manual'),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
@@ -206,8 +206,8 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    ('index', '$PROJETO-api', u'Documentation',
-     [u'$PROJETO'], 1)
+    ('index', 'simplenet-api', u'Documentation',
+     [u'simplenet'], 1)
 ]
 
 # If true, show URL addresses after external links.
@@ -220,8 +220,8 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-  ('index', '$PROJETO', u'Documentation',
-   u'$PROJETO', '$PROJETO', 'One line description of project.',
+  ('index', 'simplenet', u'Documentation',
+   u'simplenet', 'simplenet', 'Network management made easy',
    'Miscellaneous'),
 ]
 
