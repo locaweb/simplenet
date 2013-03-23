@@ -79,7 +79,14 @@ run_test "datacenter create datacenter01" '"name": "datacenter01"'
 run_test "zone create zone01 --datacenter datacenter01" '"name": "zone01"'
 run_test "device create firewall01 --zone zone01" '"name": "firewall01"'
 run_test "device create firewall01 --zone zone01" '"message": "Device:firewall01 already exists Forbidden"'
+run_test "vlan create vlan01 --zone zone01" '"name": "vlan01"'
+run_test "device vlan_attach firewall01 --vlan vlan01" '"name": "firewall01"'
+run_test "device vlan_attach firewall01 --vlan vlan01" '"message": "Exception(FlushError(.*"'
+run_test "device vlan_detach firewall01 --vlan vlan01" '"message": "Successful deletetion"'
+exit
+./simplenet-cli device vlan_detach firewall01 --vlan vlan01
 run_test "device info firewall01" '"name": "firewall01"'
+run_test "vlan delete vlan01" '"message": "Successful deletetion"'
 run_test "device delete firewall01" '"message": "Successful deletetion"'
 run_test "zone create zone01 --datacenter datacenter01" '"message": "Zone:zone01 already exists Forbidden"'
 run_test "zone delete zone01" '"message": "Successful deletetion"'
@@ -151,7 +158,6 @@ run_test "anycast create 192.168.168.0/24" '"cidr": "192.168.168.0/24"'
 run_test "anycastip create 192.168.168.3 --anycast 192.168.168.0/24" '"ip": "192.168.168.3"'
 run_test "anycastip create 192.168.0.3 --anycast 192.168.168.0/24" '"message": "Ip:192.168.0.3 address must be contained in 192.168.168.0/24 Forbidden"'
 run_policy_test "policy create" "anycast" "192.168.168.0/24 --dst 192.168.168.3 --proto tcp --table OUTPUT --policy DROP"
-exit
 run_test "anycastip info 192.168.168.3" '"ip": "192.168.168.3"'
 run_test "anycastip delete 192.168.168.3" '"message": "Successful deletetion"'
 run_test "anycast delete 192.168.168.0/24" '"message": "Successful deletetion"'
