@@ -9,7 +9,7 @@ Basic network management API
 .. automodule:: simplenet.routes.base
   :members:
 
-Network appliances API
+Network appliance API
 ----------------------
 
 .. automodule:: simplenet.routes.policy
