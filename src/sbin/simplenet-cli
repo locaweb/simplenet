@@ -381,7 +381,7 @@ def device(action=None, name=None, zone=None, vlan=None, anycast=None):
             sys.exit(1)
 
         r = __api_call("delete", '%s/%s/anycasts/%s' % (
-            base_url, fetch_id('devices', name), fetch_id('anycasts', vlan))
+            base_url, fetch_id('devices', name), fetch_id('anycasts', anycast))
         )
     elif action == 'vlan_list':
         r = __api_call("get", '%s/vlans/list-by-device/%s' %
