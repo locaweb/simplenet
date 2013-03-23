@@ -1,48 +1,24 @@
-$PROJETO
-========
+SimpleNet
+=========
 
-Uma breve descriçào sobre esse projeto da Locaweb contendo algo como:
-
-* O que ele faz?
-* Porque foi criado?
-
-
-Arquitetura
------------
-
- * :doc:`Arquitetura <resources/arquitetura>`
- * :doc:`Integrações <resources/integracoes>`
-
-.. toctree::
-   :hidden:
-
-   resources/organizacao
-   resources/integracoes
-
-
-Webapi
-------
-
+Network made easy
 
 High-level API
 --------------
 
- * :doc:`/v1/something <resources/api>`
+Basic network management API
+----------------------------
 
-.. toctree::
-   :hidden:
+.. automodule:: simplenet.routes.base
+  :members:
 
-   resources/api
+Network appliances API
+----------------------
 
+.. automodule:: simplenet.routes.policy
+  :members:
 
  Contato
  =======
 
- * $PROJETO@locaweb.com.br
-
-=============
-REST BASE API
-=============
-
-.. automodule:: simplenet.routes.base
-  :members:
+ * juliano.martinez@locaweb.com.br
