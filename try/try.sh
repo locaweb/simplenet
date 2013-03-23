@@ -83,8 +83,6 @@ run_test "vlan create vlan01 --zone zone01" '"name": "vlan01"'
 run_test "device vlan_attach firewall01 --vlan vlan01" '"name": "firewall01"'
 run_test "device vlan_attach firewall01 --vlan vlan01" '"message": "Exception(FlushError(.*"'
 run_test "device vlan_detach firewall01 --vlan vlan01" '"message": "Successful deletetion"'
-exit
-./simplenet-cli device vlan_detach firewall01 --vlan vlan01
 run_test "device info firewall01" '"name": "firewall01"'
 run_test "vlan delete vlan01" '"message": "Successful deletetion"'
 run_test "device delete firewall01" '"message": "Successful deletetion"'
@@ -154,62 +152,19 @@ run_test "zone delete zone02" '"message": "Successful deletetion"'
 run_test "datacenter delete datacenter01" '"message": "Successful deletetion"'
 
 echo -e "\n::::: Starting IpAnycast Tests "
+run_test "datacenter create datacenter01" '"name": "datacenter01"'
+run_test "zone create zone01 --datacenter datacenter01" '"name": "zone01"'
+run_test "device create firewall01 --zone zone01" '"name": "firewall01"'
 run_test "anycast create 192.168.168.0/24" '"cidr": "192.168.168.0/24"'
 run_test "anycastip create 192.168.168.3 --anycast 192.168.168.0/24" '"ip": "192.168.168.3"'
 run_test "anycastip create 192.168.0.3 --anycast 192.168.168.0/24" '"message": "Ip:192.168.0.3 address must be contained in 192.168.168.0/24 Forbidden"'
 run_policy_test "policy create" "anycast" "192.168.168.0/24 --dst 192.168.168.3 --proto tcp --table OUTPUT --policy DROP"
 run_test "anycastip info 192.168.168.3" '"ip": "192.168.168.3"'
+run_test "device anycast_attach firewall01 --anycast 192.168.168.0/24" '"name": "firewall01"'
+run_test "device anycast_detach firewall01 --anycast 192.168.168.0/24" '"message": "Successful deletetion"'
 run_test "anycastip delete 192.168.168.3" '"message": "Successful deletetion"'
 run_test "anycast delete 192.168.168.0/24" '"message": "Successful deletetion"'
-
-exit
-
-echo "Creating and list policy anycast subnet"
-paid=$(./simplenet-cli policy create anycast 192.168.168.0/24 --dst 192.168.168.3 --proto tcp --table OUTPUT --policy DROP | awk '/"id": / {gsub(/"|,/,"",$2) ; print $2}')
-
-./simplenet-cli device anycast_attach fireany01 --anycast 192.168.168.0/24 | ccze -A
-./simplenet-cli device anycast_attach fireany02 --anycast 192.168.168.0/24 | ccze -A
-
-echo "Creating and list policy ip"
-piid=$(./simplenet-cli policy create ip 192.168.0.1 --src 192.168.0.2 --proto udp --table FORWARD --policy REJECT | awk '/"id": / {gsub(/"|,/,"",$2) ; print $2}')
-piid2=$(./simplenet-cli policy create ip 192.168.0.1 --src 192.168.0.3 --proto udp --table FORWARD --policy REJECT | awk '/"id": / {gsub(/"|,/,"",$2) ; print $2}')
-piid3=$(./simplenet-cli policy create ip 192.168.0.1 --src 192.168.0.4 --proto udp --table FORWARD --policy REJECT | awk '/"id": / {gsub(/"|,/,"",$2) ; print $2}')
-./simplenet-cli policy info ip $piid | ccze -A
-./simplenet-cli policy info ip all | ccze -A
-echo
-
-echo "Creating and list policy anycast ip"
-paid2=$(./simplenet-cli policy create anycastip 192.168.168.3 --src 192.168.0.2 --proto udp --table FORWARD --policy REJECT | awk '/"id": / {gsub(/"|,/,"",$2) ; print $2}')
-
-echo "Attaching Vlan to Device"
-./simplenet-cli device vlan_attach firewall01 --vlan vlan01 | ccze -A
-echo "Next attach creation must fail"
-./simplenet-cli device vlan_attach firewall02 --vlan vlan01 | ccze -A
-if [ $? -ne 1 ]; then
-    echo "Return must FAIL but it has exited OK"
-    exit 1
-fi
-echo
-
-echo "Reverse policy"
-echo "Creating and list policy ip"
-revpiid=$(./simplenet-cli policy create ip 192.168.0.1 --src 192.168.0.2 --proto udp --table FORWARD --policy REJECT | awk '/"id": / {gsub(/"|,/,"",$2) ; print $2}')
-
-echo "Creating and list policy anycast ip"
-revpaid2=$(./simplenet-cli policy create anycastip 192.168.168.3 --src 192.168.0.2 --proto udp --table FORWARD --policy REJECT | awk '/"id": / {gsub(/"|,/,"",$2) ; print $2}')
-
-echo "Creating and list policy anycast subnet"
-revpaid=$(./simplenet-cli policy create anycast 192.168.168.0/24 --dst 192.168.168.3 --proto tcp --table OUTPUT --policy DROP | awk '/"id": / {gsub(/"|,/,"",$2) ; print $2}')
-
-echo "Creating and list policy subnet"
-revpsid=$(./simplenet-cli policy create subnet 192.168.0.0/24 --dst 192.168.0.2 --proto tcp --table OUTPUT --policy DROP | awk '/"id": / {gsub(/"|,/,"",$2) ; print $2}')
-
-echo "Creating and list policy vlan"
-revpvid=$(./simplenet-cli policy create vlan vlan01 --dst_port 53 --proto udp --table INPUT --policy ACCEPT | awk '/"id": / {gsub(/"|,/,"",$2) ; print $2}')
-
-echo "Creating and list policy zone"
-revpnid=$(./simplenet-cli policy create zone ita01 --src 192.168.0.1 --proto tcp --table INPUT --policy ACCEPT | awk '/"id": / {gsub(/"|,/,"",$2) ; print $2}')
-
-echo "Detaching Device"
-./simplenet-cli device vlan_detach firewall01 --vlan vlan01
-echo
+run_test "vlan delete vlan01" '"message": "Successful deletetion"'
+run_test "device delete firewall01" '"message": "Successful deletetion"'
+run_test "zone delete zone01" '"message": "Successful deletetion"'
+run_test "datacenter delete datacenter01" '"message": "Successful deletetion"'
