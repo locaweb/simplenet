@@ -39,19 +39,40 @@ function run_test(){
     fi
 }
 
+function run_policy_test(){
+    local action="$1"
+    local rule_type="$2"
+    local cmd="$1 $2 $3"
+    local simplenet="../src/sbin/simplenet-cli"
+    echo "::  Running ${simplenet/*\//} $cmd"
+    echo -n "::: Status ->  "
+    local result=$($simplenet $cmd 2>&1)
+    local rule_id=$(echo "$result" | awk '/"id": / {gsub(/"|,/,"",$2) ; print $2}')
+    if [ $(echo "$rule_id" | wc -c) != 37 ]; then
+        echo -e "\033[01;31m[ FAIL ]\033[00m"
+        echo "Unable to $cmd"
+        echo "Got $result"
+    else
+        echo -e "\033[01;32m[ OK ]\033[00m Result: ${rule_id}"
+        run_test "policy info $rule_type ${rule_id}" '"id": "'${rule_id}'"'
+        run_test "policy delete $rule_type ${rule_id}" '"message": "Successful deletetion"'
+    fi
+}
+
 echo "::::: Starting Datacenter Tests "
 run_test "datacenter create datacenter01" '"name": "datacenter01"'
 run_test "datacenter create datacenter01" '"message": "Datacenter:datacenter01 already exists Forbidden"'
 run_test "datacenter info datacenter01" '"name": "datacenter01"'
-run_test "datacenter delete datacenter01" ''
+run_test "datacenter delete datacenter01" '"message": "Successful deletetion"'
 
 echo -e "\n::::: Starting Zone Tests "
 run_test "datacenter create datacenter01" '"name": "datacenter01"'
 run_test "zone create zone01 --datacenter datacenter01" '"name": "zone01"'
 run_test "zone create zone01 --datacenter datacenter01" '"message": "Zone:zone01 already exists Forbidden"'
+run_policy_test "policy create" "zone" "zone01 --src 192.168.0.1 --proto tcp --table INPUT --policy ACCEPT"
 run_test "zone info zone01" '"name": "zone01"'
-run_test "zone delete zone01" ''
-run_test "datacenter delete datacenter01" ''
+run_test "zone delete zone01" '"message": "Successful deletetion"'
+run_test "datacenter delete datacenter01" '"message": "Successful deletetion"'
 
 echo -e "\n::::: Starting Device Tests "
 run_test "datacenter create datacenter01" '"name": "datacenter01"'
@@ -59,20 +80,23 @@ run_test "zone create zone01 --datacenter datacenter01" '"name": "zone01"'
 run_test "device create firewall01 --zone zone01" '"name": "firewall01"'
 run_test "device create firewall01 --zone zone01" '"message": "Device:firewall01 already exists Forbidden"'
 run_test "device info firewall01" '"name": "firewall01"'
-run_test "device delete firewall01" ''
+run_test "device delete firewall01" '"message": "Successful deletetion"'
 run_test "zone create zone01 --datacenter datacenter01" '"message": "Zone:zone01 already exists Forbidden"'
-run_test "zone delete zone01" ''
-run_test "datacenter delete datacenter01" ''
+run_test "zone delete zone01" '"message": "Successful deletetion"'
+run_test "datacenter delete datacenter01" '"message": "Successful deletetion"'
 
 echo -e "\n::::: Starting Vlan Tests "
 run_test "datacenter create datacenter01" '"name": "datacenter01"'
 run_test "zone create zone01 --datacenter datacenter01" '"name": "zone01"'
 run_test "vlan create vlan01 --zone zone01" '"name": "vlan01"'
 run_test "vlan create vlan01 --zone zone01" '"message": "Vlan:vlan01 already exists Forbidden"'
+run_policy_test "policy create" "vlan" "vlan01 --dst_port 53 --proto udp --table INPUT --policy ACCEPT"
+run_policy_test "policy create" "vlan" "vlan01 --dst_port 80 --proto tcp --table INPUT --policy ACCEPT"
+run_policy_test "policy create" "vlan" "vlan01 --dst_port 443 --proto tcp --table INPUT --policy ACCEPT"
 run_test "vlan info vlan01" '"name": "vlan01"'
-run_test "vlan delete vlan01" ''
-run_test "zone delete zone01" ''
-run_test "datacenter delete datacenter01" ''
+run_test "vlan delete vlan01" '"message": "Successful deletetion"'
+run_test "zone delete zone01" '"message": "Successful deletetion"'
+run_test "datacenter delete datacenter01" '"message": "Successful deletetion"'
 
 echo -e "\n::::: Starting Subnet Tests "
 run_test "datacenter create datacenter01" '"name": "datacenter01"'
@@ -85,18 +109,19 @@ run_test "subnet create 192.168.0.0/24 --vlan vlan01" '"message": "Subnet:192.16
 run_test "subnet create 192.168.0.1/24 --vlan vlan02" '"cidr": "192.168.0.1/24"'
 run_test "subnet info 192.168.0.0/24" '"cidr": "192.168.0.0/24"'
 run_test "subnet info 192.168.0.1/24" '"cidr": "192.168.0.1/24"'
-run_test "subnet delete 192.168.0.0/24" ''
-run_test "subnet delete 192.168.0.1/24" ''
-run_test "vlan delete vlan01" ''
-run_test "vlan delete vlan02" ''
-run_test "zone delete zone01" ''
-run_test "zone delete zone02" ''
-run_test "datacenter delete datacenter01" ''
+run_test "subnet delete 192.168.0.0/24" '"message": "Successful deletetion"'
+run_test "subnet delete 192.168.0.1/24" '"message": "Successful deletetion"'
+run_test "vlan delete vlan01" '"message": "Successful deletetion"'
+run_test "vlan delete vlan02" '"message": "Successful deletetion"'
+run_test "zone delete zone01" '"message": "Successful deletetion"'
+run_test "zone delete zone02" '"message": "Successful deletetion"'
+run_test "datacenter delete datacenter01" '"message": "Successful deletetion"'
 
 echo -e "\n::::: Starting Anycast Tests "
 run_test "anycast create 192.168.168.0/24" '"cidr": "192.168.168.0/24"'
+run_test "anycast create 192.168.168.0/24" '"message": "Anycast:192.168.168.0/24 already exists Forbidden"'
 run_test "anycast info 192.168.168.0/24" '"cidr": "192.168.168.0/24"'
-run_test "anycast delete 192.168.168.0/24" ''
+run_test "anycast delete 192.168.168.0/24" '"message": "Successful deletetion"'
 
 echo -e "\n::::: Starting Ip Tests "
 run_test "datacenter create datacenter01" '"name": "datacenter01"'
@@ -108,47 +133,30 @@ run_test "subnet create 192.168.0.0/24 --vlan vlan01" '"cidr": "192.168.0.0/24"'
 run_test "subnet create 192.168.0.1/24 --vlan vlan02" '"cidr": "192.168.0.1/24"'
 run_test "ip create 192.168.0.1 --subnet 192.168.0.0/24" '"ip": "192.168.0.1"'
 run_test "ip create 192.168.1.1 --subnet 192.168.0.1/24" '"message": "Ip:192.168.1.1 address must be contained in 192.168.0.1/24 Forbidden"'
+run_policy_test "policy create" "subnet" "192.168.0.0/24 --dst 192.168.0.2 --proto tcp --table OUTPUT --policy DROP"
+run_policy_test "policy create" "subnet" "192.168.0.0/24 --dst 192.168.0.2 --proto tcp --table FORWARD --policy DROP"
+run_policy_test "policy create" "subnet" "192.168.0.0/24 --dst 192.168.0.2 --proto tcp --table INPUT --policy DROP"
 run_test "ip info 192.168.0.1" '"ip": "192.168.0.1"'
-run_test "ip delete 192.168.0.1" ''
-run_test "subnet delete 192.168.0.0/24" ''
-run_test "subnet delete 192.168.0.1/24" ''
-run_test "vlan delete vlan01" ''
-run_test "vlan delete vlan02" ''
-run_test "zone delete zone01" ''
-run_test "zone delete zone02" ''
-run_test "datacenter delete datacenter01" ''
+run_test "ip delete 192.168.0.1" '"message": "Successful deletetion"'
+run_test "subnet delete 192.168.0.0/24" '"message": "Successful deletetion"'
+run_test "subnet delete 192.168.0.1/24" '"message": "Successful deletetion"'
+run_test "vlan delete vlan01" '"message": "Successful deletetion"'
+run_test "vlan delete vlan02" '"message": "Successful deletetion"'
+run_test "zone delete zone01" '"message": "Successful deletetion"'
+run_test "zone delete zone02" '"message": "Successful deletetion"'
+run_test "datacenter delete datacenter01" '"message": "Successful deletetion"'
 
 echo -e "\n::::: Starting IpAnycast Tests "
 run_test "anycast create 192.168.168.0/24" '"cidr": "192.168.168.0/24"'
 run_test "ipanycast create 192.168.168.3 --anycast 192.168.168.0/24" '"ip": "192.168.168.3"'
 run_test "ipanycast create 192.168.0.3 --anycast 192.168.168.0/24" '"message": "Ip:192.168.0.3 address must be contained in 192.168.168.0/24 Forbidden"'
+run_policy_test "policy create" "anycast" "192.168.168.0/24 --dst 192.168.168.3 --proto tcp --table OUTPUT --policy DROP"
+exit
 run_test "ipanycast info 192.168.168.3" '"ip": "192.168.168.3"'
-#run_test "ipanycast delete 192.168.168.3" ''
-run_test "anycast delete 192.168.168.0/24" ''
+run_test "ipanycast delete 192.168.168.3" '"message": "Successful deletetion"'
+run_test "anycast delete 192.168.168.0/24" '"message": "Successful deletetion"'
 
 exit
-
-echo "Creating and list policy zone"
-pnid=$(./simplenet-cli policy create zone ita01 --src 192.168.0.1 --proto tcp --table INPUT --policy ACCEPT | awk '/"id": / {gsub(/"|,/,"",$2) ; print $2}')
-./simplenet-cli policy info zone $pnid | ccze -A
-./simplenet-cli policy info zone all | ccze -A
-echo
-
-echo "Creating and list policy vlan"
-pvid=$(./simplenet-cli policy create vlan vlan01 --dst_port 53 --proto udp --table INPUT --policy ACCEPT | awk '/"id": / {gsub(/"|,/,"",$2) ; print $2}')
-pvid2=$(./simplenet-cli policy create vlan vlan01 --dst_port 80 --proto tcp --table INPUT --policy ACCEPT | awk '/"id": / {gsub(/"|,/,"",$2) ; print $2}')
-pvid3=$(./simplenet-cli policy create vlan vlan01 --dst_port 443 --proto tcp --table INPUT --policy ACCEPT | awk '/"id": / {gsub(/"|,/,"",$2) ; print $2}')
-./simplenet-cli policy info vlan $pvid | ccze -A
-./simplenet-cli policy info vlan all | ccze -A
-echo
-
-echo "Creating and list policy subnet"
-psid=$(./simplenet-cli policy create subnet 192.168.0.0/24 --dst 192.168.0.2 --proto tcp --table OUTPUT --policy DROP | awk '/"id": / {gsub(/"|,/,"",$2) ; print $2}')
-psid2=$(./simplenet-cli policy create subnet 192.168.0.0/24 --dst 192.168.0.2 --proto tcp --table FORWARD --policy DROP | awk '/"id": / {gsub(/"|,/,"",$2) ; print $2}')
-psid3=$(./simplenet-cli policy create subnet 192.168.0.0/24 --dst 192.168.0.2 --proto tcp --table INPUT --policy DROP | awk '/"id": / {gsub(/"|,/,"",$2) ; print $2}')
-./simplenet-cli policy info subnet $psid | ccze -A
-./simplenet-cli policy info subnet all | ccze -A
-echo
 
 echo "Creating and list policy anycast subnet"
 paid=$(./simplenet-cli policy create anycast 192.168.168.0/24 --dst 192.168.168.3 --proto tcp --table OUTPUT --policy DROP | awk '/"id": / {gsub(/"|,/,"",$2) ; print $2}')
