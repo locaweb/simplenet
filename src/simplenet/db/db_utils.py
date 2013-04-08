@@ -16,12 +16,10 @@
 # @author: Juliano Martinez (ncode), Locaweb.
 # @author: Luiz Ozaki, Locaweb.
 
-import logging
-
 from sqlalchemy.orm import sessionmaker
 from simplenet.db import models
 
-LOG = logging.getLogger(__name__)
+logger = config.get_logger()
 
 _engine = models.engine
 _maker = None

@@ -19,39 +19,49 @@
 # @author: Juliano Martinez (ncode), Locaweb.
 # @author: Luiz Ozaki, Locaweb.
 
+import ConfigParser
 import os
 import socket
-import ConfigParser
+import syslog
 
-import logging
-import logging.config
-import logging.handlers
-
+caller = inspect.stack()[-1][1].split('/')[-1]
 config = ConfigParser.ConfigParser()
 config_file = "/etc/simplenet/simplenet.cfg"
+logger = None
 
 if os.path.isfile(config_file):
     config.read(config_file)
 
+class SyslogWrapper(object):
 
-def set_logger():
-    root_logger = logging.root
-    root_logger.setLevel(logging.DEBUG)
+    def __init__(self):
+        self.config = load()
 
-    log_format = "[%(name)s] %(levelname)s - %(message)s"
-    log_date_format = "%Y-%m-%d %H:%M:%S"
-    formatter = logging.Formatter(log_format, log_date_format)
+    def info(self, msg):
+        syslog.syslog(syslog.LOG_INFO, msg)
 
-    SysLogHandler = logging.handlers.SysLogHandler
-    try:
-        handler = SysLogHandler(address='/dev/log',
-                                facility=SysLogHandler.LOG_SYSLOG)
-    except socket.error:
-        handler = SysLogHandler(address='/var/run/syslog',
-                                facility=SysLogHandler.LOG_SYSLOG)
+    def warning(self, msg):
+        syslog.syslog(syslog.LOG_WARNING, msg)
 
-    handler.setFormatter(formatter)
-    root_logger.addHandler(handler)
+    def critical(self, msg):
+        syslog.syslog(syslog.LOG_CRIT, msg)
+
+    def error(self, msg):
+        syslog.syslog(syslog.LOG_ERR, msg)
+
+    def debug(self, msg):
+        if self.config.has_section(caller) and \
+           self.config.getboolean(caller, 'debug'):
+            syslog.syslog(syslog.LOG_DEBUG, msg)
+
+
+def get_logger():
+    global logger
+    if logger: return logger
+    syslog.openlog(caller, syslog.LOG_PID, syslog.LOG_DAEMON)
+    logger = SyslogWrapper()
+    return logger
+
 
 def section(cfg, cfg_section):
     r = {}

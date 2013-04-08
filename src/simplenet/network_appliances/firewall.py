@@ -16,9 +16,8 @@
 # @author: Juliano Martinez (ncode), Locaweb.
 # @author: Luiz Ozaki, Locaweb.
 
-import logging
-
 from simplenet.common import event
+from simplenet.confing import get_logger
 from simplenet.db import models, db_utils
 from simplenet.exceptions import EntityNotFound, OperationNotPermited
 from simplenet.network_appliances.base import SimpleNet
@@ -29,11 +28,7 @@ from kombu import Exchange, BrokerConnection
 from kombu.common import maybe_declare
 from kombu.pools import producers
 
-import os
-import json
-myname = os.uname()[1]
-
-LOG = logging.getLogger(__name__)
+logger = config.get_logger()
 session = db_utils.get_database_session()
 
 class Net(SimpleNet):
@@ -42,8 +37,6 @@ class Net(SimpleNet):
         policy_list = []
         _get_data = getattr(self, "_get_data_%s_" % owner_type)
         _data = _get_data(owner_id)
-
-        print json.dumps(_data, sort_keys=True, indent=4)
 
         if (owner_type != 'zone') and ('vlan_id' in _data):
             devices = self.device_list_by_vlan(_data['vlan_id'])
@@ -56,52 +49,36 @@ class Net(SimpleNet):
             _get_data = getattr(self, "_get_data_%s_" % 'device')
             _data.update(_get_data(device['id']))
 
-            print 'Loop start'
             zone_id = device['zone_id']
             dev_id = device['device_id'] if (owner_type != 'zone') else device['id']
-
-            print "Device:", device['name']
-            print "Zone:", device['zone']
 
             policy_list = policy_list + self.policy_list_by_owner('zone', zone_id)
             _data.update({'policy': self.policy_list_by_owner('zone', zone_id)})
             for vlan in self.vlan_list_by_device(dev_id): # Cascade thru the vlans of the device
-                print "VLANs:", vlan['vlan_id']
                 _get_data = getattr(self, "_get_data_%s_" % 'vlan')
                 _data.update(_get_data(vlan['vlan_id']))
                 policy_list = policy_list + self.policy_list_by_owner('vlan', vlan['vlan_id'])
                 for subnet in self.subnet_list_by_vlan(vlan['vlan_id']): # Cascade thru the subnets of the vlan
-                    print "Subnet:", subnet['id']
                     _get_data = getattr(self, "_get_data_%s_" % 'subnet')
                     _data.update(_get_data(subnet['id']))
                     policy_list = policy_list + self.policy_list_by_owner('subnet', subnet['id'])
                     for ip in self.ip_list_by_subnet(subnet['id']): # Cascade thru the IPs of the subnet
-                        print "IP:",  ip['id']
                         _get_data = getattr(self, "_get_data_%s_" % 'ip')
                         _data.update(_get_data(ip['id']))
                         policy_list = policy_list + self.policy_list_by_owner('ip', ip['id'])
 
-            print 'Start Anycast'
             for anycast in self.anycast_list_by_device(dev_id): # Cascade thru the anycasts of the device
-                print "Anycast:", anycast['anycast_cidr']
                 _get_data = getattr(self, "_get_data_%s_" % 'anycast')
                 _data.update(_get_data(anycast['anycast_id']))
                 policy_list = policy_list + self.policy_list_by_owner('anycast', anycast['anycast_id'])
                 for ip in self.ip_list_by_anycast(anycast['anycast_id']): # Cascade thru the IPs of the anycast subnet
-                    print "IP Anycast:",  ip['ip']
                     _get_data = getattr(self, "_get_data_%s_" % 'ipanycast')
                     _data.update(_get_data(ip['id']))
                     policy_list = policy_list + self.policy_list_by_owner('Ipanycast', ip['id'])
 
-            print 'End Anycast'
             _data.update({'policy': policy_list})
-
-            #print json.dumps(_data, sort_keys=True, indent=4)
-
             if policy_list:
                 event.EventManager().raise_event(device['name'], _data)
-
-            print 'Loop end'
 
     def policy_list(self, owner_type):
         _model = getattr(models, "%sPolicy" % owner_type.capitalize())

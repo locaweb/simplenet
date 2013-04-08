@@ -16,17 +16,15 @@
 # @author: Juliano Martinez (ncode), Locaweb.
 # @author: Luiz Ozaki, Locaweb.
 
-import logging
-
+from simplenet.common.config import config, get_logger
 from simplenet.db import models, db_utils
 from simplenet.exceptions import (
     FeatureNotImplemented, EntityNotFound, OperationNotPermited
 )
 from sqlalchemy.exc import IntegrityError
 
-LOG = logging.getLogger(__name__)
+logger = config.get_logger()
 session = db_utils.get_database_session()
-
 
 class SimpleNet(object):
 

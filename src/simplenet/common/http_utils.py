@@ -18,7 +18,6 @@
 # @author: Luiz Ozaki, Locaweb.
 
 import os
-import logging
 
 from functools import wraps
 from bottle import response, request, abort
@@ -30,7 +29,7 @@ try:
 except ImportError:
     from json import dumps, loads
 
-LOG = logging.getLogger('simplenet.server')
+logger = config.get_logger()
 
 
 def reply_json(f):
@@ -49,7 +48,6 @@ def create_manager(network_appliance):
     _module_ = "simplenet.network_appliances.%s" % network_appliance
     module = __import__(_module_)
     module = getattr(module.network_appliances, network_appliance)
-
     return module.Net()
 
 
@@ -97,18 +95,42 @@ def validate_input(src="query", *vargs, **vkwargs):
                         assert ptype.search(pvalue) is not None
                         continue
                 except NullParameter, e:
-                    LOG.warn(str(e))
+                    logger.warn(str(e))
                     abort(400, str(e))
                 except Exception, e:
-                    LOG.warn("Error: the '%s' param has an unexpected type or an invalid format" % param) \
+                    logger.warn("Error: the '%s' param has an unexpected type or an invalid format" % param) \
                     if logger else None
                     abort(400, "Error: '%s' query parameter has an unexpected type or an invalid format" % param)
             return f(*args, **kwargs)
         return validate
     return proxy
 
+
+def cached(ttl=300, rd=None):
+    if not rd:
+        rd = redis.Redis()
+    def proxy(f):
+        @wraps(f)
+        def caching(*args, **kwargs):
+            _hash = "%s-%s" % (f.__name__, hashlib.md5("%s%s" % (
+                repr(args[1:]),
+                repr(kwargs)
+            )).hexdigest())
+            try:
+                cache = rd.get(_hash)
+                if not cache:
+                    cache = json.dumps(f(*args, **kwargs))
+                    rd.setex(_hash, cache, ttl)
+                return json.loads(cache)
+            except Exception, e:
+                return f(*args, **kwargs)
+        return caching
+    return proxy
+
+
 class InvalidParameter(Exception):
     pass
+
 
 class NullParameter(Exception):
     pass

@@ -18,13 +18,11 @@
 # @author: Juliano Martinez (ncode), Locaweb.
 # @author: Luiz Ozaki, Locaweb.
 
-import logging
-
 from bottle import error, request, response
 
 from simplenet.common.http_utils import reply_json
 
-LOG = logging.getLogger('simplenet.server')
+logger = config.get_logger()
 
 @error(400)
 @reply_json

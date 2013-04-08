@@ -17,23 +17,20 @@
 # @author: Willian Molinari, Locaweb.
 # @author: Juliano Martinez, Locaweb.
 
-import logging
 import socket
 
 from kombu import BrokerConnection, Exchange, Queue
 
-from simplenet.common.config import config, set_logger
+from simplenet.common.config import config, get_logger
 
-LOG = logging.getLogger(__name__)
-
+logger = config.get_logger()
 
 class EventManager(object):
     def __init__(self):
-        # "amqp://guest:guest@localhost//"
         self.url = config.get("event", "broker")
 
     def raise_event(self, event_type, params, **kwargs):
-        LOG.debug("Raising event %s with params: %s" % (event_type, params))
+        logger.debug("Raising event %s with params: %s" % (event_type, params))
         with BrokerConnection(self.url) as conn:
             conn.ensure_connection()
 
@@ -56,11 +53,9 @@ class EventManager(object):
 
             with conn.Producer(exchange=media_exchange, serializer="json",
                                routing_key=routing_key) as producer:
+                    logger.info("Publishing %s" % params)
                     producer.publish(params)
 
-    # Example callback:
-    # def callback(ch, method, properties, body)
-    #   print " [x] Received %r" % (body,)
     def listen_event(self, queue_name, callback):
         with BrokerConnection(self.url) as conn:
             conn.ensure_connection()
@@ -77,6 +72,7 @@ class EventManager(object):
                     routing_key=queue_name
             )
 
+            logger.info("Listening for data...")
             with conn.Consumer([queue], callbacks=[callback]) as consumer:
                 while True:
                     conn.drain_events()

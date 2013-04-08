@@ -34,14 +34,13 @@ import bottle
 from bottle import delete, put, get, post, error, run, debug
 from bottle import abort, request, ServerAdapter, response
 
-from simplenet.common.config import config, set_logger
+from simplenet.common.config import config, get_logger
 from simplenet.common.http_utils import reply_json, validate_input
 
 from simplenet.routes import base, policy, errors
 
 app = bottle.app()
-LOG = logging.getLogger('simplenet.server')
-
+logger = config.get_logger()
 
 def start():
     os.setgid(grp.getgrnam('nogroup')[2])
@@ -50,7 +49,7 @@ def start():
     port = config.getint("server", "port")
     bind_addr = config.get("server", "bind_addr")
     set_logger()
-    LOG.info("Starting Simplestack server")
+    logger.info("Starting Simplestack server")
     run(host=bind_addr, port=port, server="gevent")
 
 def main(action="foreground"):
