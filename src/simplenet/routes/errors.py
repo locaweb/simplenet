@@ -20,6 +20,7 @@
 
 from bottle import error, request, response
 
+from simplenet.common.config import get_logger
 from simplenet.common.http_utils import reply_json
 
 logger = get_logger()
