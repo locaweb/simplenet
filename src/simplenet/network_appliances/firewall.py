@@ -112,7 +112,7 @@ class Net(SimpleNet):
         logger.debug("Created rule %s on %s: %s using data: %s" %
             (str(policy.id), owner_type, owner_id, data)
         )
-        self._enqueue_rules_(owner_type, owner_id)
+        self._enqueue_rules_(owner_type, str(owner_id))
         return self.policy_info(owner_type, str(policy.id))
 
     def policy_info(self, owner_type, id):
