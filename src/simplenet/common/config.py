@@ -20,6 +20,7 @@
 # @author: Luiz Ozaki, Locaweb.
 
 import ConfigParser
+import inspect
 import os
 import socket
 import syslog
