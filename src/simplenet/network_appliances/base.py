@@ -61,7 +61,7 @@ class SimpleNet(object):
         logger.debug("Received %s from [%s]" % (data, id))
         return data
 
-    def _genreric_info_by_something_(self, name, value, model):
+    def _genreric_info_by_something_(self, name, model, value):
         logger.debug("Getting %s info by %s" % (name, value))
         ss = session.query(model).filter_by(**value).first()
         if not ss:
