@@ -48,6 +48,15 @@ class SimpleNet(object):
         logger.debug("Received %s from [%s]" % (data, id))
         return data
 
+    def _genreric_info_by_something_(self, name, value, model):
+        logger.debug("Getting %s info by %s" % (name, value))
+        ss = session.query(model).filter_by(**value).first()
+        if not ss:
+            raise EntityNotFound(nama.capitalize(), value)
+        data = ss.to_dict()
+        logger.debug("Received %s from [%s]" % (data, value))
+        return data
+
     def _get_data_device_(self, id):
         logger.debug("Getting device data %s" % id)
         device = self.device_info(id)
