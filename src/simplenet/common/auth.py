@@ -19,11 +19,14 @@
 
 __copyright__ = "Copyright 2012, Locaweb IDC"
 
-from ast import literal_eval
-from functools import wraps
-from bottle import request, abort
-from locautils.cas import CASClient, CasError
 import hashlib
+
+from ast import literal_eval
+from bottle import request, abort
+from functools import wraps
+from locautils.cas import CASClient, CasError
+from simplenet.common.config import config, get_logger
+from simplenet.common.config import config, get_logger
 
 logger = get_logger()
 
