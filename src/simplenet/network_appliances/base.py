@@ -278,17 +278,7 @@ class SimpleNet(object):
         return data
 
     def zone_delete(self, id):
-        logger.debug("Deleting zone %s" % id)
-        ss = session.query(models.Zone).get(id)
-        session.begin(subtransactions=True)
-        try:
-            session.delete(ss)
-            session.commit()
-        except Exception, e:
-            session.rollback()
-            raise Exception(e)
-        logger.debug("Successful deleted zone %s" % id)
-        return True
+        return self._generic_delete_("zone", models.Zone, id)
 
     def device_list(self):
         return self._generic_list_("devices", models.Device)
@@ -425,17 +415,7 @@ class SimpleNet(object):
         raise FeatureNotImplemented()
 
     def device_delete(self, id):
-        logger.debug("Deleting device %s" % id)
-        ss = session.query(models.Device).get(id)
-        session.begin(subtransactions=True)
-        try:
-            session.delete(ss)
-            session.commit()
-        except Exception, e:
-            session.rollback()
-            raise Exception(e)
-        logger.debug("Successful deletion of zone %s" % id)
-        return True
+        return self._generic_delete_("device", models.Device, id)
 
     def vlan_list(self):
         return self._generic_list_("vlans", models.Vlan)
@@ -498,17 +478,7 @@ class SimpleNet(object):
         raise FeatureNotImplemented()
 
     def vlan_delete(self, id):
-        logger.debug("Deleting vlan %s" % id)
-        ss = session.query(models.Vlan).get(id)
-        session.begin(subtransactions=True)
-        try:
-            session.delete(ss)
-            session.commit()
-        except Exception, e:
-            session.rollback()
-            raise Exception(e)
-        logger.debug("Successful deleted vlan %s" % id)
-        return True
+        return self._generic_delete_("vlan", models.Vlan, id)
 
     def subnet_list(self):
         return self._generic_list_("subnets", models.Subnet)
@@ -598,28 +568,10 @@ class SimpleNet(object):
         raise FeatureNotImplemented()
 
     def subnet_delete(self, id):
-        ss = session.query(models.Subnet).get(id)
-        session.begin(subtransactions=True)
-        try:
-            session.delete(ss)
-            session.commit()
-        except Exception, e:
-            session.rollback()
-            raise Exception(e)
-        return True
+        return self._generic_delete_("subnet", models.Subnet, id)
 
     def anycast_delete(self, id):
-        logger.debug("Deleting anycast %s" % id)
-        ss = session.query(models.Anycast).get(id)
-        session.begin(subtransactions=True)
-        try:
-            session.delete(ss)
-            session.commit()
-        except Exception, e:
-            session.rollback()
-            raise Exception(e)
-        logger.debug("Successful deleted anycast %s" % id)
-        return True
+        return self._generic_delete_("anycast", models.Anycast, id)
 
     def ip_list(self):
         return self._generic_list_("ips", models.Ip)
@@ -733,30 +685,10 @@ class SimpleNet(object):
         raise FeatureNotImplemented()
 
     def ip_delete(self, id):
-        logger.debug("Deleting ip %s" % id)
-        ss = session.query(models.Ip).get(id)
-        session.begin(subtransactions=True)
-        try:
-            session.delete(ss)
-            session.commit()
-        except Exception, e:
-            session.rollback()
-            raise Exception(e)
-        logger.debug("Successful deleted ip %s" % id)
-        return True
+        return self._generic_delete_("ip", models.Ip, id)
 
     def ipanycast_delete(self, id):
-        logger.debug("Deleting anycast ip %s" % id)
-        ss = session.query(models.Ipanycast).get(id)
-        session.begin(subtransactions=True)
-        try:
-            session.delete(ss)
-            session.commit()
-        except Exception, e:
-            session.rollback()
-            raise Exception(e)
-        logger.debug("Successful anycast ip %s" % id)
-        return True
+        return self._generic_delete_("ip anycast", models.Ipanycast, id)
 
     def policy_list(self, *args, **kawrgs):
         raise FeatureNotImplemented()
