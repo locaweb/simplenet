@@ -228,13 +228,23 @@ class SimpleNet(object):
         self._generic_info_("datacenter", models.Datacenter, id)
 
     def datacenter_info_by_name(self, name):
-        logger.debug("Getting datacenter info by name %s" % name)
-        ss = session.query(models.Datacenter).filter_by(name=name).first()
-        if not ss:
-            raise EntityNotFound('Datacenter', name)
-        data = ss.to_dict()
-        logger.debug("Received %s from [%s]" % (data, name))
-        return data
+        self._genreric_info_by_something_("datacenter", models.Datacenter, {'name': name})
+ #       logger.debug("Getting datacenter info by name %s" % name)
+ #       ss = session.query(models.Datacenter).filter_by(name=name).first()
+ #       if not ss:
+ #           raise EntityNotFound('Datacenter', name)
+ #       data = ss.to_dict()
+ #       logger.debug("Received %s from [%s]" % (data, name))
+ #       return data#
+#
+#    def _genreric_info_by_something_(self, name, value, model):
+#        logger.debug("Getting %s info by %s" % (name, value))
+#        ss = session.query(model).filter_by(**value).first()
+#        if not ss:
+#            raise EntityNotFound(nama.capitalize(), value)
+#        data = ss.to_dict()
+#        logger.debug("Received %s from [%s]" % (data, value))
+#        return data
 
     def datacenter_delete(self, id):
         return self._generic_delete_("datacenter", models.Datacenter, id)
