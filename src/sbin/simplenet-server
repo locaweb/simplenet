@@ -48,9 +48,9 @@ def start():
     debug(config.getboolean("server", "debug"))
     port = config.getint("server", "port")
     bind_addr = config.get("server", "bind_addr")
-    set_logger()
     logger.info("Starting Simplestack server")
     run(host=bind_addr, port=port, server="gevent")
+
 
 def main(action="foreground"):
     from supay import Daemon
@@ -67,6 +67,7 @@ def main(action="foreground"):
         daemon.status()
     else:
         cli_help()
+
 
 def cli_help():
     print "Usage: %s <start|stop|status|foreground>" % sys.argv[0]
