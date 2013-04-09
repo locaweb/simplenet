@@ -271,7 +271,7 @@ class SimpleNet(object):
         raise FeatureNotImplemented()
 
     def zone_info(self, id):
-        return self.generic_info(self, "zone", models.Zone, id)
+        return self._generic_info_("zone", models.Zone, id)
 
     def zone_info_by_name(self, name):
         return self._genreric_info_by_something_("zone", models.Zone, {'name': name})
