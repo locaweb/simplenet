@@ -24,16 +24,9 @@ import hashlib
 from ast import literal_eval
 from bottle import request, abort
 from functools import wraps
-from locautils.cas import CASClient, CasError
-from simplenet.common.config import config, get_logger
 from simplenet.common.config import config, get_logger
 
 logger = get_logger()
-
-cas_endpoint = config.get("authentication", "cas_endpoint")
-cas_sys_endpoint = config.get("authentication", "cas_sys_endpoint")
-cas_service  = config.get("authentication", "cas_service")
-user_roles = get_rolesdb()
 
 def load_plugin(network_appliance):
     _module_ = "simplenet.network_appliances.%s" % network_appliance
