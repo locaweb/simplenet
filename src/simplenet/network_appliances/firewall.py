@@ -34,6 +34,7 @@ session = db_utils.get_database_session()
 class Net(SimpleNet):
 
     def _enqueue_rules_(self, owner_type, owner_id):
+        logger.debug("Getting rules from %s with id %s" % (owner_type, id))
         policy_list = []
         _get_data = getattr(self, "_get_data_%s_" % owner_type)
         _data = _get_data(owner_id)
@@ -77,10 +78,12 @@ class Net(SimpleNet):
                     policy_list = policy_list + self.policy_list_by_owner('Ipanycast', ip['id'])
 
             _data.update({'policy': policy_list})
+            logger.debug("Received rules: %s from %s with id %s" % (rules, owner_type, id))
             if policy_list:
                 event.EventManager().raise_event(device['name'], _data)
 
     def policy_list(self, owner_type):
+        logger.debug("Listing policy")
         _model = getattr(models, "%sPolicy" % owner_type.capitalize())
         ss = session.query(_model).all()
         policies = []
@@ -88,9 +91,13 @@ class Net(SimpleNet):
             policies.append(
                 policy.to_dict()
             )
+        logger.debug("Received policies: %s" % policies)
         return policies
 
     def policy_create(self, owner_type, owner_id, data):
+        logger.debug("Creating rule on %s: %s using data: %s" %
+            (owner_type, owner_id, data)
+        )
         data.update({'owner_id': owner_id})
         _model = getattr(models, "%sPolicy" % owner_type.capitalize())
         policy = _model(**data)
@@ -102,20 +109,27 @@ class Net(SimpleNet):
             session.rollback()
             raise Exception(e)
 
+        logger.debug("Created rule on %s: %s using data: %s" %
+            (owner_type, owner_id, data)
+        )
         self._enqueue_rules_(owner_type, owner_id)
         return self.policy_info(owner_type, policy.id)
 
     def policy_info(self, owner_type, id):
+        logger.debug("Getting policy info from %s with id %s" % (owner_type, id))
         _model = getattr(models, "%sPolicy" % owner_type.capitalize())
         ss = session.query(_model).get(id)
         if not ss:
             raise EntityNotFound('%sPolicy' % owner_type.capitalize(), id)
-        return ss.to_dict()
+        data = ss.to_dict()
+        logger.debug("Received %s from [%s]" % (data, id))
+        return data
 
     def policy_update(self, *args, **kwargs):
         raise FeatureNotImplemented()
 
     def policy_delete(self, owner_type, id):
+        logger.debug("Deleting policy %s" % id)
         _model = getattr(models, "%sPolicy" % owner_type.capitalize())
         ss = session.query(_model).get(id)
         if not ss:
@@ -129,10 +143,12 @@ class Net(SimpleNet):
             session.rollback()
             raise Exception(e)
 
+        logger.debug("Successful deletion of policy %s" % id)
         self._enqueue_rules_(owner_type, owner_id)
         return True
 
     def policy_list_by_owner(self, owner_type, id):
+        logger.debug("Getting policy info by owner %s with id %s" % (owner_type, id))
         _model = getattr(models, "%sPolicy" % owner_type.capitalize())
         ss = session.query(_model).filter_by(owner_id=id).all()
         policies = []
@@ -140,4 +156,5 @@ class Net(SimpleNet):
             policies.append(
                 policy.to_dict()
             )
+        logger.debug("Received policies: %s from owner %s with id %s" % (policies, owner_type, id))
         return policies

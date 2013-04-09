@@ -18,11 +18,13 @@
 # @author: Luiz Ozaki, Locaweb.
 
 import os
+import redis
 
 from functools import wraps
 from bottle import response, request, abort
 
 from simplenet.common.config import config
+
 
 try:
     from simplejson import dumps, loads
@@ -106,7 +108,7 @@ def validate_input(src="query", *vargs, **vkwargs):
     return proxy
 
 
-def cached(ttl=300, rd=None):
+def cache(ttl=300, rd=None):
     if not rd:
         rd = redis.Redis()
     def proxy(f):

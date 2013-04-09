@@ -410,7 +410,7 @@ class SimpleNet(object):
         except Exception, e:
             session.rollback()
             raise Exception(e.__str__())
-        logger.debug("Successful remove vlan from device: %s" % device_id )
+        logger.debug("Successful remotion of vlan %s from device: %s" % (vlan_id, device_id))
         return True
 
     def device_info(self, id):
@@ -444,7 +444,7 @@ class SimpleNet(object):
         except Exception, e:
             session.rollback()
             raise Exception(e)
-        logger.debug("Successful deleted zone %s" % id)
+        logger.debug("Successful deletion of zone %s" % id)
         return True
 
     def vlan_list(self):
