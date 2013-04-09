@@ -34,18 +34,16 @@ def load_plugin(network_appliance):
     module = getattr(module.network_appliances, network_appliance)
     return module.Load()
 
-def handle_auth():
-    def proxy(f):
-        @wraps(f)
-        def auth(f):
-            if not config.getboolean("authentication", "enabled"):
+def handle_auth(f):
+    @wraps(f)
+    def auth(*args, **kwargs):
+        if not config.getboolean("authentication", "enabled"):
+            return f(*args, **kwargs)
+        authentication_plugin = config.get("authentication", "authentication_plugin")
+        def authenticate(*args, **kwargs):
+            auth = load_plugin(authentication_plugin)
+            if auth.do(request):
                 return f(*args, **kwargs)
-            authentication_plugin = config.get("authentication", "authentication_plugin")
-            def authenticate(*args, **kwargs):
-                auth = load_plugin(authentication_plugin)
-                if auth.do(request):
-                    return f(*args, **kwargs)
-                else:
-                    abort(403, "Access denied")
-        return auth
-    return proxy
+            else:
+                abort(403, "Access denied")
+    return auth
