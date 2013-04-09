@@ -23,7 +23,7 @@ import redis
 from functools import wraps
 from bottle import response, request, abort
 
-from simplenet.common.config import config
+from simplenet.common.config import config, get_logger
 
 
 try:
@@ -31,7 +31,7 @@ try:
 except ImportError:
     from json import dumps, loads
 
-logger = config.get_logger()
+logger = get_logger()
 
 
 def reply_json(f):
