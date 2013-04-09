@@ -29,9 +29,13 @@ session = db_utils.get_database_session()
 class SimpleNet(object):
 
     def _get_data_device_(self, id):
+        logger.debug("Getting device data %s" % id)
         device = self.device_info(id)
         zone = self.zone_info(device['zone_id'])
         datacenter = self.datacenter_info(zone['datacenter_id'])
+        logger.debug("Received device: %s zone: %s dc: %s from [%s]" %
+            (device, zone, datacenter, id)
+        )
         return {
             'zone': zone['name'],
             'zone_id': zone['id'],
@@ -40,11 +44,15 @@ class SimpleNet(object):
         }
 
     def _get_data_ip_(self, id):
+        logger.debug("Getting ip data %s" % id)
         ip = self.ip_info(id)
         subnet = self.subnet_info(ip['subnet_id'])
         vlan = self.vlan_info(subnet['vlan_id'])
         zone = self.zone_info(vlan['zone_id'])
         datacenter = self.datacenter_info(zone['datacenter_id'])
+        logger.debug("Received ip: %s vlan: %s zone: %s dc: %s from [%s]" % (
+            (ip, vlan, zone, datacenter, id)
+        )
         return {
             'ip': ip['ip'],
             'subnet': subnet['cidr'],
@@ -58,8 +66,12 @@ class SimpleNet(object):
         }
 
     def _get_data_ipanycast_(self, id):
+        logger.debug("Getting ip anycast data %s" % id)
         ip = self.ipanycast_info(id)
         anycast = self.anycast_info(ip['anycast_id'])
+        logger.debug("Received anycast: %s from [%s]" %
+            (anycast, id)
+        )
         return {
             'ipanycast': ip['ip'],
             'anycast': anycast['cidr'],
@@ -67,10 +79,14 @@ class SimpleNet(object):
         }
 
     def _get_data_subnet_(self, id):
+        logger.debug("Getting subnet data %s" % id)
         subnet = self.subnet_info(id)
         vlan = self.vlan_info(subnet['vlan_id'])
         zone = self.zone_info(vlan['zone_id'])
         datacenter = self.datacenter_info(zone['datacenter_id'])
+        logger.debug("Received subnet: %s vlan: %s zone: %s dc: %s from [%s]" % (
+            (subnet, vlan, zone, datacenter, id)
+        )
         return {
             'subnet': subnet['cidr'],
             'vlan': vlan['name'],
@@ -83,7 +99,11 @@ class SimpleNet(object):
         }
 
     def _get_data_anycast_(self, id):
+        logger.debug("Getting anycast data %s" % id)
         anycast = self.anycast_info(id)
+        logger.debug("Received anycast: %s from [%s]" % (
+            (anycast, id)
+        )
         return {
             'anycast_id': anycast['id'],
             'anycast': anycast['cidr'],
@@ -91,9 +111,13 @@ class SimpleNet(object):
         }
 
     def _get_data_vlan_(self, id):
+        logger.debug("Getting vlan data %s" % id)
         vlan = self.vlan_info(id)
         zone = self.zone_info(vlan['zone_id'])
         datacenter = self.datacenter_info(zone['datacenter_id'])
+        logger.debug("Received vlan: %s zone: %s dc: %s from [%s]" % (
+            (vlan, zone, datacenter, id)
+        )
         return {
             'vlan': vlan['name'],
             'vlan_id': vlan['id'],
@@ -105,8 +129,12 @@ class SimpleNet(object):
         }
 
     def _get_data_zone_(self, id):
+        logger.debug("Getting zone data %s" % id)
         zone = self.zone_info(id)
         datacenter = self.datacenter_info(zone['datacenter_id'])
+        logger.debug("Received zone: %s dc: %s from [%s]" % (
+            (zone, datacenter, id)
+        )
         return {
             'zone': zone['name'],
             'zone_id': zone['id'],
@@ -116,26 +144,35 @@ class SimpleNet(object):
         }
 
     def _get_data_datacenter_(self, id):
+        logger.debug("Getting dc data %s" % id)
         datacenter = self.datacenter_info(id)
+        logger.debug("Received dc: %s from [%s]" % (
+            (datacenter, id)
+        )
         return {
             'datacenter': datacenter['name'],
             'zones': self.zone_list_by_datacenter(id),
         }
 
     def prober(self):
+        logger.debug("Getting prober data")
         ss = session.query(models.Prober).all()
+        logger.debug("Received prober: %s" % ss)
         return ss
 
     def datacenter_list(self):
+        logger.debug("Listing dcs")
         ss = session.query(models.Datacenter).all()
         datacenters = []
         for datacenter in ss:
             datacenters.append(
                 datacenter.to_dict()
             )
+        logger.debug("Received dcs: %s" % datacenters)
         return datacenters
 
     def datacenter_create(self, data):
+        logger.debug("Creating dc using data: %s" % data)
         session.begin(subtransactions=True)
         try:
             session.add(models.Datacenter(name=data['name']))
@@ -147,24 +184,32 @@ class SimpleNet(object):
         except Exception, e:
             session.rollback()
             raise Exception(e)
+        logger.debug("Created dc using data: %s" % data)
         return self.datacenter_info_by_name(data['name'])
 
     def datacenter_update(self, *args, **kawrgs):
         raise FeatureNotImplemented()
 
     def datacenter_info(self, id):
+        logger.debug("Getting dc info from %s" % id)
         ss = session.query(models.Datacenter).get(id)
         if not ss:
             raise EntityNotFound('Datacenter', id)
-        return ss.to_dict()
+        data = ss.to_dict()
+        logger.debug("Received %s from [%s]" % (data, id))
+        return data
 
     def datacenter_info_by_name(self, name):
+        logger.debug("Getting dc info by name %s" % name)
         ss = session.query(models.Datacenter).filter_by(name=name).first()
         if not ss:
             raise EntityNotFound('Datacenter', name)
-        return ss.to_dict()
+        data = ss.to_dict()
+        logger.debug("Received %s from [%s]" % (data, name))
+        return data
 
     def datacenter_delete(self, id):
+        logger.debug("Deleting dc %s" % id)
         ss = session.query(models.Datacenter).get(id)
         session.begin(subtransactions=True)
         try:
@@ -173,18 +218,24 @@ class SimpleNet(object):
         except Exception, e:
             session.rollback()
             raise Exception(e)
+        logger.debug("Successful deleted dc %s" % id)
         return True
 
     def zone_list(self):
+        logger.debug("Listing zones")
         ss = session.query(models.Zone).all()
         zones = []
         for zone in ss:
             zones.append(
                 zone.to_dict(),
             )
+        logger.debug("Received zones: %s" % zones)
         return zones
 
     def zone_create(self, datacenter_id, data):
+        logger.debug("Creating zone on dc: %s using data: %s" %
+            (datacenter_id, data)
+        )
         session.begin(subtransactions=True)
         try:
             session.add(models.Zone(name=data['name'], datacenter_id=datacenter_id))
@@ -196,24 +247,34 @@ class SimpleNet(object):
         except Exception, e:
             session.rollback()
             raise Exception(e)
+        logger.debug("Created zone on dc: %s using data: %s" %
+            (datacenter_id, data)
+        )
         return self.zone_info_by_name(data['name'])
 
     def zone_update(self, *args, **kawrgs):
         raise FeatureNotImplemented()
 
     def zone_info(self, id):
+        logger.debug("Getting zone info from %s" % id)
         ss = session.query(models.Zone).get(id)
         if not ss:
             raise EntityNotFound('Zone', id)
-        return ss.to_dict()
+        data = ss.to_dict()
+        logger.debug("Received %s from [%s]" % (data, id))
+        return data
 
     def zone_info_by_name(self, name):
+        logger.debug("Getting zone info by name %s" % name)
         ss = session.query(models.Zone).filter_by(name=name).first()
         if not ss:
             raise EntityNotFound('Zone', name)
-        return ss.to_dict()
+        data = ss.to_dict()
+        logger.debug("Received %s from [%s]" % (data, name))
+        return data
 
     def zone_delete(self, id):
+        logger.debug("Deleting zone %s" % id)
         ss = session.query(models.Zone).get(id)
         session.begin(subtransactions=True)
         try:
@@ -222,18 +283,24 @@ class SimpleNet(object):
         except Exception, e:
             session.rollback()
             raise Exception(e)
+        logger.debug("Successful deleted zone %s" % id)
         return True
 
     def device_list(self):
+        logger.debug("Getting device list")
         ss = session.query(models.Device).all()
         devices = []
         for device in ss:
             devices.append(
                 device.to_dict()
             )
+        logger.debug("Received devices: %s" % devices)
         return devices
 
     def device_create(self, zone_id, data):
+        logger.debug("Creating device on zone: %s using data: %s" %
+            (zone_id, data)
+        )
         session.begin(subtransactions=True)
         try:
             session.add(models.Device(name=data['name'], zone_id=zone_id))
@@ -245,9 +312,15 @@ class SimpleNet(object):
         except Exception, e:
             session.rollback()
             raise Exception(e)
+        logger.debug("Created device on zone: %s using data: %s" %
+            (zone_id, data)
+        )
         return self.device_info_by_name(data['name'])
 
     def device_add_vlan(self, device_id, data):
+        logger.debug("Adding vlan to device: %s using data: %s" %
+            (device_id, data)
+        )
         device = session.query(models.Device).get(device_id)
         vlan = session.query(models.Vlan).get(data['vlan_id'])
 
@@ -265,9 +338,16 @@ class SimpleNet(object):
         except Exception, e:
             session.rollback()
             raise Exception(e)
-        return device.to_dict()
+        _data = device.to_dict()
+        logger.debug("Successful adding vlan to device: %s device status: %s" %
+            (device_id, _data)
+        )
+        return _data
 
     def device_add_anycast(self, device_id, data):
+        logger.debug("Adding vlan to anycast: %s using data: %s" %
+            (device_id, data)
+        )
         device = session.query(models.Device).get(device_id)
         anycast = session.query(models.Anycast).get(data['anycast_id'])
 
@@ -280,36 +360,49 @@ class SimpleNet(object):
         except Exception, e:
             session.rollback()
             raise Exception(e)
-        return device.to_dict()
+        _data = device.to_dict()
+        logger.debug("Successful adding vlan to anycast: %s device status: %s" %
+            (device_id, _data)
+        )
+        return _data
 
     def device_list_by_vlan(self, vlan_id):
+        logger.debug("Listing devices by vlan [%s]" % vland_id)
         ss = session.query(models.Vlans_to_Device).filter_by(vlan_id=vlan_id).all()
         devices = []
         for relationship in ss:
             devices.append(
                 relationship.to_dict()
             )
+        logger.debug("Received devices: %s from [%s]" % (devices, vlan_id))
         return devices
 
     def device_list_by_anycast(self, anycast_id):
+        logger.debug("Listing devices by anycast [%s]" % anycast_id)
         ss = session.query(models.Anycasts_to_Device).filter_by(anycast_id=anycast_id).all()
         devices = []
         for relationship in ss:
             devices.append(
                 relationship.to_dict()
             )
+        logger.debug("Received devices: %s from [%s]" % (devices, anycast_id))
         return devices
 
     def device_list_by_zone(self, zone_id):
+        logger.debug("Listing devices by zone [%s]" % zone_id)
         ss = session.query(models.Device).filter_by(zone_id=zone_id).all()
         devices = []
         for relationship in ss:
             devices.append(
                 relationship.to_dict()
             )
+        logger.debug("Received devices: %s from [%s]" % (devices, zone_id))
         return devices
 
     def device_remove_vlan(self, device_id, vlan_id):
+        logger.debug("Removing vlan from device: %s vlan: %s" % (
+            (device_id, vlan_id)
+        )
         session.begin(subtransactions=True)
         try:
             session.query(models.Vlans_to_Device).filter_by(vlan_id=vlan_id, device_id=device_id).delete()
@@ -317,24 +410,32 @@ class SimpleNet(object):
         except Exception, e:
             session.rollback()
             raise Exception(e.__str__())
+        logger.debug("Successful remove vlan from device: %s" % device_id )
         return True
 
     def device_info(self, id):
+        logger.debug("Getting device info from %s" % id)
         ss = session.query(models.Device).get(id)
         if not ss:
             raise EntityNotFound('Device', id)
-        return ss.to_dict()
+        data = ss.to_dict()
+        logger.debug("Received %s from [%s]" % (data, id))
+        return data
 
     def device_info_by_name(self, name):
+        logger.debug("Getting zone info by name %s" % name)
         ss = session.query(models.Device).filter_by(name=name).first()
         if not ss:
             raise EntityNotFound('Device', name)
-        return ss.to_dict()
+        data = ss.to_dict()
+        logger.debug("Received %s from [%s]" % (data, name))
+        return data
 
     def device_update(self, *args, **kawrgs):
         raise FeatureNotImplemented()
 
     def device_delete(self, id):
+        logger.debug("Deleting device %s" % id)
         ss = session.query(models.Device).get(id)
         session.begin(subtransactions=True)
         try:
@@ -343,9 +444,11 @@ class SimpleNet(object):
         except Exception, e:
             session.rollback()
             raise Exception(e)
+        logger.debug("Successful deleted zone %s" % id)
         return True
 
     def vlan_list(self):
+        logger.debug("Listing vlans")
         ss = session.query(models.Vlan).all()
         vlans = []
         for vlan in ss:
@@ -355,24 +458,31 @@ class SimpleNet(object):
         return vlans
 
     def vlan_list_by_device(self, device_id):
+        logger.debug("Listing vlans by device [%s]" % device_id)
         ss = session.query(models.Vlans_to_Device).filter_by(device_id=device_id).all()
         vlans = []
         for relationship in ss:
             vlans.append(
                 relationship.to_dict()
             )
+        logger.debug("Received vlans: %s" % vlans)
         return vlans
 
     def vlan_list_by_zone(self, zone_id):
+        logger.debug("Listing vlans by zone [%s]" % zone_id)
         ss = session.query(models.Vlan).filter_by(zone_id=zone_id).all()
         vlans = []
         for relationship in ss:
             vlans.append(
                 relationship.to_dict()
             )
+        logger.debug("Received vlans: %s" % vlans)
         return vlans
 
     def vlan_create(self, zone_id, data):
+        logger.debug("Creating vlan on zone: %s using data: %s" %
+            (zone_id, data)
+        )
         session.begin(subtransactions=True)
         try:
             session.add(models.Vlan(name=data['name'], zone_id=zone_id))
@@ -384,24 +494,34 @@ class SimpleNet(object):
         except Exception, e:
             session.rollback()
             raise Exception(e)
+        logger.debug("Created vlan on zone: %s using data: %s" %
+            (zone_id, data)
+        )
         return self.vlan_info_by_name(data['name'])
 
     def vlan_info(self, id):
+        logger.debug("Getting vlan info from %s" % id)
         ss = session.query(models.Vlan).get(id)
         if not ss:
             raise EntityNotFound('Vlan', id)
-        return ss.to_dict()
+        data = ss.to_dict()
+        logger.debug("Received %s from [%s]" % (data, id))
+        return data
 
     def vlan_info_by_name(self, name):
+        logger.debug("Getting vlan info by name %s" % name)
         ss = session.query(models.Vlan).filter_by(name=name).first()
         if not ss:
             raise EntityNotFound('Vlan', name)
-        return ss.to_dict()
+        data = ss.to_dict()
+        logger.debug("Received %s from [%s]" % (data, name))
+        return data
 
     def vlan_update(self, *args, **kawrgs):
         raise FeatureNotImplemented()
 
     def vlan_delete(self, id):
+        logger.debug("Deleting vlan %s" % id)
         ss = session.query(models.Vlan).get(id)
         session.begin(subtransactions=True)
         try:
@@ -410,42 +530,51 @@ class SimpleNet(object):
         except Exception, e:
             session.rollback()
             raise Exception(e)
+        logger.debug("Successful deleted vlan %s" % id)
         return True
 
     def subnet_list(self):
+        logger.debug("Listing subnets")
         ss = session.query(models.Subnet).all()
         subnets = []
         for subnet in ss:
             subnets.append(
                 subnet.to_dict()
             )
+        logger.debug("Received subnets: %s" % subnets)
         return subnets
 
     def anycast_list(self):
+        logger.debug("Listing anycasts")
         ss = session.query(models.Anycast).all()
         anycasts = []
         for anycast in ss:
             anycasts.append(
                 anycast.to_dict()
             )
+        logger.debug("Received anycasts: %s" % anycasts)
         return anycasts
 
     def anycast_list_by_device(self, device_id):
+        logger.debug("Listing anycasts by device [%s]" % device_id)
         ss = session.query(models.Anycasts_to_Device).filter_by(device_id=device_id).all()
         anycasts = []
         for relationship in ss:
             anycasts.append(
                 relationship.to_dict()
             )
+        logger.debug("Received anycasts: %s" % anycasts)
         return anycasts
 
     def subnet_list_by_vlan(self, vlan_id):
+        logger.debug("Listing subnets by vlan [%s]" % vlan_id)
         ss = session.query(models.Subnet).filter_by(vlan_id=vlan_id).all()
         subnets = []
         for subnet in ss:
             subnets.append(
                 subnet.to_dict()
             )
+        logger.debug("Received subnets: %s" % subnets)
         return subnets
 
     def subnet_create(self, vlan_id, data):
@@ -463,6 +592,7 @@ class SimpleNet(object):
         return self.subnet_info_by_cidr(data['cidr'])
 
     def anycast_create(self, data):
+        logger.debug("Creating subnet using data: %s" % data)
         session.begin(subtransactions=True)
         try:
             session.add(models.Anycast(cidr=data['cidr']))
@@ -474,33 +604,46 @@ class SimpleNet(object):
         except Exception, e:
             session.rollback()
             raise Exception(e)
+        logger.debug("Created subnet using data: %s" % data)
         return self.anycast_info_by_cidr(data['cidr'])
 
     def anycast_info_by_cidr(self, cidr):
+        logger.debug("Getting anycast by cidr [%s]" % cidr)
         cidr = cidr.replace('_', '/')
         ss = session.query(models.Anycast).filter_by(cidr=cidr).first()
         if not ss:
             raise EntityNotFound('Anycast', cidr)
-        return ss.to_dict()
+        data = ss.to_dict()
+        logger.debug("Received %s from [%s]" % (data, name))
+        return data
 
     def subnet_info(self, id):
+        logger.debug("Getting subnet info from %s" % id)
         ss = session.query(models.Subnet).get(id)
         if not ss:
             raise EntityNotFound('Subnet', id)
-        return ss.to_dict()
+        data = ss.to_dict()
+        logger.debug("Received %s from [%s]" % (data, id))
+        return data
 
     def anycast_info(self, id):
+        logger.debug("Getting anycast info from %s" % id)
         ss = session.query(models.Anycast).get(id)
         if not ss:
             raise EntityNotFound('Anycast', id)
-        return ss.to_dict()
+        data = ss.to_dict()
+        logger.debug("Received %s from [%s]" % (data, id))
+        return data
 
     def subnet_info_by_cidr(self, cidr):
+        logger.debug("Getting subnet info from %s" % id)
         cidr = cidr.replace('_', '/')
         ss = session.query(models.Subnet).filter_by(cidr=cidr).first()
         if not ss:
             raise EntityNotFound('Subnet', cidr)
-        return ss.to_dict()
+        data = ss.to_dict()
+        logger.debug("Received %s from [%s]" % (data, id))
+        return data
 
     def subnet_update(self, *args, **kwargs):
         raise FeatureNotImplemented()
@@ -517,6 +660,7 @@ class SimpleNet(object):
         return True
 
     def anycast_delete(self, id):
+        logger.debug("Deleting anycast %s" % id)
         ss = session.query(models.Anycast).get(id)
         session.begin(subtransactions=True)
         try:
@@ -525,54 +669,57 @@ class SimpleNet(object):
         except Exception, e:
             session.rollback()
             raise Exception(e)
+        logger.debug("Successful deleted anycast %s" % id)
         return True
 
     def ip_list(self):
+        logger.debug("Getting ips list")
         ss = session.query(models.Ip).all()
         ips = []
         for ip in ss:
             ips.append(
                 ip.to_dict(),
             )
+        logger.debug("Received ips: %s" % ips)
         return ips
 
     def ip_list_by_subnet(self, subnet_id):
+        logger.debug("Getting ip info by subnet %s" % subnet_id)
         ss = session.query(models.Ip).filter_by(subnet_id=subnet_id).all()
         ips = []
         for ip in ss:
             ips.append(
                 ip.to_dict()
             )
+        logger.debug("Received ips: %s from [%s]" % (ips, subnet_id))
         return ips
 
-    def ip_list_by_anycast(self, anycast_id):
+    def ipanycast_list_by_anycast(self, anycast_id):
+        logger.debug("Getting ip info by anycast %s" % anycast_id)
         ss = session.query(models.Ipanycast).filter_by(anycast_id=anycast_id).all()
         ips = []
         for ip in ss:
             ips.append(
                 ip.to_dict()
             )
+        logger.debug("Received ips: %s from [%s]" % (ips, anycast_id))
         return ips
 
     def ipanycast_list(self):
+        logger.debug("Getting anycast ips list")
         ss = session.query(models.Ipanycast).all()
         ips = []
         for ip in ss:
             ips.append(
                 ip.to_dict(),
             )
-        return ips
-
-    def ipsanycast_list_by_anycast(self, anycast_id):
-        ss = session.query(models.Ipanycast).filter_by(anycast_id=anycast_id).all()
-        ips = []
-        for ip in ss:
-            ips.append(
-                ip.to_dict()
-            )
+        logger.debug("Received anycast ips: %s" % ips)
         return ips
 
     def ip_create(self, subnet_id, data):
+        logger.debug("Creating ip on zone: %s using data: %s" %
+            (subnet_id, data)
+        )
         subnet = session.query(models.Subnet).get(subnet_id)
         if not subnet.contains(data['ip']):
             raise OperationNotPermited(
@@ -592,9 +739,15 @@ class SimpleNet(object):
         except Exception, e:
             session.rollback()
             raise Exception(e)
+        logger.debug("Created ip on zone: %s using data: %s" %
+            (zone_id, data)
+        )
         return self.ip_info_by_ip(data['ip'])
 
     def ipanycast_create(self, anycast_id, data):
+        logger.debug("Creating ip on anycast: %s using data: %s" %
+            (anycast_id, data)
+        )
         anycast = session.query(models.Anycast).get(anycast_id)
         if not anycast.contains(data['ip']):
             raise OperationNotPermited(
@@ -614,41 +767,52 @@ class SimpleNet(object):
         except Exception, e:
             session.rollback()
             raise Exception(e)
+        logger.debug("Created ip on anycast: %s using data: %s" %
+            (anycast_id, data)
+        )
         return self.ipanycast_info_by_ip(data['ip'])
 
     def ip_info(self, id):
+        logger.debug("Getting ip info from %s" % id)
         ss = session.query(models.Ip).get(id)
         if not ss:
             raise EntityNotFound('Ip', id)
-        return ss.to_dict()
+        data = ss.to_dict()
+        logger.debug("Received %s from [%s]" % (data, id))
+        return data
 
     def ipanycast_info(self, id):
+        logger.debug("Getting anycast ip info from %s" % id)
         ss = session.query(models.Ipanycast).get(id)
         if not ss:
             raise EntityNotFound('Ipanycast', id)
-        return ss.to_dict()
+        data = ss.to_dict()
+        logger.debug("Received %s from [%s]" % (data, id))
+        return data
 
     def ip_info_by_ip(self, ip):
+        logger.debug("Getting ip info by ip %s" % id)
         ss = session.query(models.Ip).filter_by(ip=ip).first()
         if not ss:
             raise EntityNotFound('Ip', ip)
-        return ss.to_dict()
+        data = ss.to_dict()
+        logger.debug("Received %s from [%s]" % (data, id))
+        return data
 
     def ipanycast_info_by_ip(self, ip):
+        logger.debug("Getting anycast ip info by ip %s" % id)
         ss = session.query(models.Ipanycast).filter_by(ip=ip).first()
         if not ss:
             raise EntityNotFound('Ipanycast', ip)
-        return ss.to_dict()
+        data = ss.to_dict()
+        logger.debug("Received %s from [%s]" % (data, id))
+        return data
 
-    def ipsanycast_info_by_ip(self, ip):
-        ss = session.query(models.Ipanycast).filter_by(ip=ip).first()
-        if not ss:
-            raise EntityNotFound('Ipanycast', ip)
-        return ss.to_dict()
     def ip_update(self, *args, **kawrgs):
         raise FeatureNotImplemented()
 
     def ip_delete(self, id):
+        logger.debug("Deleting ip %s" % id)
         ss = session.query(models.Ip).get(id)
         session.begin(subtransactions=True)
         try:
@@ -657,9 +821,11 @@ class SimpleNet(object):
         except Exception, e:
             session.rollback()
             raise Exception(e)
+        logger.debug("Successful deleted ip %s" % id)
         return True
 
     def ipanycast_delete(self, id):
+        logger.debug("Deleting anycast ip %s" % id)
         ss = session.query(models.Ipanycast).get(id)
         session.begin(subtransactions=True)
         try:
@@ -668,6 +834,7 @@ class SimpleNet(object):
         except Exception, e:
             session.rollback()
             raise Exception(e)
+        logger.debug("Successful anycast ip %s" % id)
         return True
 
     def policy_list(self, *args, **kawrgs):
