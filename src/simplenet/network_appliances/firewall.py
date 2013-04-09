@@ -34,7 +34,7 @@ session = db_utils.get_database_session()
 class Net(SimpleNet):
 
     def _enqueue_rules_(self, owner_type, owner_id):
-        logger.debug("Getting rules from %s with id %s" % (owner_type, id))
+        logger.debug("Getting rules from %s with id %s" % (owner_type, owner_id))
         policy_list = []
         _get_data = getattr(self, "_get_data_%s_" % owner_type)
         _data = _get_data(owner_id)
@@ -110,10 +110,10 @@ class Net(SimpleNet):
             raise Exception(e)
 
         logger.debug("Created rule %s on %s: %s using data: %s" %
-            (str(policy.id), owner_type, owner_id, data)
+            (policy.id, owner_type, owner_id, data)
         )
-        self._enqueue_rules_(owner_type, str(owner_id))
-        return self.policy_info(owner_type, str(policy.id))
+        self._enqueue_rules_(owner_type, owner_id)
+        return self.policy_info(owner_type, policy.id)
 
     def policy_info(self, owner_type, id):
         logger.debug("Getting policy info from %s with id %s" % (owner_type, id))
