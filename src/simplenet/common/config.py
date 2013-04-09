@@ -35,8 +35,8 @@ if os.path.isfile(config_file):
 
 class SyslogWrapper(object):
 
-    def __init__(self):
-        self.config = load()
+    def __init__(self, config=None):
+        self.config = config
 
     def info(self, msg):
         syslog.syslog(syslog.LOG_INFO, msg)
@@ -58,9 +58,10 @@ class SyslogWrapper(object):
 
 def get_logger():
     global logger
+    global config
     if logger: return logger
     syslog.openlog(caller, syslog.LOG_PID, syslog.LOG_DAEMON)
-    logger = SyslogWrapper()
+    logger = SyslogWrapper(config)
     return logger
 
 
