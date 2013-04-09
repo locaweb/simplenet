@@ -527,7 +527,7 @@ class SimpleNet(object):
         return self._generic_list_("ips anycast", models.Ipanycast)
 
     def ip_create(self, subnet_id, data):
-        logger.debug("Creating ip on zone: %s using data: %s" %
+        logger.debug("Creating ip on subnet: %s using data: %s" %
             (subnet_id, data)
         )
         subnet = session.query(models.Subnet).get(subnet_id)
@@ -549,8 +549,8 @@ class SimpleNet(object):
         except Exception, e:
             session.rollback()
             raise Exception(e)
-        logger.debug("Created ip on zone: %s using data: %s" %
-            (zone_id, data)
+        logger.debug("Created ip on subnet: %s using data: %s" %
+            (subnet_id, data)
         )
         return self.ip_info_by_ip(data['ip'])
 
