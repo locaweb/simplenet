@@ -236,7 +236,7 @@ class SimpleNet(object):
         raise FeatureNotImplemented()
 
     def datacenter_info(self, id):
-        self._generic_info_("datacenter", models.Datacenter, id)
+        return self._generic_info_("datacenter", models.Datacenter, id)
 
     def datacenter_info_by_name(self, name):
         return self._genreric_info_by_something_("datacenter", models.Datacenter, {'name': name})
@@ -271,7 +271,7 @@ class SimpleNet(object):
         raise FeatureNotImplemented()
 
     def zone_info(self, id):
-        self.generic_info(self, "zone", models.Zone, id)
+        return self.generic_info(self, "zone", models.Zone, id)
 
     def zone_info_by_name(self, name):
         return self._genreric_info_by_something_("zone", models.Zone, {'name': name})
@@ -367,21 +367,29 @@ class SimpleNet(object):
         )
 
     def device_remove_vlan(self, device_id, vlan_id):
-        logger.debug("Removing vlan from device: %s vlan: %s" %
-            (device_id, vlan_id)
+        return self._generic_delete_(
+            "vlan from device", models.Vlans_to_Device, {'vlan_id': vlan_id, 'device_id': device_id}
         )
-        session.begin(subtransactions=True)
-        try:
-            session.query(models.Vlans_to_Device).filter_by(vlan_id=vlan_id, device_id=device_id).delete()
-            session.commit()
-        except Exception, e:
-            session.rollback()
-            raise Exception(e.__str__())
-        logger.debug("Successful remotion of vlan %s from device: %s" % (vlan_id, device_id))
-        return True
+        #logger.debug("Removing vlan from device: %s vlan: %s" %
+        #    (device_id, vlan_id)
+        #)
+        #session.begin(subtransactions=True)
+        #try:
+        #    session.query(models.Vlans_to_Device).filter_by(vlan_id=vlan_id, device_id=device_id).delete()
+        #    session.commit()
+        #except Exception, e:
+        #    session.rollback()
+        #    raise Exception(e.__str__())
+        #logger.debug("Successful remotion of vlan %s from device: %s" % (vlan_id, device_id))
+        #return True
+
+    def device_remove_vlan(self, device_id, vlan_id):
+        return self._generic_delete_(
+            "vlan from device", models.Anycasts_to_Device, {'vlan_id': vlan_id, 'device_id': device_id}
+        )
 
     def device_info(self, id):
-        self._generic_info_("device", models.Device, id)
+        return self._generic_info_("device", models.Device, id)
 
     def device_info_by_name(self, name):
         return self._genreric_info_by_something_("device", models.Device, {'name': name})
@@ -396,12 +404,12 @@ class SimpleNet(object):
         return self._generic_list_("vlans", models.Vlan)
 
     def vlan_list_by_device(self, device_id):
-        self._genreric_list_by_something_(
+        return self._genreric_list_by_something_(
             "vlans by device", models.Vlans_to_Device, {'device_id': device_id}
         )
 
     def vlan_list_by_zone(self, zone_id):
-        self._genreric_list_by_something_(
+        return self._genreric_list_by_something_(
             "vlans by zone", models.Vlan, {'zone_id': zone_id}
         )
 
@@ -426,10 +434,12 @@ class SimpleNet(object):
         return self.vlan_info_by_name(data['name'])
 
     def vlan_info(self, id):
-        self._generic_info_("vlan", models.Vlan, id)
+        return self._generic_info_("vlan", models.Vlan, id)
 
     def vlan_info_by_name(self, name):
-        return self._genreric_info_by_something_("vlan", models.Vlan, {'name': name})
+        return self._genreric_info_by_something_(
+            "vlan", models.Vlan, {'name': name}
+        )
 
     def vlan_update(self, *args, **kawrgs):
         raise FeatureNotImplemented()
@@ -444,12 +454,12 @@ class SimpleNet(object):
         return self._generic_list_("anycasts", models.Anycast)
 
     def anycast_list_by_device(self, device_id):
-        self._genreric_list_by_something_(
+        return self._genreric_list_by_something_(
             "anycasts by device", models.Anycasts_to_Device, {'device_id': device_id}
         )
 
     def subnet_list_by_vlan(self, vlan_id):
-        self._genreric_list_by_something_(
+        return self._genreric_list_by_something_(
             "subnets by vlan", models.Subnet, {'vlan_id': vlan_id}
         )
 
@@ -487,10 +497,10 @@ class SimpleNet(object):
         return self._genreric_info_by_something_("anycast", models.Anycast, {'cidr': cidr})
 
     def subnet_info(self, id):
-        self._generic_info_("subnet", models.Subnet, id)
+        return self._generic_info_("subnet", models.Subnet, id)
 
     def anycast_info(self, id):
-        self._generic_info_("anycast", models.Anycast, id)
+        return self._generic_info_("anycast", models.Anycast, id)
 
     def subnet_info_by_cidr(self, cidr):
         return self._genreric_info_by_something_("subnet", models.Subnet, {'cidr': cidr})
@@ -508,10 +518,10 @@ class SimpleNet(object):
         return self._generic_list_("ips", models.Ip)
 
     def ip_list_by_subnet(self, subnet_id):
-        self._genreric_info_by_something_("ip info by subnet", models.Ip, {'subnet_id': subnet_id})
+        return self._genreric_info_by_something_("ip info by subnet", models.Ip, {'subnet_id': subnet_id})
 
     def ipanycast_list_by_anycast(self, anycast_id):
-        self._genreric_list_by_something_("ip info by anycast", models.Ipanycast, {'anycast_id': anycast_id})
+        return self._genreric_list_by_something_("ip info by anycast", models.Ipanycast, {'anycast_id': anycast_id})
 
     def ipanycast_list(self):
         return self._generic_list_("ips anycast", models.Ipanycast)
@@ -573,10 +583,10 @@ class SimpleNet(object):
         return self.ipanycast_info_by_ip(data['ip'])
 
     def ip_info(self, id):
-        self._generic_info_("ip", models.Ip, id)
+        return self._generic_info_("ip", models.Ip, id)
 
     def ipanycast_info(self, id):
-        self._generic_info_("ip anycast", models.Ipanycast, id)
+        return self._generic_info_("ip anycast", models.Ipanycast, id)
 
     def ip_info_by_ip(self, ip):
         return self._genreric_info_by_something_("ip", models.Ip, {'ip': ip})
