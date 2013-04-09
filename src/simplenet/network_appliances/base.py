@@ -70,9 +70,9 @@ class SimpleNet(object):
         logger.debug("Received %s from [%s]" % (data, value))
         return data
 
-    def _genreric_info_by_something_(self, name, model, value):
+    def _genreric_list_by_something_(self, name, model, value):
         logger.debug("Getting %s by %s" % (name, value))
-        ss = session.query(models.Ipanycast).filter_by(**value).all()
+        ss = session.query(model).filter_by(**value).all()
         _values = []
         for _value in ss:
             _values.append(
