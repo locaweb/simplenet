@@ -28,7 +28,7 @@ session = db_utils.get_database_session()
 
 class SimpleNet(object):
 
-    def _generic_list(self, name, model):
+    def _generic_list_(self, name, model):
         logger.debug("Listing %s" % name)
         ss = session.query(model).all()
         _values = []
@@ -38,6 +38,15 @@ class SimpleNet(object):
             )
         logger.debug("Received %s: %s" % name)
         return _values
+
+    def _generic_info_(self, name, model, id):
+        logger.debug("Getting %s info from %s" % (name, id))
+        ss = session.query(name).get(id)
+        if not ss:
+            raise EntityNotFound(nama.capitalize(), id)
+        data = ss.to_dict()
+        logger.debug("Received %s from [%s]" % (data, id))
+        return data
 
     def _get_data_device_(self, id):
         logger.debug("Getting device data %s" % id)
@@ -172,7 +181,7 @@ class SimpleNet(object):
         return ss
 
     def datacenter_list(self):
-        return self._generic_list(self, "datacenters", models.Datacenter)
+        return self._generic_list_(self, "datacenters", models.Datacenter)
 
     def datacenter_create(self, data):
         logger.debug("Creating dc using data: %s" % data)
@@ -194,13 +203,7 @@ class SimpleNet(object):
         raise FeatureNotImplemented()
 
     def datacenter_info(self, id):
-        logger.debug("Getting dc info from %s" % id)
-        ss = session.query(models.Datacenter).get(id)
-        if not ss:
-            raise EntityNotFound('Datacenter', id)
-        data = ss.to_dict()
-        logger.debug("Received %s from [%s]" % (data, id))
-        return data
+        self._generic_info_(self, "datacenter", models.Datacenter, id)
 
     def datacenter_info_by_name(self, name):
         logger.debug("Getting dc info by name %s" % name)
@@ -225,7 +228,7 @@ class SimpleNet(object):
         return True
 
     def zone_list(self):
-        return self._generic_list(self, "zones", models.Zone)
+        return self._generic_list_(self, "zones", models.Zone)
 
     def zone_create(self, datacenter_id, data):
         logger.debug("Creating zone on dc: %s using data: %s" %
@@ -251,13 +254,7 @@ class SimpleNet(object):
         raise FeatureNotImplemented()
 
     def zone_info(self, id):
-        logger.debug("Getting zone info from %s" % id)
-        ss = session.query(models.Zone).get(id)
-        if not ss:
-            raise EntityNotFound('Zone', id)
-        data = ss.to_dict()
-        logger.debug("Received %s from [%s]" % (data, id))
-        return data
+        self.generic_info(self, "zone", models.Zone, id):
 
     def zone_info_by_name(self, name):
         logger.debug("Getting zone info by name %s" % name)
@@ -282,7 +279,7 @@ class SimpleNet(object):
         return True
 
     def device_list(self):
-        return self._generic_list(self, "devices", models.Device)
+        return self._generic_list_(self, "devices", models.Device)
 
     def device_create(self, zone_id, data):
         logger.debug("Creating device on zone: %s using data: %s" %
@@ -401,13 +398,7 @@ class SimpleNet(object):
         return True
 
     def device_info(self, id):
-        logger.debug("Getting device info from %s" % id)
-        ss = session.query(models.Device).get(id)
-        if not ss:
-            raise EntityNotFound('Device', id)
-        data = ss.to_dict()
-        logger.debug("Received %s from [%s]" % (data, id))
-        return data
+        self._generic_info_(self, "device", models.Device, id)
 
     def device_info_by_name(self, name):
         logger.debug("Getting zone info by name %s" % name)
@@ -435,7 +426,7 @@ class SimpleNet(object):
         return True
 
     def vlan_list(self):
-        return self._generic_list(self, "vlans", models.Vlan)
+        return self._generic_list_(self, "vlans", models.Vlan)
 
     def vlan_list_by_device(self, device_id):
         logger.debug("Listing vlans by device [%s]" % device_id)
@@ -480,13 +471,7 @@ class SimpleNet(object):
         return self.vlan_info_by_name(data['name'])
 
     def vlan_info(self, id):
-        logger.debug("Getting vlan info from %s" % id)
-        ss = session.query(models.Vlan).get(id)
-        if not ss:
-            raise EntityNotFound('Vlan', id)
-        data = ss.to_dict()
-        logger.debug("Received %s from [%s]" % (data, id))
-        return data
+        self._generic_info_(self, "vlan", models.Vlan, id)
 
     def vlan_info_by_name(self, name):
         logger.debug("Getting vlan info by name %s" % name)
@@ -514,10 +499,10 @@ class SimpleNet(object):
         return True
 
     def subnet_list(self):
-        return self._generic_list(self, "subnets", models.Subnet)
+        return self._generic_list_(self, "subnets", models.Subnet)
 
     def anycast_list(self):
-        return self._generic_list(self, "anycasts", models.Anycast)
+        return self._generic_list_(self, "anycasts", models.Anycast)
 
     def anycast_list_by_device(self, device_id):
         logger.debug("Listing anycasts by device [%s]" % device_id)
@@ -582,22 +567,10 @@ class SimpleNet(object):
         return data
 
     def subnet_info(self, id):
-        logger.debug("Getting subnet info from %s" % id)
-        ss = session.query(models.Subnet).get(id)
-        if not ss:
-            raise EntityNotFound('Subnet', id)
-        data = ss.to_dict()
-        logger.debug("Received %s from [%s]" % (data, id))
-        return data
+        self._generic_info_(self, "subnet", models.Subnet, id)
 
     def anycast_info(self, id):
-        logger.debug("Getting anycast info from %s" % id)
-        ss = session.query(models.Anycast).get(id)
-        if not ss:
-            raise EntityNotFound('Anycast', id)
-        data = ss.to_dict()
-        logger.debug("Received %s from [%s]" % (data, id))
-        return data
+        self._generic_info_(self, "anycast", models.Anycast, id)
 
     def subnet_info_by_cidr(self, cidr):
         logger.debug("Getting subnet info from %s" % id)
@@ -637,7 +610,7 @@ class SimpleNet(object):
         return True
 
     def ip_list(self):
-        return self._generic_list(self, "ips", models.Ip)
+        return self._generic_list_(self, "ips", models.Ip)
 
     def ip_list_by_subnet(self, subnet_id):
         logger.debug("Getting ip info by subnet %s" % subnet_id)
@@ -662,7 +635,7 @@ class SimpleNet(object):
         return ips
 
     def ipanycast_list(self):
-        return self._generic_list(self, "ips anycast", models.Ipanycast)
+        return self._generic_list_(self, "ips anycast", models.Ipanycast)
 
     def ip_create(self, subnet_id, data):
         logger.debug("Creating ip on zone: %s using data: %s" %
@@ -721,22 +694,10 @@ class SimpleNet(object):
         return self.ipanycast_info_by_ip(data['ip'])
 
     def ip_info(self, id):
-        logger.debug("Getting ip info from %s" % id)
-        ss = session.query(models.Ip).get(id)
-        if not ss:
-            raise EntityNotFound('Ip', id)
-        data = ss.to_dict()
-        logger.debug("Received %s from [%s]" % (data, id))
-        return data
+        self._generic_info_(self, "ip", models.Ip, id)
 
     def ipanycast_info(self, id):
-        logger.debug("Getting anycast ip info from %s" % id)
-        ss = session.query(models.Ipanycast).get(id)
-        if not ss:
-            raise EntityNotFound('Ipanycast', id)
-        data = ss.to_dict()
-        logger.debug("Received %s from [%s]" % (data, id))
-        return data
+        self._generic_info_(self, "ip anycast", models.Ipanycast, id)
 
     def ip_info_by_ip(self, ip):
         logger.debug("Getting ip info by ip %s" % id)
