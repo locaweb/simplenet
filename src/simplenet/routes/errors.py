@@ -22,7 +22,7 @@ from bottle import error, request, response
 
 from simplenet.common.http_utils import reply_json
 
-logger = config.get_logger()
+logger = get_logger()
 
 @error(400)
 @reply_json

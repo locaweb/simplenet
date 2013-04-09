@@ -19,7 +19,7 @@
 from sqlalchemy.orm import sessionmaker
 from simplenet.db import models
 
-logger = config.get_logger()
+logger = get_logger()
 
 _engine = models.engine
 _maker = None

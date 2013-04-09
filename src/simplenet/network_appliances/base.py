@@ -23,7 +23,7 @@ from simplenet.exceptions import (
 )
 from sqlalchemy.exc import IntegrityError
 
-logger = config.get_logger()
+logger = get_logger()
 session = db_utils.get_database_session()
 
 class SimpleNet(object):

@@ -26,7 +26,7 @@ from locautils.cas import CASClient, CasError
 from simplenet.common.cache import RedisClient
 import hashlib
 
-logger = config.get_logger()
+logger = get_logger()
 
 cas_endpoint = config.get("authentication", "cas_endpoint")
 cas_sys_endpoint = config.get("authentication", "cas_sys_endpoint")

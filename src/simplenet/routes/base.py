@@ -27,7 +27,7 @@ from simplenet.common.http_utils import (
     reply_json, create_manager, validate_input
 )
 
-logger = config.get_logger()
+logger = get_logger()
 
 cas_endpoint = config.get("authentication", "cas_endpoint")
 cas_sys_endpoint = config.get("authentication", "cas_sys_endpoint")
