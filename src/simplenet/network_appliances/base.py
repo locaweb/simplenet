@@ -75,7 +75,7 @@ class SimpleNet(object):
         device = self.device_info(id)
         zone = self.zone_info(device['zone_id'])
         datacenter = self.datacenter_info(zone['datacenter_id'])
-        logger.debug("Received device: %s zone: %s dc: %s from [%s]" %
+        logger.debug("Received device: %s zone: %s datacenter: %s from [%s]" %
             (device, zone, datacenter, id)
         )
         return {
@@ -92,7 +92,7 @@ class SimpleNet(object):
         vlan = self.vlan_info(subnet['vlan_id'])
         zone = self.zone_info(vlan['zone_id'])
         datacenter = self.datacenter_info(zone['datacenter_id'])
-        logger.debug("Received ip: %s vlan: %s zone: %s dc: %s from [%s]" %
+        logger.debug("Received ip: %s vlan: %s zone: %s datacenter: %s from [%s]" %
             (ip, vlan, zone, datacenter, id)
         )
         return {
@@ -126,7 +126,7 @@ class SimpleNet(object):
         vlan = self.vlan_info(subnet['vlan_id'])
         zone = self.zone_info(vlan['zone_id'])
         datacenter = self.datacenter_info(zone['datacenter_id'])
-        logger.debug("Received subnet: %s vlan: %s zone: %s dc: %s from [%s]" %
+        logger.debug("Received subnet: %s vlan: %s zone: %s datacenter: %s from [%s]" %
             (subnet, vlan, zone, datacenter, id)
         )
         return {
@@ -157,7 +157,7 @@ class SimpleNet(object):
         vlan = self.vlan_info(id)
         zone = self.zone_info(vlan['zone_id'])
         datacenter = self.datacenter_info(zone['datacenter_id'])
-        logger.debug("Received vlan: %s zone: %s dc: %s from [%s]" %
+        logger.debug("Received vlan: %s zone: %s datacenter: %s from [%s]" %
             (vlan, zone, datacenter, id)
         )
         return {
@@ -174,7 +174,7 @@ class SimpleNet(object):
         logger.debug("Getting zone data %s" % id)
         zone = self.zone_info(id)
         datacenter = self.datacenter_info(zone['datacenter_id'])
-        logger.debug("Received zone: %s dc: %s from [%s]" %
+        logger.debug("Received zone: %s datacenter: %s from [%s]" %
             (zone, datacenter, id)
         )
         return {
@@ -186,9 +186,9 @@ class SimpleNet(object):
         }
 
     def _get_data_datacenter_(self, id):
-        logger.debug("Getting dc data %s" % id)
+        logger.debug("Getting datacenter data %s" % id)
         datacenter = self.datacenter_info(id)
-        logger.debug("Received dc: %s from [%s]" %
+        logger.debug("Received datacenter: %s from [%s]" %
             (datacenter, id)
         )
         return {
@@ -206,7 +206,7 @@ class SimpleNet(object):
         return self._generic_list_("datacenters", models.Datacenter)
 
     def datacenter_create(self, data):
-        logger.debug("Creating dc using data: %s" % data)
+        logger.debug("Creating datacenter using data: %s" % data)
         session.begin(subtransactions=True)
         try:
             session.add(models.Datacenter(name=data['name']))
@@ -218,7 +218,7 @@ class SimpleNet(object):
         except Exception, e:
             session.rollback()
             raise Exception(e)
-        logger.debug("Created dc using data: %s" % data)
+        logger.debug("Created datacenter using data: %s" % data)
         return self.datacenter_info_by_name(data['name'])
 
     def datacenter_update(self, *args, **kawrgs):
@@ -228,7 +228,7 @@ class SimpleNet(object):
         self._generic_info_("datacenter", models.Datacenter, id)
 
     def datacenter_info_by_name(self, name):
-        logger.debug("Getting dc info by name %s" % name)
+        logger.debug("Getting datacenter info by name %s" % name)
         ss = session.query(models.Datacenter).filter_by(name=name).first()
         if not ss:
             raise EntityNotFound('Datacenter', name)
@@ -243,7 +243,7 @@ class SimpleNet(object):
         return self._generic_list_("zones", models.Zone)
 
     def zone_create(self, datacenter_id, data):
-        logger.debug("Creating zone on dc: %s using data: %s" %
+        logger.debug("Creating zone on datacenter: %s using data: %s" %
             (datacenter_id, data)
         )
         session.begin(subtransactions=True)
@@ -257,7 +257,7 @@ class SimpleNet(object):
         except Exception, e:
             session.rollback()
             raise Exception(e)
-        logger.debug("Created zone on dc: %s using data: %s" %
+        logger.debug("Created zone on datacenter: %s using data: %s" %
             (datacenter_id, data)
         )
         return self.zone_info_by_name(data['name'])
