@@ -110,10 +110,10 @@ class Net(SimpleNet):
             raise Exception(e)
 
         logger.debug("Created rule %s on %s: %s using data: %s" %
-            (police.id, owner_type, owner_id, data)
+            (policy.id, owner_type, owner_id, data)
         )
-        logger.debug(str(police.id))
-        logger.debug(dir(police.id))
+        logger.debug(str(policy.id))
+        logger.debug(dir(policy.id))
         self._enqueue_rules_(owner_type, owner_id)
         return self.policy_info(owner_type, policy.id)
 
