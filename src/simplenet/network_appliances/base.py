@@ -39,6 +39,19 @@ class SimpleNet(object):
         logger.debug("Received %s: %s" % (name, _values))
         return _values
 
+    def _generic_delete_(self, name, model, id):
+        logger.debug("Deleting %s from %s" % (id, name))
+        ss = session.query(model).get(id)
+        session.begin(subtransactions=True)
+        try:
+            session.delete(ss)
+            session.commit()
+        except Exception, e:
+            session.rollback()
+            raise Exception(e)
+        logger.debug("Successful deletetion of %s from %s" % (id, name))
+        return True
+
     def _generic_info_(self, name, model, id):
         logger.debug("Getting %s info from %s" % (name, id))
         ss = session.query(name).get(id)
@@ -224,17 +237,7 @@ class SimpleNet(object):
         return data
 
     def datacenter_delete(self, id):
-        logger.debug("Deleting dc %s" % id)
-        ss = session.query(models.Datacenter).get(id)
-        session.begin(subtransactions=True)
-        try:
-            session.delete(ss)
-            session.commit()
-        except Exception, e:
-            session.rollback()
-            raise Exception(e)
-        logger.debug("Successful deleted dc %s" % id)
-        return True
+        return self._generic_delete_("datacenter", models.Datacenter, id)
 
     def zone_list(self):
         return self._generic_list_("zones", models.Zone)
