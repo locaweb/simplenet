@@ -48,7 +48,7 @@ class Net(SimpleNet):
 
         for device in devices:
             _get_data = getattr(self, "_get_data_%s_" % 'device')
-            _data.update(_get_data(device['id']))
+            _data.update(self._get_data_device_(device['id']))
 
             zone_id = device['zone_id']
             dev_id = device['device_id'] if (owner_type != 'zone') else device['id']
@@ -109,9 +109,11 @@ class Net(SimpleNet):
             session.rollback()
             raise Exception(e)
 
-        logger.debug("Created rule on %s: %s using data: %s" %
-            (owner_type, owner_id, data)
+        logger.debug("Created rule %s on %s: %s using data: %s" %
+            (police.id, owner_type, owner_id, data)
         )
+        logger.debug(str(police.id))
+        logger.debug(dir(police.id))
         self._enqueue_rules_(owner_type, owner_id)
         return self.policy_info(owner_type, policy.id)
 
