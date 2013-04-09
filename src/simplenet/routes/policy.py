@@ -22,7 +22,7 @@ from bottle import delete, put, get, post
 from bottle import abort, request, response
 
 from simplenet.common.auth import handle_auth
-from simplenet.common.config import config, get_rlogger
+from simplenet.common.config import config, get_logger
 from simplenet.common.http_utils import (
     reply_json, create_manager
 )
