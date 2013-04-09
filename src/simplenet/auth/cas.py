@@ -18,6 +18,13 @@
 from simplenet.common.http_utils import cache
 from simplenet.common.config import config
 
+from locautils.cas import CASClient, CasError
+
+cas_endpoint = config.get("authentication", "cas_endpoint")
+cas_sys_endpoint = config.get("authentication", "cas_sys_endpoint")
+cas_service  = config.get("authentication", "cas_service")
+user_roles = get_rolesdb()
+
 class Auth(object)
     @cache
     def authenticate(self, request):

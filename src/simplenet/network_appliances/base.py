@@ -56,7 +56,7 @@ class SimpleNet(object):
         logger.debug("Getting %s info from %s" % (name, id))
         ss = session.query(name).get(id)
         if not ss:
-            raise EntityNotFound(nama.capitalize(), id)
+            raise EntityNotFound(name.capitalize(), id)
         data = ss.to_dict()
         logger.debug("Received %s from [%s]" % (data, id))
         return data
@@ -65,7 +65,7 @@ class SimpleNet(object):
         logger.debug("Getting %s info by %s" % (name, value))
         ss = session.query(model).filter_by(**value).first()
         if not ss:
-            raise EntityNotFound(nama.capitalize(), value)
+            raise EntityNotFound(name.capitalize(), value)
         data = ss.to_dict()
         logger.debug("Received %s from [%s]" % (data, value))
         return data

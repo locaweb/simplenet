@@ -17,7 +17,7 @@
 # @author: Luiz Ozaki, Locaweb.
 
 from simplenet.common import event
-from simplenet.confing import get_logger
+from simplenet.config import get_logger
 from simplenet.db import models, db_utils
 from simplenet.exceptions import EntityNotFound, OperationNotPermited
 from simplenet.network_appliances.base import SimpleNet
