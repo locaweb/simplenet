@@ -23,7 +23,6 @@ from ast import literal_eval
 from functools import wraps
 from bottle import request, abort
 from locautils.cas import CASClient, CasError
-from simplenet.common.cache import RedisClient
 import hashlib
 
 logger = get_logger()
@@ -51,7 +50,6 @@ def handle_auth():
                 if auth.do(request):
                     return f(*args, **kwargs)
                 else:
-                    logger
                     abort(403, "Access denied")
         return auth
     return proxy
