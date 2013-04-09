@@ -494,7 +494,7 @@ class SimpleNet(object):
         return self.anycast_info_by_cidr(data['cidr'])
 
     def anycast_info_by_cidr(self, cidr):
-        return self._genreric_info_by_something_("anycast", models.Anycast, {'cidr': cidr})
+        return self._genreric_info_by_something_("anycast", models.Anycast, {'cidr': cidr.replace('/','_')})
 
     def subnet_info(self, id):
         return self._generic_info_("subnet", models.Subnet, id)
@@ -503,7 +503,7 @@ class SimpleNet(object):
         return self._generic_info_("anycast", models.Anycast, id)
 
     def subnet_info_by_cidr(self, cidr):
-        return self._genreric_info_by_something_("subnet", models.Subnet, {'cidr': cidr})
+        return self._genreric_info_by_something_("subnet", models.Subnet, {'cidr': cidr.replace('/','_')})
 
     def subnet_update(self, *args, **kwargs):
         raise FeatureNotImplemented()
