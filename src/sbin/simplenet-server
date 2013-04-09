@@ -48,7 +48,7 @@ def start():
     debug(config.getboolean("server", "debug"))
     port = config.getint("server", "port")
     bind_addr = config.get("server", "bind_addr")
-    logger.info("Starting Simplestack server")
+    logger.info("Starting SimpleNet Server")
     run(host=bind_addr, port=port, server="gevent")
 
 
