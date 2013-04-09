@@ -228,7 +228,7 @@ class SimpleNet(object):
         self._generic_info_("datacenter", models.Datacenter, id)
 
     def datacenter_info_by_name(self, name):
-        self._genreric_info_by_something_("datacenter", models.Datacenter, {'name': name})
+        return self._genreric_info_by_something_("datacenter", models.Datacenter, {'name': name})
  #       logger.debug("Getting datacenter info by name %s" % name)
  #       ss = session.query(models.Datacenter).filter_by(name=name).first()
  #       if not ss:
