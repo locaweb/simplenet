@@ -79,7 +79,7 @@ class SimpleNet(object):
         vlan = self.vlan_info(subnet['vlan_id'])
         zone = self.zone_info(vlan['zone_id'])
         datacenter = self.datacenter_info(zone['datacenter_id'])
-        logger.debug("Received ip: %s vlan: %s zone: %s dc: %s from [%s]" % (
+        logger.debug("Received ip: %s vlan: %s zone: %s dc: %s from [%s]" %
             (ip, vlan, zone, datacenter, id)
         )
         return {
