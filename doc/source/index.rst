@@ -39,3 +39,10 @@ High-level API
  =======
 
  * $PROJETO@locaweb.com.br
+
+=============
+REST BASE API
+=============
+
+.. automodule:: simplenet.routes.base
+  :members:
