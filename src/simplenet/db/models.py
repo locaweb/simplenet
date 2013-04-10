@@ -277,9 +277,9 @@ class Anycast(Base):
         }
 
 
-class Ipanycast(Base):
+class Anycastip(Base):
 
-    __tablename__ = 'ipsanycast'
+    __tablename__ = 'anycastips'
 
     id = Column(String(255), primary_key=True)
     ip = Column(String(255), unique=True)
@@ -293,7 +293,7 @@ class Ipanycast(Base):
         self.anycast_id = anycast_id
 
     def __repr__(self):
-       return "<Ipanycast('%s','%s')>" % (self.id, self.ip)
+       return "<Anycastip('%s','%s')>" % (self.id, self.ip)
 
     def to_dict(self):
         return {
@@ -496,9 +496,9 @@ class SubnetPolicy(Base):
                  'owner': self.subnet.cidr }
 
 
-class IpanycastPolicy(Base):
+class AnycastipPolicy(Base):
 
-    __tablename__ = 'ipanycast_policies'
+    __tablename__ = 'Anycastip_policies'
     id = Column(String(255), primary_key=True)
     proto = Column(String(255), nullable=True)
     src = Column(String(255), nullable=True)
@@ -507,8 +507,8 @@ class IpanycastPolicy(Base):
     dst_port = Column(String(255), nullable=True)
     table = Column(String(255), nullable=False)
     policy = Column(String(255), nullable=False)
-    owner_id = Column(String(255), ForeignKey('ipsanycast.id'))
-    ip = relationship('Ipanycast')
+    owner_id = Column(String(255), ForeignKey('anycastips.id'))
+    ip = relationship('Anycastip')
 
     def __init__(self, owner_id, proto, src, src_port, dst, dst_port, table, policy):
         self.id = str(uuid.uuid4())
