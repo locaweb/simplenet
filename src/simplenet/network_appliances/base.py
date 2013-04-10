@@ -19,7 +19,8 @@
 from simplenet.common.config import config, get_logger
 from simplenet.db import models, db_utils
 from simplenet.exceptions import (
-    FeatureNotImplemented, EntityNotFound, OperationNotPermited
+    FeatureNotImplemented, EntityNotFound,
+    OperationNotPermited, FeatureNotAvailable
 )
 from sqlalchemy.exc import IntegrityError
 
@@ -370,18 +371,6 @@ class SimpleNet(object):
         return self._generic_delete_(
             "vlan from device", models.Vlans_to_Device, {'vlan_id': vlan_id, 'device_id': device_id}
         )
-        #logger.debug("Removing vlan from device: %s vlan: %s" %
-        #    (device_id, vlan_id)
-        #)
-        #session.begin(subtransactions=True)
-        #try:
-        #    session.query(models.Vlans_to_Device).filter_by(vlan_id=vlan_id, device_id=device_id).delete()
-        #    session.commit()
-        #except Exception, e:
-        #    session.rollback()
-        #    raise Exception(e.__str__())
-        #logger.debug("Successful remotion of vlan %s from device: %s" % (vlan_id, device_id))
-        #return True
 
     def device_remove_vlan(self, device_id, vlan_id):
         return self._generic_delete_(
