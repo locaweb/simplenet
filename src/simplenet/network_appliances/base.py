@@ -52,7 +52,7 @@ class SimpleNet(object):
             session.rollback()
             raise Exception(e)
         logger.debug("Successful deletetion of %s from %s" % (id, name))
-        return True
+        return 'Successful deletetion of %s' % id
 
     def _generic_info_(self, name, model, id):
         logger.debug("Getting %s info from %s" % (name, id))
