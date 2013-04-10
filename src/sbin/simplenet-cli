@@ -72,9 +72,9 @@ def __api_call(method, url, data=None):
         # ret = requests.delete(url + "?ticket=" + __gen_authtk())
         ret = requests.delete(url)
 
-    if ret.status_code == 403:
-        os.remove(os.path.expanduser("~/.simplecli"))
-        sys.exit(1)
+    #if ret.status_code == 403:
+    #    os.remove(os.path.expanduser("~/.simplecli"))
+    #    sys.exit(1)
 
     return ret
 
@@ -421,4 +421,5 @@ def policy(action=None, name=None, owner=None, dst=None, src=None, dst_port=None
         sys.exit(1)
     pretty_output(r)
 
-baker.run()
+if __name__ == "__main__":
+    baker.run()
