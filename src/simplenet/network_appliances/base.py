@@ -88,7 +88,8 @@ class SimpleNet(object):
         device = self.device_info(id)
         zone = self.zone_info(device['zone_id'])
         datacenter = self.datacenter_info(zone['datacenter_id'])
-        logger.debug("Received device: %s zone: %s datacenter: %s from [%s]" %
+        logger.debug("Received device: %s zone: %s "
+            "datacenter: %s from [%s]" %
             (device, zone, datacenter, id)
         )
         return {
@@ -105,7 +106,8 @@ class SimpleNet(object):
         vlan = self.vlan_info(subnet['vlan_id'])
         zone = self.zone_info(vlan['zone_id'])
         datacenter = self.datacenter_info(zone['datacenter_id'])
-        logger.debug("Received ip: %s vlan: %s zone: %s datacenter: %s from [%s]" %
+        logger.debug("Received ip: %s vlan: %s zone: %s "
+            "datacenter: %s from [%s]" %
             (ip, vlan, zone, datacenter, id)
         )
         return {
@@ -139,7 +141,8 @@ class SimpleNet(object):
         vlan = self.vlan_info(subnet['vlan_id'])
         zone = self.zone_info(vlan['zone_id'])
         datacenter = self.datacenter_info(zone['datacenter_id'])
-        logger.debug("Received subnet: %s vlan: %s zone: %s datacenter: %s from [%s]" %
+        logger.debug("Received subnet: %s vlan: %s "
+            "zone: %s datacenter: %s from [%s]" %
             (subnet, vlan, zone, datacenter, id)
         )
         return {
@@ -170,8 +173,8 @@ class SimpleNet(object):
         vlan = self.vlan_info(id)
         zone = self.zone_info(vlan['zone_id'])
         datacenter = self.datacenter_info(zone['datacenter_id'])
-        logger.debug("Received vlan: %s zone: %s datacenter: %s from [%s]" %
-            (vlan, zone, datacenter, id)
+        logger.debug("Received vlan: %s zone: %s "
+            "datacenter: %s from [%s]" % (vlan, zone, datacenter, id)
         )
         return {
             'vlan': vlan['name'],
@@ -195,7 +198,8 @@ class SimpleNet(object):
             'zone_id': zone['id'],
             'datacenter': datacenter['name'],
             'datacenter_id': datacenter['id'],
-            'vlans': [ self._get_data_vlan_(vlan['id']) for vlan in self.vlan_list_by_zone(id) ]
+            'vlans': [ self._get_data_vlan_(vlan['id'])
+                       for vlan in self.vlan_list_by_zone(id) ]
         }
 
     def _get_data_datacenter_(self, id):
@@ -241,7 +245,9 @@ class SimpleNet(object):
         return self._generic_info_("datacenter", models.Datacenter, id)
 
     def datacenter_info_by_name(self, name):
-        return self._genreric_info_by_something_("datacenter", models.Datacenter, {'name': name})
+        return self._genreric_info_by_something_(
+            "datacenter", models.Datacenter, {'name': name}
+        )
 
     def datacenter_delete(self, id):
         return self._generic_delete_("datacenter", models.Datacenter, id)
@@ -255,7 +261,9 @@ class SimpleNet(object):
         )
         session.begin(subtransactions=True)
         try:
-            session.add(models.Zone(name=data['name'], datacenter_id=datacenter_id))
+            session.add(models.Zone(
+                name=data['name'], datacenter_id=datacenter_id)
+            )
             session.commit()
         except IntegrityError:
             session.rollback()
@@ -276,7 +284,9 @@ class SimpleNet(object):
         return self._generic_info_("zone", models.Zone, id)
 
     def zone_info_by_name(self, name):
-        return self._genreric_info_by_something_("zone", models.Zone, {'name': name})
+        return self._genreric_info_by_something_(
+            "zone", models.Zone, {'name': name}
+        )
 
     def zone_delete(self, id):
         return self._generic_delete_("zone", models.Zone, id)
@@ -326,8 +336,8 @@ class SimpleNet(object):
             session.rollback()
             raise Exception(e)
         _data = device.to_dict()
-        logger.debug("Successful adding vlan to device: %s device status: %s" %
-            (device_id, _data)
+        logger.debug("Successful adding vlan to device:"
+            " %s device status: %s" % (device_id, _data)
         )
         return _data
 
@@ -360,7 +370,8 @@ class SimpleNet(object):
 
     def device_list_by_anycast(self, anycast_id):
         return self._genreric_list_by_something_(
-            "devices by anycast", models.Anycasts_to_Device, {'anycast_id': anycast_id}
+            "devices by anycast", models.Anycasts_to_Device,
+            {'anycast_id': anycast_id}
         )
 
     def device_list_by_zone(self, zone_id):
@@ -370,19 +381,23 @@ class SimpleNet(object):
 
     def device_remove_vlan(self, device_id, vlan_id):
         return self._generic_delete_(
-            "vlan from device", models.Vlans_to_Device, {'vlan_id': vlan_id, 'device_id': device_id}
+            "vlan from device", models.Vlans_to_Device,
+            {'vlan_id': vlan_id, 'device_id': device_id}
         )
 
     def device_remove_vlan(self, device_id, vlan_id):
         return self._generic_delete_(
-            "vlan from device", models.Anycasts_to_Device, {'vlan_id': vlan_id, 'device_id': device_id}
+            "vlan from device", models.Anycasts_to_Device,
+            {'vlan_id': vlan_id, 'device_id': device_id}
         )
 
     def device_info(self, id):
         return self._generic_info_("device", models.Device, id)
 
     def device_info_by_name(self, name):
-        return self._genreric_info_by_something_("device", models.Device, {'name': name})
+        return self._genreric_info_by_something_(
+            "device", models.Device, {'name': name}
+        )
 
     def device_update(self, *args, **kawrgs):
         raise FeatureNotImplemented()
@@ -395,7 +410,8 @@ class SimpleNet(object):
 
     def vlan_list_by_device(self, device_id):
         return self._genreric_list_by_something_(
-            "vlans by device", models.Vlans_to_Device, {'device_id': device_id}
+            "vlans by device", models.Vlans_to_Device,
+            {'device_id': device_id}
         )
 
     def vlan_list_by_zone(self, zone_id):
@@ -445,12 +461,14 @@ class SimpleNet(object):
 
     def anycast_list_by_device(self, device_id):
         return self._genreric_list_by_something_(
-            "anycasts by device", models.Anycasts_to_Device, {'device_id': device_id}
+            "anycasts by device", models.Anycasts_to_Device,
+            {'device_id': device_id}
         )
 
     def subnet_list_by_vlan(self, vlan_id):
         return self._genreric_list_by_something_(
-            "subnets by vlan", models.Subnet, {'vlan_id': vlan_id}
+            "subnets by vlan", models.Subnet,
+            {'vlan_id': vlan_id}
         )
 
     def subnet_create(self, vlan_id, data):
@@ -484,7 +502,9 @@ class SimpleNet(object):
         return self.anycast_info_by_cidr(data['cidr'])
 
     def anycast_info_by_cidr(self, cidr):
-        return self._genreric_info_by_something_("anycast", models.Anycast, {'cidr': cidr.replace('_','/')})
+        return self._genreric_info_by_something_(
+            "anycast", models.Anycast, {'cidr': cidr.replace('_','/')}
+        )
 
     def subnet_info(self, id):
         return self._generic_info_("subnet", models.Subnet, id)
@@ -493,7 +513,9 @@ class SimpleNet(object):
         return self._generic_info_("anycast", models.Anycast, id)
 
     def subnet_info_by_cidr(self, cidr):
-        return self._genreric_info_by_something_("subnet", models.Subnet, {'cidr': cidr.replace('_','/')})
+        return self._genreric_info_by_something_(
+            "subnet", models.Subnet, {'cidr': cidr.replace('_','/')}
+        )
 
     def subnet_update(self, *args, **kwargs):
         raise FeatureNotImplemented()
@@ -508,10 +530,14 @@ class SimpleNet(object):
         return self._generic_list_("ips", models.Ip)
 
     def ip_list_by_subnet(self, subnet_id):
-        return self._genreric_info_by_something_("ip info by subnet", models.Ip, {'subnet_id': subnet_id})
+        return self._genreric_info_by_something_(
+            "ip info by subnet", models.Ip, {'subnet_id': subnet_id}
+        )
 
     def anycastips_list_by_anycast(self, anycast_id):
-        return self._genreric_list_by_something_("ip info by anycast", models.Anycastip, {'anycast_id': anycast_id})
+        return self._genreric_list_by_something_(
+            "ip info by anycast", models.Anycastip, {'anycast_id': anycast_id}
+        )
 
     def Anycastip_list(self):
         return self._generic_list_("ips anycast", models.Anycastip)
@@ -558,7 +584,9 @@ class SimpleNet(object):
             )
         session.begin(subtransactions=True)
         try:
-            session.add(models.Anycastip(ip=data['ip'], anycast_id=anycast_id))
+            session.add(
+                models.Anycastip(ip=data['ip'], anycast_id=anycast_id)
+            )
             session.commit()
         except IntegrityError:
             session.rollback()
@@ -582,7 +610,9 @@ class SimpleNet(object):
         return self._genreric_info_by_something_("ip", models.Ip, {'ip': ip})
 
     def anycastips_info_by_ip(self, ip):
-        return self._genreric_info_by_something_("ip anycast", models.Anycastip, {'ip': ip})
+        return self._genreric_info_by_something_(
+            "ip anycast", models.Anycastip, {'ip': ip}
+        )
 
     def ip_update(self, *args, **kawrgs):
         raise FeatureNotImplemented()
