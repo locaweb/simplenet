@@ -79,7 +79,7 @@ class SimpleNet(object):
                 _value.to_dict()
             )
         logger.debug("Received %s: %s from [%s]" % (name, _values, value))
-        return _value
+        return _values
 
     def _get_data_device_(self, id):
         logger.debug("Getting device data %s" % id)
@@ -188,7 +188,6 @@ class SimpleNet(object):
         logger.debug("Received zone: %s datacenter: %s from [%s]" %
             (zone, datacenter, id)
         )
-        logger.debug("%s" % self.vlan_list_by_zone(id))
         return {
             'zone': zone['name'],
             'zone_id': zone['id'],
