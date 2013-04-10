@@ -162,7 +162,7 @@ class SimpleNet(object):
         return {
             'anycast_id': anycast['id'],
             'anycast': anycast['cidr'],
-            'ipsanycast': self.ipsanycast_list_by_anycast(id)
+            'anycastips': self.anycastips_list_by_anycast(id)
         }
 
     def _get_data_vlan_(self, id):
@@ -510,11 +510,11 @@ class SimpleNet(object):
     def ip_list_by_subnet(self, subnet_id):
         return self._genreric_info_by_something_("ip info by subnet", models.Ip, {'subnet_id': subnet_id})
 
-    def ipsanycast_list_by_anycast(self, anycast_id):
-        return self._genreric_list_by_something_("ip info by anycast", models.Ipanycast, {'anycast_id': anycast_id})
+    def anycastips_list_by_anycast(self, anycast_id):
+        return self._genreric_list_by_something_("ip info by anycast", models.Anycastip, {'anycast_id': anycast_id})
 
     def ipanycast_list(self):
-        return self._generic_list_("ips anycast", models.Ipanycast)
+        return self._generic_list_("ips anycast", models.Anycastip)
 
     def ip_create(self, subnet_id, data):
         logger.debug("Creating ip on subnet: %s using data: %s" %
@@ -558,7 +558,7 @@ class SimpleNet(object):
             )
         session.begin(subtransactions=True)
         try:
-            session.add(models.Ipanycast(ip=data['ip'], anycast_id=anycast_id))
+            session.add(models.Anycastip(ip=data['ip'], anycast_id=anycast_id))
             session.commit()
         except IntegrityError:
             session.rollback()
@@ -570,19 +570,19 @@ class SimpleNet(object):
         logger.debug("Created ip on anycast: %s using data: %s" %
             (anycast_id, data)
         )
-        return self.ipsanycast_info_by_ip(data['ip'])
+        return self.anycastips_info_by_ip(data['ip'])
 
     def ip_info(self, id):
         return self._generic_info_("ip", models.Ip, id)
 
-    def ipsanycast_info(self, id):
-        return self._generic_info_("ip anycast", models.Ipanycast, id)
+    def anycastips_info(self, id):
+        return self._generic_info_("ip anycast", models.Anycastip, id)
 
     def ip_info_by_ip(self, ip):
         return self._genreric_info_by_something_("ip", models.Ip, {'ip': ip})
 
-    def ipsanycast_info_by_ip(self, ip):
-        return self._genreric_info_by_something_("ip anycast", models.Ipanycast, {'ip': ip})
+    def anycastips_info_by_ip(self, ip):
+        return self._genreric_info_by_something_("ip anycast", models.Anycastip, {'ip': ip})
 
     def ip_update(self, *args, **kawrgs):
         raise FeatureNotImplemented()
@@ -590,8 +590,8 @@ class SimpleNet(object):
     def ip_delete(self, id):
         return self._generic_delete_("ip", models.Ip, id)
 
-    def ipsanycast_delete(self, id):
-        return self._generic_delete_("ip anycast", models.Ipanycast, id)
+    def anycastips_delete(self, id):
+        return self._generic_delete_("ip anycast", models.Anycastip, id)
 
     def policy_list(self, *args, **kawrgs):
         raise FeatureNotImplemented()
