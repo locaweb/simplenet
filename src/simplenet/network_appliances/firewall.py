@@ -125,7 +125,7 @@ class Net(SimpleNet):
 
     def policy_info(self, owner_type, id):
         _model = getattr(models, "%sPolicy" % owner_type.capitalize())
-        return self._generic_info_("%sPolicy" % owner_type.capitalize(), model, id)
+        return self._generic_info_("%sPolicy" % owner_type.capitalize(), _model, id)
         #logger.debug("Getting policy info from %s with id %s" % (owner_type, id))
         #_model = getattr(models, "%sPolicy" % owner_type.capitalize())
         #ss = session.query(_model).get(id)
