@@ -25,18 +25,12 @@ import os
 import sys
 import grp
 import pwd
-import json
-import time
-import base64
-import logging
 
 import bottle
 from bottle import delete, put, get, post, error, run, debug
 from bottle import abort, request, ServerAdapter, response
 
 from simplenet.common.config import config, get_logger
-from simplenet.common.http_utils import reply_json, validate_input
-
 from simplenet.routes import base, policy, errors
 
 app = bottle.app()
@@ -50,6 +44,7 @@ def start():
     bind_addr = config.get("server", "bind_addr")
     logger.info("Starting SimpleNet Server")
     run(host=bind_addr, port=port, server="gevent")
+    logger.info("Stopped SimpleNet Server")
 
 
 def main(action="foreground"):
