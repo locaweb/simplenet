@@ -122,7 +122,7 @@ class SimpleNet(object):
             'datacenter_id': datacenter['id'],
         }
 
-    def _get_data_Anycastip_(self, id):
+    def _get_data_anycastip_(self, id):
         logger.debug("Getting ip anycast data %s" % id)
         ip = self.Anycastip_info(id)
         anycast = self.anycast_info(ip['anycast_id'])
@@ -539,7 +539,7 @@ class SimpleNet(object):
             "ip info by anycast", models.Anycastip, {'anycast_id': anycast_id}
         )
 
-    def Anycastip_list(self):
+    def anycastip_list(self):
         return self._generic_list_("ips anycast", models.Anycastip)
 
     def ip_create(self, subnet_id, data):
