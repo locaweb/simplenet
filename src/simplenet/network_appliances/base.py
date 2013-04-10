@@ -188,7 +188,7 @@ class SimpleNet(object):
         logger.debug("Received zone: %s datacenter: %s from [%s]" %
             (zone, datacenter, id)
         )
-        logger.debug(self.vlan_list_by_zone(id))
+        logger.debug("%s" % self.vlan_list_by_zone(id))
         return {
             'zone': zone['name'],
             'zone_id': zone['id'],
