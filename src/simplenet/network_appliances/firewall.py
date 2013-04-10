@@ -43,10 +43,10 @@ class Net(SimpleNet):
             logger.debug("Getting devices by vlan %s" % _data['vlan_id'])
             devices = self.device_list_by_vlan(_data['vlan_id'])
         elif ('anycast_id' in _data):
-            logger.debug("Getting devices by anycast %s" % _data['vlan_id'])
+            logger.debug("Getting devices by anycast %s" % _data['anycast_id'])
             devices = self.device_list_by_anycast(_data['anycast_id'])
         else:
-            logger.debug("Getting devices by anycast %s" % _data['vlan_id'])
+            logger.debug("Getting devices by anycast %s" % _data['zone_id'])
             devices = self.device_list_by_zone(_data['zone_id'])
 
         for device in devices:
