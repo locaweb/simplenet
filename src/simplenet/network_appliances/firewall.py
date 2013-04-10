@@ -27,10 +27,6 @@ from simplenet.network_appliances.base import SimpleNet
 
 from sqlalchemy.exc import IntegrityError
 
-from kombu import Exchange, BrokerConnection
-from kombu.common import maybe_declare
-from kombu.pools import producers
-
 logger = get_logger()
 session = db_utils.get_database_session()
 
