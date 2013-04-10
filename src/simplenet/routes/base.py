@@ -26,6 +26,10 @@ from simplenet.common.config import config, get_logger
 from simplenet.common.http_utils import (
     reply_json, create_manager, validate_input
 )
+from simplenet.exceptions import (
+    FeatureNotImplemented, EntityNotFound,
+    OperationNotPermited, FeatureNotAvailable
+)
 
 logger = get_logger()
 
