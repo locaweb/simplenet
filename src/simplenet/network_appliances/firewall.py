@@ -82,7 +82,9 @@ class Net(SimpleNet):
                     policy_list = policy_list + self.policy_list_by_owner('Ipanycast', ip['id'])
 
             _data.update({'policy': policy_list})
-            logger.debug("Received rules: %s from %s with id %s" % (rules, owner_type, id))
+            logger.debug("Received rules: %s from %s with id %s and device %s" % (
+                _data, owner_type, id, device['name'])
+            )
             if policy_list:
                 event.EventManager().raise_event(device['name'], _data)
 
