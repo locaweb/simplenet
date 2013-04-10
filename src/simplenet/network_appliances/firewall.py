@@ -126,14 +126,6 @@ class Net(SimpleNet):
     def policy_info(self, owner_type, id):
         _model = getattr(models, "%sPolicy" % owner_type.capitalize())
         return self._generic_info_("%sPolicy" % owner_type.capitalize(), _model, id)
-        #logger.debug("Getting policy info from %s with id %s" % (owner_type, id))
-        #_model = getattr(models, "%sPolicy" % owner_type.capitalize())
-        #ss = session.query(_model).get(id)
-        #if not ss:
-        #    raise EntityNotFound('%sPolicy' % owner_type.capitalize(), id)
-        #data = ss.to_dict()
-        #logger.debug("Received %s from [%s]" % (data, id))
-        #return data
 
     def policy_update(self, *args, **kwargs):
         raise FeatureNotImplemented()
@@ -159,17 +151,6 @@ class Net(SimpleNet):
 
     def policy_list_by_owner(self, owner_type, id):
         _model = getattr(models, "%sPolicy" % owner_type.capitalize())
-        self._genreric_list_by_something_(
+        return self._genreric_list_by_something_(
             "%sPolicy" % owner_type.capitalize(), _model, {'owner_id': id}
         )
-
-        #logger.debug("Getting policy info by owner %s with id %s" % (owner_type, id))
-        #_model = getattr(models, "%sPolicy" % owner_type.capitalize())
-        #ss = session.query(_model).filter_by(owner_id=id).all()
-        #policies = []
-        #for policy in ss:
-        #    policies.append(
-        #        policy.to_dict()
-        #    )
-        #logger.debug("Received policies: %s from owner %s with id %s" % (policies, owner_type, id))
-        #return policies
