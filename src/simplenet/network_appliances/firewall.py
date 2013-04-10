@@ -91,16 +91,16 @@ class Net(SimpleNet):
                 event.EventManager().raise_event(device['name'], _data)
 
     def policy_list(self, owner_type):
-        logger.debug("Listing policy")
         _model = getattr(models, "%sPolicy" % owner_type.capitalize())
-        ss = session.query(_model).all()
-        policies = []
-        for policy in ss:
-            policies.append(
-                policy.to_dict()
-            )
-        logger.debug("Received policies: %s" % policies)
-        return policies
+        return self._generic_list_("%sPolicy" % owner_type.capitalize(), _model)
+        #ss = session.query(_model).all()
+        #policies = []
+        #for policy in ss:
+        #    policies.append(
+        #        policy.to_dict()
+        #    )
+        #logger.debug("Received policies: %s" % policies)
+        #return policies
 
     def policy_create(self, owner_type, owner_id, data):
         logger.debug("Creating rule on %s: %s using data: %s" %
@@ -156,13 +156,39 @@ class Net(SimpleNet):
         return True
 
     def policy_list_by_owner(self, owner_type, id):
-        logger.debug("Getting policy info by owner %s with id %s" % (owner_type, id))
         _model = getattr(models, "%sPolicy" % owner_type.capitalize())
-        ss = session.query(_model).filter_by(owner_id=id).all()
-        policies = []
-        for policy in ss:
-            policies.append(
-                policy.to_dict()
+        self._genreric_list_by_something_(
+            "%sPolicy" % owner_type.capitalize(), _model, {'owner_id': id}
+        )
+
+        #logger.debug("Getting policy info by owner %s with id %s" % (owner_type, id))
+        #_model = getattr(models, "%sPolicy" % owner_type.capitalize())
+        #ss = session.query(_model).filter_by(owner_id=id).all()
+        #policies = []
+        #for policy in ss:
+        #    policies.append(
+        #        policy.to_dict()
+        #    )
+        #logger.debug("Received policies: %s from owner %s with id %s" % (policies, owner_type, id))
+        #return policies
+
+    def _genreric_info_by_something_(self, name, model, value):
+        logger.debug("Getting %s info by %s" % (name, value))
+        ss = session.query(model).filter_by(**value).first()
+        if not ss:
+            raise EntityNotFound(name.capitalize(), value)
+        data = ss.to_dict()
+        logger.debug("Received %s from [%s]" % (data, value))
+        return data
+
+    def _genreric_list_by_something_(self, name, model, value):
+        logger.debug("Getting %s by %s" % (name, value))
+        ss = session.query(model).filter_by(**value).all()
+        _values = []
+        for _value in ss:
+            _values.append(
+                _value.to_dict()
             )
-        logger.debug("Received policies: %s from owner %s with id %s" % (policies, owner_type, id))
-        return policies
+        logger.debug("Received %s: %s from [%s]" % (name, _values, value))
+        return _values
+
