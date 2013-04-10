@@ -54,7 +54,7 @@ class SimpleNet(object):
 
     def _generic_info_(self, name, model, id):
         logger.debug("Getting %s info from %s" % (name, id))
-        ss = session.query(name).get(id)
+        ss = session.query(model).filter_by(id=id).first()
         if not ss:
             raise EntityNotFound(name.capitalize(), id)
         data = ss.to_dict()
