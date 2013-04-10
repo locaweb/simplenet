@@ -124,14 +124,16 @@ class Net(SimpleNet):
         return self.policy_info(owner_type, policy.id)
 
     def policy_info(self, owner_type, id):
-        logger.debug("Getting policy info from %s with id %s" % (owner_type, id))
         _model = getattr(models, "%sPolicy" % owner_type.capitalize())
-        ss = session.query(_model).get(id)
-        if not ss:
-            raise EntityNotFound('%sPolicy' % owner_type.capitalize(), id)
-        data = ss.to_dict()
-        logger.debug("Received %s from [%s]" % (data, id))
-        return data
+        return self._generic_info_("%sPolicy" % owner_type.capitalize(), model, id)
+        #logger.debug("Getting policy info from %s with id %s" % (owner_type, id))
+        #_model = getattr(models, "%sPolicy" % owner_type.capitalize())
+        #ss = session.query(_model).get(id)
+        #if not ss:
+        #    raise EntityNotFound('%sPolicy' % owner_type.capitalize(), id)
+        #data = ss.to_dict()
+        #logger.debug("Received %s from [%s]" % (data, id))
+        #return data
 
     def policy_update(self, *args, **kwargs):
         raise FeatureNotImplemented()
@@ -171,24 +173,3 @@ class Net(SimpleNet):
         #    )
         #logger.debug("Received policies: %s from owner %s with id %s" % (policies, owner_type, id))
         #return policies
-
-    def _genreric_info_by_something_(self, name, model, value):
-        logger.debug("Getting %s info by %s" % (name, value))
-        ss = session.query(model).filter_by(**value).first()
-        if not ss:
-            raise EntityNotFound(name.capitalize(), value)
-        data = ss.to_dict()
-        logger.debug("Received %s from [%s]" % (data, value))
-        return data
-
-    def _genreric_list_by_something_(self, name, model, value):
-        logger.debug("Getting %s by %s" % (name, value))
-        ss = session.query(model).filter_by(**value).all()
-        _values = []
-        for _value in ss:
-            _values.append(
-                _value.to_dict()
-            )
-        logger.debug("Received %s: %s from [%s]" % (name, _values, value))
-        return _values
-
