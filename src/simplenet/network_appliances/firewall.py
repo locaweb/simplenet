@@ -19,7 +19,10 @@
 from simplenet.common import event
 from simplenet.common.config import config, get_logger
 from simplenet.db import models, db_utils
-from simplenet.exceptions import EntityNotFound, OperationNotPermited
+from simplenet.exceptions import (
+    FeatureNotImplemented, EntityNotFound,
+    OperationNotPermited, FeatureNotAvailable
+)
 from simplenet.network_appliances.base import SimpleNet
 
 from sqlalchemy.exc import IntegrityError
@@ -50,7 +53,6 @@ class Net(SimpleNet):
             devices = self.device_list_by_zone(_data['zone_id'])
 
         for device in devices:
-            #_get_data = getattr(self, "_get_data_%s_" % device)
             logger.debug("Getting data from device %s" % device['id'])
             _data.update(self._get_data_device_(device['id']))
 
