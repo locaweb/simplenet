@@ -182,7 +182,7 @@ def datacenter_zone_create(datacenter_id):
     """
     ::
 
-      POST /datacenter/<datacenter_id>/zones
+      POST /datacenters/<datacenter_id>/zones
 
     Create a new zone in datacenter
     """
@@ -205,7 +205,7 @@ def zone_device_create(zone_id):
     """
     ::
 
-      POST /zone/<zone_id>/devices
+      POST /zones/<zone_id>/devices
 
     Create a new device in zone
     """
@@ -228,7 +228,7 @@ def zone_vlan_create(zone_id):
     """
     ::
 
-      POST /zone/<zone_id>/vlans
+      POST /zones/<zone_id>/vlans
 
     Create a new vlan in zone
     """
@@ -382,7 +382,7 @@ def subnet_ip_create(subnet_id):
     """
     ::
 
-      POST /subnet/<subnet_id>/ips
+      POST /subnets/<subnet_id>/ips
 
     Create a new ip in subnet
     """
