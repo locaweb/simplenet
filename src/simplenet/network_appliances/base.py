@@ -544,7 +544,7 @@ class SimpleNet(object):
         )
         return self.ip_info_by_ip(data['ip'])
 
-    def Anycastip_create(self, anycast_id, data):
+    def anycastip_create(self, anycast_id, data):
         logger.debug("Creating ip on anycast: %s using data: %s" %
             (anycast_id, data)
         )
