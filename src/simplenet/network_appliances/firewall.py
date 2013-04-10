@@ -40,14 +40,18 @@ class Net(SimpleNet):
         _data = _get_data(owner_id)
 
         if (owner_type != 'zone') and ('vlan_id' in _data):
+            logger.debug("Getting devices by vlan %s" % _data['vlan_id'])
             devices = self.device_list_by_vlan(_data['vlan_id'])
         elif ('anycast_id' in _data):
+            logger.debug("Getting devices by anycast %s" % _data['vlan_id'])
             devices = self.device_list_by_anycast(_data['anycast_id'])
         else:
+            logger.debug("Getting devices by anycast %s" % _data['vlan_id'])
             devices = self.device_list_by_zone(_data['zone_id'])
 
         for device in devices:
-            _get_data = getattr(self, "_get_data_%s_" % 'device')
+            #_get_data = getattr(self, "_get_data_%s_" % device)
+            logger.debug("Getting data from device %s" % device['id'])
             _data.update(self._get_data_device_(device['id']))
 
             zone_id = device['zone_id']
