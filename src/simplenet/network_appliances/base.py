@@ -120,15 +120,15 @@ class SimpleNet(object):
             'datacenter_id': datacenter['id'],
         }
 
-    def _get_data_ipanycast_(self, id):
+    def _get_data_Anycastip_(self, id):
         logger.debug("Getting ip anycast data %s" % id)
-        ip = self.ipanycast_info(id)
+        ip = self.Anycastip_info(id)
         anycast = self.anycast_info(ip['anycast_id'])
         logger.debug("Received anycast: %s from [%s]" %
             (anycast, id)
         )
         return {
-            'ipanycast': ip['ip'],
+            'Anycastip': ip['ip'],
             'anycast': anycast['cidr'],
             'anycast_id': anycast['id'],
         }
@@ -513,7 +513,7 @@ class SimpleNet(object):
     def anycastips_list_by_anycast(self, anycast_id):
         return self._genreric_list_by_something_("ip info by anycast", models.Anycastip, {'anycast_id': anycast_id})
 
-    def ipanycast_list(self):
+    def Anycastip_list(self):
         return self._generic_list_("ips anycast", models.Anycastip)
 
     def ip_create(self, subnet_id, data):
@@ -544,7 +544,7 @@ class SimpleNet(object):
         )
         return self.ip_info_by_ip(data['ip'])
 
-    def ipanycast_create(self, anycast_id, data):
+    def Anycastip_create(self, anycast_id, data):
         logger.debug("Creating ip on anycast: %s using data: %s" %
             (anycast_id, data)
         )
@@ -563,7 +563,7 @@ class SimpleNet(object):
         except IntegrityError:
             session.rollback()
             forbidden_msg = "%s already exists" % data['ip']
-            raise OperationNotPermited('Ipanycast', forbidden_msg)
+            raise OperationNotPermited('Anycastip', forbidden_msg)
         except Exception, e:
             session.rollback()
             raise Exception(e)
