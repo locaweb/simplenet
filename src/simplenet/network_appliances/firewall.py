@@ -142,6 +142,6 @@ class Net(SimpleNet):
 
     def policy_list_by_owner(self, owner_type, id):
         _model = getattr(models, "%sPolicy" % owner_type.capitalize())
-        return self._genreric_list_by_something_(
+        return self._generic_list_by_something_(
             "%sPolicy" % owner_type.capitalize(), _model, {'owner_id': id}
         )
