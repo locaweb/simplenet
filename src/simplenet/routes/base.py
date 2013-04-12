@@ -308,7 +308,7 @@ def device_remove_vlan(device_id, vlan_id):
 @delete('/devices/<device_id>/anycasts/<anycast_id>')
 @handle_auth
 @reply_json
-def device_remove_anycast(device_id, vlan_id):
+def device_remove_anycast(device_id, anycast_id):
     """
     ::
 
