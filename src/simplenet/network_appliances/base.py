@@ -376,10 +376,10 @@ class SimpleNet(object):
             {'vlan_id': vlan_id, 'device_id': device_id}
         )
 
-    def device_remove_anycast(self, device_id, vlan_id):
+    def device_remove_anycast(self, device_id, anycast_id):
         return self._generic_delete_(
-            "vlan from device", models.Anycasts_to_Device,
-            {'vlan_id': vlan_id, 'device_id': device_id}
+            "anycast from device", models.Anycasts_to_Device,
+            {'anycast_id': anycast_id, 'device_id': device_id}
         )
 
     def device_info(self, id):
