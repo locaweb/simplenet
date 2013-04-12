@@ -167,3 +167,23 @@ run_test "anycast delete 192.168.168.0/24" '"message": "Successful deletetion"'
 run_test "device delete firewall01" '"message": "Successful deletetion"'
 run_test "zone delete zone01" '"message": "Successful deletetion"'
 run_test "datacenter delete datacenter01" '"message": "Successful deletetion"'
+
+echo -e "\n::::: Starting ipv6 Tests "
+run_test "datacenter create datacenter01" '"name": "datacenter01"'
+run_test "zone create zone01 --datacenter datacenter01" '"name": "zone01"'
+run_test "vlan create vlan01 --zone zone01" '"name": "vlan01"'
+run_test "device create firewall01 --zone zone01" '"name": "firewall01"'
+run_test "device vlan_attach firewall01 --vlan vlan01" '"name": "firewall01"'
+run_test "subnet create 2804:218::2001:c62c:3ff:fe02:adcd/64 --vlan vlan01" '"cidr": "2804:218::2001:c62c:3ff:fe02:adcd/64"'
+run_test "ip create 2804:218::2001:c62c:3ff:fe02:1 --subnet 2804:218::2001:c62c:3ff:fe02:adcd/64" '"ip": "2804:218::2001:c62c:3ff:fe02:1"'
+run_test "ip create 2804:218::2001:c62c:3ff:fe02:1 --subnet 2804:218::2001:c62c:3ff:fe02:adcd/64" '"message": "Ip:2804:218::2001:c62c:3ff:fe02:1 already exists Forbidden"'
+run_policy_test "policy create" "subnet" "2804:218::2001:c62c:3ff:fe02:adcd/64 --dst 2804:218::2001:c62c:3ff:fe02:ffff --proto tcp --table OUTPUT --policy DROP"
+exit
+run_policy_test "policy create" "ip" "2804:218::2001:c62c:3ff:fe02:1 --dst 2804:218::2001:c62c:3ff:fe02:ffff --proto tcp --table OUTPUT --policy DROP"
+run_test "ip info 2804:218::2001:c62c:3ff:fe02:1" '"ip": "2804:218::2001:c62c:3ff:fe02:1"'
+run_test "ip delete 2804:218::2001:c62c:3ff:fe02:1" '"message": "Successful deletetion"'
+run_test "subnet delete 2804:218::2001:c62c:3ff:fe02:adcd/64" '"message": "Successful deletetion"'
+run_test "device vlan_detach firewall01 --vlan vlan01" '"message": "Successful deletetion"'
+run_test "vlan delete vlan01" '"message": "Successful deletetion"'
+run_test "zone delete zone01" '"message": "Successful deletetion"'
+run_test "datacenter delete datacenter01" '"message": "Successful deletetion"'
