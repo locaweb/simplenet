@@ -41,9 +41,9 @@ class SimpleNet(object):
         logger.debug("Received %s: %s" % (name, _values))
         return _values
 
-    def _generic_delete_(self, name, model, id):
-        logger.debug("Deleting %s from %s" % (id, name))
-        ss = session.query(model).get(id)
+    def _generic_delete_(self, name, model, value):
+        logger.debug("Deleting %s from %s" % (**value, name))
+        session.query(model).filter_by(**value).first()
         session.begin(subtransactions=True)
         try:
             session.delete(ss)
@@ -51,7 +51,7 @@ class SimpleNet(object):
         except Exception, e:
             session.rollback()
             raise Exception(e)
-        logger.debug("Successful deletion of %s from %s" % (id, name))
+        logger.debug("Successful deletion of %s from %s" % (**value, name))
         return True
 
     def _generic_info_(self, name, model, id):
@@ -242,7 +242,7 @@ class SimpleNet(object):
         raise FeatureNotImplemented()
 
     def datacenter_info(self, id):
-        return self._generic_info_("datacenter", models.Datacenter, id)
+        return self._generic_info_("datacenter", models.Datacenter, {'id': id})
 
     def datacenter_info_by_name(self, name):
         return self._genreric_info_by_something_(
@@ -250,7 +250,7 @@ class SimpleNet(object):
         )
 
     def datacenter_delete(self, id):
-        return self._generic_delete_("datacenter", models.Datacenter, id)
+        return self._generic_delete_("datacenter", models.Datacenter, {'id': id})
 
     def zone_list(self):
         return self._generic_list_("zones", models.Zone)
@@ -281,7 +281,7 @@ class SimpleNet(object):
         raise FeatureNotImplemented()
 
     def zone_info(self, id):
-        return self._generic_info_("zone", models.Zone, id)
+        return self._generic_info_("zone", models.Zone, {'id': id})
 
     def zone_info_by_name(self, name):
         return self._genreric_info_by_something_(
@@ -289,7 +289,7 @@ class SimpleNet(object):
         )
 
     def zone_delete(self, id):
-        return self._generic_delete_("zone", models.Zone, id)
+        return self._generic_delete_("zone", models.Zone, {'id': id})
 
     def device_list(self):
         return self._generic_list_("devices", models.Device)
@@ -403,7 +403,7 @@ class SimpleNet(object):
         raise FeatureNotImplemented()
 
     def device_delete(self, id):
-        return self._generic_delete_("device", models.Device, id)
+        return self._generic_delete_("device", models.Device, {'id': id})
 
     def vlan_list(self):
         return self._generic_list_("vlans", models.Vlan)
@@ -451,7 +451,7 @@ class SimpleNet(object):
         raise FeatureNotImplemented()
 
     def vlan_delete(self, id):
-        return self._generic_delete_("vlan", models.Vlan, id)
+        return self._generic_delete_("vlan", models.Vlan, {'id': id})
 
     def subnet_list(self):
         return self._generic_list_("subnets", models.Subnet)
@@ -521,10 +521,10 @@ class SimpleNet(object):
         raise FeatureNotImplemented()
 
     def subnet_delete(self, id):
-        return self._generic_delete_("subnet", models.Subnet, id)
+        return self._generic_delete_("subnet", models.Subnet, {'id': id})
 
     def anycast_delete(self, id):
-        return self._generic_delete_("anycast", models.Anycast, id)
+        return self._generic_delete_("anycast", models.Anycast, {'id': id})
 
     def ip_list(self):
         return self._generic_list_("ips", models.Ip)
@@ -618,10 +618,10 @@ class SimpleNet(object):
         raise FeatureNotImplemented()
 
     def ip_delete(self, id):
-        return self._generic_delete_("ip", models.Ip, id)
+        return self._generic_delete_("ip", models.Ip, {'id': id})
 
     def anycastips_delete(self, id):
-        return self._generic_delete_("ip anycast", models.Anycastip, id)
+        return self._generic_delete_("ip anycast", models.Anycastip, {'id': id})
 
     def policy_list(self, *args, **kawrgs):
         raise FeatureNotImplemented()
