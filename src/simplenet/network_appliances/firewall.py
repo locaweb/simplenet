@@ -58,26 +58,21 @@ class Net(SimpleNet):
             policy_list = policy_list + self.policy_list_by_owner('zone', zone_id)
             _data.update({'policy': self.policy_list_by_owner('zone', zone_id)})
             for vlan in self.vlan_list_by_device(dev_id): # Cascade thru the vlans of the device
-                _get_data = getattr(self, "_get_data_%s_" % 'vlan')
-                _data.update(_get_data(vlan['vlan_id']))
+                _data.update(self._get_data_vlan_(vlan['vlan_id']))
                 policy_list = policy_list + self.policy_list_by_owner('vlan', vlan['vlan_id'])
                 for subnet in self.subnet_list_by_vlan(vlan['vlan_id']): # Cascade thru the subnets of the vlan
-                    _get_data = getattr(self, "_get_data_%s_" % 'subnet')
-                    _data.update(_get_data(subnet['id']))
+                    _data.update(self._get_data_subnet_(subnet['id']))
                     policy_list = policy_list + self.policy_list_by_owner('subnet', subnet['id'])
                     for ip in self.ip_list_by_subnet(subnet['id']): # Cascade thru the IPs of the subnet
-                        _get_data = getattr(self, "_get_data_%s_" % 'ip')
-                        _data.update(_get_data(ip['id']))
+                        _data.update(self._get_data_ip_(ip['id']))
                         policy_list = policy_list + self.policy_list_by_owner('ip', ip['id'])
 
             for anycast in self.anycast_list_by_device(dev_id): # Cascade thru the anycasts of the device
-                _get_data = getattr(self, "_get_data_%s_" % 'anycast')
-                _data.update(_get_data(anycast['anycast_id']))
+                _data.update(self._get_data_anycast_(anycast['anycast_id']))
                 policy_list = policy_list + self.policy_list_by_owner('anycast', anycast['anycast_id'])
                 for ip in self.ip_list_by_anycast(anycast['anycast_id']): # Cascade thru the IPs of the anycast subnet
                     _get_data = getattr(self, "_get_data_%s_" % 'anycastip')
-                    _data.update(_get_data(ip['id']))
-                    policy_list = policy_list + self.policy_list_by_owner('Anycastip', ip['id'])
+                    policy_list = policy_list + self.policy_list_by_owner('anycastip', ip['id'])
 
             _data.update({'policy': policy_list})
             logger.debug("Received rules: %s from %s with id %s and device %s" % (
