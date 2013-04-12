@@ -156,7 +156,7 @@ class SimpleNet(object):
         return {
             'anycast_id': anycast['id'],
             'anycast': anycast['cidr'],
-            'anycastips': self.anycastips_list_by_anycast(id)
+            'anycastips': self.anycastip_list_by_anycast(id)
         }
 
     def _get_data_vlan_(self, id):
@@ -525,7 +525,7 @@ class SimpleNet(object):
             "ip info by subnet", models.Ip, {'subnet_id': subnet_id}
         )
 
-    def anycastips_list_by_anycast(self, anycast_id):
+    def anycastip_list_by_anycast(self, anycast_id):
         return self._generic_list_by_something_(
             "ip info by anycast", models.Anycastip, {'anycast_id': anycast_id}
         )
@@ -589,18 +589,18 @@ class SimpleNet(object):
         logger.debug("Created ip on anycast: %s using data: %s" %
             (anycast_id, data)
         )
-        return self.anycastips_info_by_ip(data['ip'])
+        return self.anycastip_info_by_ip(data['ip'])
 
     def ip_info(self, id):
         return self._generic_info_("ip", models.Ip, {'id': id})
 
-    def anycastips_info(self, id):
+    def anycastip_info(self, id):
         return self._generic_info_("ip anycast", models.Anycastip, {'id': id})
 
     def ip_info_by_ip(self, ip):
         return self._generic_info_("ip", models.Ip, {'ip': ip})
 
-    def anycastips_info_by_ip(self, ip):
+    def anycastip_info_by_ip(self, ip):
         return self._generic_info_(
             "ip anycast", models.Anycastip, {'ip': ip}
         )
@@ -611,7 +611,7 @@ class SimpleNet(object):
     def ip_delete(self, id):
         return self._generic_delete_("ip", models.Ip, {'id': id})
 
-    def anycastips_delete(self, id):
+    def anycastip_delete(self, id):
         return self._generic_delete_("ip anycast", models.Anycastip, {'id': id})
 
     def policy_list(self, *args, **kawrgs):
