@@ -42,7 +42,7 @@ class SimpleNet(object):
         return _values
 
     def _generic_delete_(self, name, model, value):
-        logger.debug("Deleting %s from %s" % (**value, name))
+        logger.debug("Deleting %s from %s" % (value, name))
         session.query(model).filter_by(**value).first()
         session.begin(subtransactions=True)
         try:
@@ -51,7 +51,7 @@ class SimpleNet(object):
         except Exception, e:
             session.rollback()
             raise Exception(e)
-        logger.debug("Successful deletion of %s from %s" % (**value, name))
+        logger.debug("Successful deletion of %s from %s" % (value, name))
         return True
 
     def _generic_info_(self, name, model, id):
