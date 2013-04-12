@@ -54,7 +54,7 @@ class SimpleNet(object):
         logger.debug("Successful deletion of %s from %s" % (value, name))
         return True
 
-    def _genreric_info_(self, name, model, value):
+    def _generic_info_(self, name, model, value):
         logger.debug("Getting %s info by %s" % (name, value))
         ss = session.query(model).filter_by(**value).first()
         if not ss:
@@ -63,7 +63,7 @@ class SimpleNet(object):
         logger.debug("Received %s from [%s]" % (data, value))
         return data
 
-    def _genreric_list_by_something_(self, name, model, value):
+    def _generic_list_by_something_(self, name, model, value):
         logger.debug("Getting %s by %s" % (name, value))
         ss = session.query(model).filter_by(**value).all()
         _values = []
@@ -355,18 +355,18 @@ class SimpleNet(object):
         return _data
 
     def device_list_by_vlan(self, vlan_id):
-        return self._genreric_list_by_something_(
+        return self._generic_list_by_something_(
             "devices by vlan", models.Vlans_to_Device, {'vlan_id': vlan_id}
         )
 
     def device_list_by_anycast(self, anycast_id):
-        return self._genreric_list_by_something_(
+        return self._generic_list_by_something_(
             "devices by anycast", models.Anycasts_to_Device,
             {'anycast_id': anycast_id}
         )
 
     def device_list_by_zone(self, zone_id):
-        return self._genreric_list_by_something_(
+        return self._generic_list_by_something_(
             "devices by zone", models.Device, {'zone_id': zone_id}
         )
 
@@ -383,7 +383,7 @@ class SimpleNet(object):
         )
 
     def device_info(self, id):
-        return self._generic_info_("device", models.Device, id)
+        return self._generic_info_("device", models.Device, {'id': id})
 
     def device_info_by_name(self, name):
         return self._genreric_info_(
@@ -400,13 +400,13 @@ class SimpleNet(object):
         return self._generic_list_("vlans", models.Vlan)
 
     def vlan_list_by_device(self, device_id):
-        return self._genreric_list_by_something_(
+        return self._generic_list_by_something_(
             "vlans by device", models.Vlans_to_Device,
             {'device_id': device_id}
         )
 
     def vlan_list_by_zone(self, zone_id):
-        return self._genreric_list_by_something_(
+        return self._generic_list_by_something_(
             "vlans by zone", models.Vlan, {'zone_id': zone_id}
         )
 
@@ -431,7 +431,7 @@ class SimpleNet(object):
         return self.vlan_info_by_name(data['name'])
 
     def vlan_info(self, id):
-        return self._generic_info_("vlan", models.Vlan, id)
+        return self._generic_info_("vlan", models.Vlan, {'id': id})
 
     def vlan_info_by_name(self, name):
         return self._genreric_info_(
@@ -451,13 +451,13 @@ class SimpleNet(object):
         return self._generic_list_("anycasts", models.Anycast)
 
     def anycast_list_by_device(self, device_id):
-        return self._genreric_list_by_something_(
+        return self._generic_list_by_something_(
             "anycasts by device", models.Anycasts_to_Device,
             {'device_id': device_id}
         )
 
     def subnet_list_by_vlan(self, vlan_id):
-        return self._genreric_list_by_something_(
+        return self._generic_list_by_something_(
             "subnets by vlan", models.Subnet,
             {'vlan_id': vlan_id}
         )
@@ -498,10 +498,10 @@ class SimpleNet(object):
         )
 
     def subnet_info(self, id):
-        return self._generic_info_("subnet", models.Subnet, id)
+        return self._generic_info_("subnet", models.Subnet, {'id': id})
 
     def anycast_info(self, id):
-        return self._generic_info_("anycast", models.Anycast, id)
+        return self._generic_info_("anycast", models.Anycast, {'id': id})
 
     def subnet_info_by_cidr(self, cidr):
         return self._genreric_info_(
@@ -526,7 +526,7 @@ class SimpleNet(object):
         )
 
     def anycastips_list_by_anycast(self, anycast_id):
-        return self._genreric_list_by_something_(
+        return self._generic_list_by_something_(
             "ip info by anycast", models.Anycastip, {'anycast_id': anycast_id}
         )
 
@@ -592,10 +592,10 @@ class SimpleNet(object):
         return self.anycastips_info_by_ip(data['ip'])
 
     def ip_info(self, id):
-        return self._generic_info_("ip", models.Ip, id)
+        return self._generic_info_("ip", models.Ip, {'id': id})
 
     def anycastips_info(self, id):
-        return self._generic_info_("ip anycast", models.Anycastip, id)
+        return self._generic_info_("ip anycast", models.Anycastip, {'id': id})
 
     def ip_info_by_ip(self, ip):
         return self._genreric_info_("ip", models.Ip, {'ip': ip})
