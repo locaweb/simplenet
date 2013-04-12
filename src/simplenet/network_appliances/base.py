@@ -43,7 +43,7 @@ class SimpleNet(object):
 
     def _generic_delete_(self, name, model, value):
         logger.debug("Deleting %s from %s" % (value, name))
-        session.query(model).filter_by(**value).first()
+        ss = session.query(model).filter_by(**value).first()
         session.begin(subtransactions=True)
         try:
             session.delete(ss)
