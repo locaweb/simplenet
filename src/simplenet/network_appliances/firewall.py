@@ -116,7 +116,7 @@ class Net(SimpleNet):
 
     def policy_info(self, owner_type, id):
         _model = getattr(models, "%sPolicy" % owner_type.capitalize())
-        return self._generic_info_("%sPolicy" % owner_type.capitalize(), _model, id)
+        return self._generic_info_("%sPolicy" % owner_type.capitalize(), _model, {'id': id})
 
     def policy_update(self, *args, **kwargs):
         raise FeatureNotImplemented()
