@@ -71,7 +71,7 @@ class Net(SimpleNet):
                 _data.update(self._get_data_anycast_(anycast['anycast_id']))
                 policy_list = policy_list + self.policy_list_by_owner('anycast', anycast['anycast_id'])
                 for ip in self.ip_list_by_anycast(anycast['anycast_id']): # Cascade thru the IPs of the anycast subnet
-                    _get_data = getattr(self, "_get_data_%s_" % 'anycastip')
+                    _data.update(self._get_data_anycastip_(ip['id']))
                     policy_list = policy_list + self.policy_list_by_owner('anycastip', ip['id'])
 
             _data.update({'policy': policy_list})
@@ -84,14 +84,6 @@ class Net(SimpleNet):
     def policy_list(self, owner_type):
         _model = getattr(models, "%sPolicy" % owner_type.capitalize())
         return self._generic_list_("%sPolicy" % owner_type.capitalize(), _model)
-        #ss = session.query(_model).all()
-        #policies = []
-        #for policy in ss:
-        #    policies.append(
-        #        policy.to_dict()
-        #    )
-        #logger.debug("Received policies: %s" % policies)
-        #return policies
 
     def policy_create(self, owner_type, owner_id, data):
         logger.debug("Creating rule on %s: %s using data: %s" %
