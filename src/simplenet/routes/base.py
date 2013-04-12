@@ -305,6 +305,22 @@ def device_remove_vlan(device_id, vlan_id):
     return device
 
 
+@delete('/devices/<device_id>/anycasts/<anycast_id>')
+@handle_auth
+@reply_json
+def device_remove_vlan(device_id, vlan_id):
+    """
+    ::
+
+      POST /devices/<device_id>/anycasts/<anycast_id>
+
+    Attach anycasts to device
+    """
+    manager = create_manager('base')
+    device = manager.device_remove_anycast(device_id, anycast_id)
+    return device
+
+
 @post('/anycasts')
 @handle_auth
 @validate_input(cidr=str)
