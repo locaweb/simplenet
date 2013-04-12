@@ -236,7 +236,7 @@ class SimpleNet(object):
         return self._generic_info_("datacenter", models.Datacenter, {'id': id})
 
     def datacenter_info_by_name(self, name):
-        return self._genreric_info_(
+        return self._generic_info_(
             "datacenter", models.Datacenter, {'name': name}
         )
 
@@ -275,7 +275,7 @@ class SimpleNet(object):
         return self._generic_info_("zone", models.Zone, {'id': id})
 
     def zone_info_by_name(self, name):
-        return self._genreric_info_(
+        return self._generic_info_(
             "zone", models.Zone, {'name': name}
         )
 
@@ -386,7 +386,7 @@ class SimpleNet(object):
         return self._generic_info_("device", models.Device, {'id': id})
 
     def device_info_by_name(self, name):
-        return self._genreric_info_(
+        return self._generic_info_(
             "device", models.Device, {'name': name}
         )
 
@@ -434,7 +434,7 @@ class SimpleNet(object):
         return self._generic_info_("vlan", models.Vlan, {'id': id})
 
     def vlan_info_by_name(self, name):
-        return self._genreric_info_(
+        return self._generic_info_(
             "vlan", models.Vlan, {'name': name}
         )
 
@@ -493,7 +493,7 @@ class SimpleNet(object):
         return self.anycast_info_by_cidr(data['cidr'])
 
     def anycast_info_by_cidr(self, cidr):
-        return self._genreric_info_(
+        return self._generic_info_(
             "anycast", models.Anycast, {'cidr': cidr.replace('_','/')}
         )
 
@@ -504,7 +504,7 @@ class SimpleNet(object):
         return self._generic_info_("anycast", models.Anycast, {'id': id})
 
     def subnet_info_by_cidr(self, cidr):
-        return self._genreric_info_(
+        return self._generic_info_(
             "subnet", models.Subnet, {'cidr': cidr.replace('_','/')}
         )
 
@@ -521,7 +521,7 @@ class SimpleNet(object):
         return self._generic_list_("ips", models.Ip)
 
     def ip_list_by_subnet(self, subnet_id):
-        return self._genreric_info_(
+        return self._generic_info_(
             "ip info by subnet", models.Ip, {'subnet_id': subnet_id}
         )
 
@@ -598,10 +598,10 @@ class SimpleNet(object):
         return self._generic_info_("ip anycast", models.Anycastip, {'id': id})
 
     def ip_info_by_ip(self, ip):
-        return self._genreric_info_("ip", models.Ip, {'ip': ip})
+        return self._generic_info_("ip", models.Ip, {'ip': ip})
 
     def anycastips_info_by_ip(self, ip):
-        return self._genreric_info_(
+        return self._generic_info_(
             "ip anycast", models.Anycastip, {'ip': ip}
         )
 
