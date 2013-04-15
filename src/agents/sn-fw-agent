@@ -170,23 +170,37 @@ class Worker(ConsumerMixin):
                     )
                 )
 
-    def _get_structured_rules_(self, rules=None):
+    def _get_structured_rules_(self, data=None):
+        def get_chain(chain, owner):
+            for ip_attrs in data.get("ips", []):
+                if owner == ip_attrs.get("ip"):
+                    if not ip_attrs.get("subnet"):
+                        break
+                    return "%s-%s" % (chain, ip_attrs.get("subnet"))
+            return "%s-%s" % (chain, owner)
+
         st_rules = {}
 
-        for rule in rules:
+        for rule in data.get("policy", []):
             table = rule.get("table")
             proto = rule.get("proto", "").lower()
             src = rule.get("src") or "0.0.0.0/0"
             src_port = rule.get("src_port") or "any"
             src_full = "%s:%s" % (src, src_port)
-            dst = rule.get("dst") or "0.0.0.0/0"
+            dst = rule.get("dst") # or "0.0.0.0/0"
             dst_port = rule.get("dst_port") or "any"
             owner = rule.get("owner")
             policy = rule.get("policy") or "DROP"
 
-            if not st_rules.has_key(table):
-                st_rules["%s-%s" % (owner, table)] = {}
-            st_rules_table = st_rules["%s-%s" % (owner, table)]
+            if not dst:
+                if re.search("^(\d{1,3}\.){3}\d{1,3}$", rule.get("owner", "")):
+                    dst = rule.get("owner")
+                else:
+                    dst = "0.0.0.0/0"
+
+            if not st_rules.has_key(get_chain(table, owner)):
+                st_rules[get_chain(table, owner)] = {}
+            st_rules_table = st_rules[get_chain(table, owner)]
             if not st_rules_table.has_key(proto):
                 st_rules_table[proto] = {}
             st_rules_proto = st_rules_table[proto]
@@ -208,8 +222,8 @@ class Worker(ConsumerMixin):
                     st_rules_pol.append(dst_port)
         return st_rules
 
-    def _add_firewall_mport_rules_(self, rules=None):
-        for table, rule_attrs in self._get_structured_rules_(rules).iteritems():
+    def _add_firewall_mport_rules_(self, data=None):
+        for table, rule_attrs in self._get_structured_rules_(data).iteritems():
             for proto in rule_attrs.iterkeys():
                 for src in rule_attrs[proto].iterkeys():
                     src_addr, src_port = src.split(":")
@@ -282,52 +296,11 @@ class Worker(ConsumerMixin):
                              'vlan': data['vlan']}
                     rule_dzvs_block(infos)
 
-            if ('subnet' in data) and ('ips' in data):
-                logging.debug('Subnet chain')
-                infos = {'table': rule['table'],
-                         'datacenter': data['datacenter'],
-                         'cidr': data['subnet'],
-                         'zone': data['zone'],
-                         'vlan': data['vlan']}
-                rule_dzvs_block(infos)
-                [self._gen_jumps_(rule['table'], data['subnet'], ip['ip'], ip['ip']) for ip in data['ips']]
-
-            if ('anycast' in data) and ('ipsanycast' in data) :
-                logging.debug('Anycast chain')
-                infos = {'table': rule['table'],
-                         'datacenter': data['datacenter'],
-                         'cidr': data['anycast'],
-                         'zone': data['zone'],
-                         'vlan': 'anycast'}
-                rule_dzvs_block(infos)
-                [self._gen_jumps_(rule['table'], data['anycast'], ip['ip'], ip['ip']) for ip in data['ipsanycast']]
-
-            if 'ip' in data:
-                logging.debug('IP Chain')
-                infos = {'table': rule['table'],
-                         'datacenter': data['datacenter'],
-                         'cidr': data['subnet'],
-                         'zone': data['zone'],
-                         'vlan': data['vlan']}
-                rule_dzvs_block(infos)
-                self._gen_jumps_(rule['table'], data['subnet'], data['ip'], data['ip'])
-
-            if 'ipanycast' in data:
-                logging.debug('IP Chain')
-                infos = {'table': rule['table'],
-                         'datacenter': data['datacenter'],
-                         'cidr': data['anycast'],
-                         'zone': data['zone'],
-                         'vlan': 'anycast'}
-                rule_dzvs_block(infos)
-                self._gen_jumps_(rule['table'], data['anycast'], data['ipanycast'], data['anycast'])
-
-
     def _gen_iptables_save_(self, data):
-        print "========="
+        print "\n========="
         logging.debug(json.dumps(data, sort_keys=True, indent=4))
         self._gen_iptables_chains_(data)
-        self._add_firewall_mport_rules_(data.get("policy", []))
+        self._add_firewall_mport_rules_(data)
 
 
 def help():
