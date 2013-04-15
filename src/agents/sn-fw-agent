@@ -47,12 +47,14 @@ from kombu.utils.debug import setup_logging
 import difflib
 import logging
 
+
 setup_logging(loglevel="INFO")
 LOGGING_LEVELS = {'critical': logging.CRITICAL,
                   'error': logging.ERROR,
                   'warning': logging.WARNING,
                   'info': logging.INFO,
                   'debug': logging.DEBUG}
+
 
 myname = os.uname()[1]
 
@@ -114,68 +116,6 @@ class Worker(ConsumerMixin):
             self.iptables_save.append(rule)
             print rule
 
-    def _gen_jumps_(self, table, name, cidr, nextjump, datacenter=False):
-        try:
-            if IPNetwork(nextjump).version == 6:
-                netid = hashlib.md5()
-                netid.update(nextjump)
-                nextjump = netid.hexdigest()[:15]
-            if IPNetwork(name).version == 6:
-                netid = hashlib.md5()
-                netid.update(name)
-                name = netid.hexdigest()[:15]
-        except ValueError:
-            pass
-
-        if table and name and cidr and nextjump:
-            self._add_rule_(":%s-%s - [0:0]" % (table, nextjump))
-            jump = "-{action} {name} -{direction} {cidr} -j {table}-{nextjump}"
-            directions = {
-                'FORWARD': ['s', 'd'],
-                'INPUT': ['d'],
-                'OUTPUT': ['s']
-            }
-
-            name = table if datacenter else "%s-%s" % (table, name)
-            for direction in directions[table]:
-                self._add_rule_(
-                    jump.format(action='A',
-                                table=table,
-                                name=name,
-                                direction=direction,
-                                cidr=cidr,
-                                nextjump=nextjump
-                    )
-                )
-
-    def _gen_rule_(self, rule):
-        iptables = []
-        try:
-            if IPNetwork(rule['owner']).version == 6:
-                netid = hashlib.md5()
-                netid.update(rule['owner'])
-                rule['owner'] = netid.hexdigest()[:15]
-        except ValueError:
-            pass
-
-        if ('table' in rule) and ('owner' in rule):
-            iptables.append('-I {table}-{owner}'.format(table=rule['table'], owner=rule['owner']))
-            field_maps = {
-                'src': '-s',
-                'dst': '-d',
-                'src_port': '--sport',
-                'dst_port': '--dport',
-                'proto': '-p',
-                'id': '-m comment --comment'
-            }
-
-            for field, value in field_maps.iteritems():
-                if rule[field]:
-                    iptables.append(' %s %s' % (value, rule[field]))
-
-            iptables.append(' -j {policy}'.format(policy=rule['policy']))
-        return "".join(iptables)
-
     @staticmethod
     def _multiport_slice_(ports=[], step=15):
         # step => max-port per rule (iptables default => 15)
@@ -198,6 +138,38 @@ class Worker(ConsumerMixin):
             pslices.append(pslice)
         return pslices
 
+    def _gen_jumps_(self, table, name, cidr, nextjump, datacenter=False):
+        try:
+            if IPNetwork(nextjump).version == 6:
+                netid = hashlib.md5()
+                netid.update(nextjump)
+                nextjump = netid.hexdigest()[:15]
+            if IPNetwork(name).version == 6:
+                netid = hashlib.md5()
+                netid.update(name)
+                name = netid.hexdigest()[:15]
+        except ValueError:
+            pass
+
+        if table and name and cidr and nextjump:
+            self._add_rule_(":%s-%s - [0:0]" % (table, nextjump))
+            jump = "-{action} {name} -{direction} {cidr} -j {table}-{nextjump}"
+            directions = { 'FORWARD': ['s', 'd'],
+                           'INPUT': ['d'],
+                           'OUTPUT': ['s'] }
+
+            name = table if datacenter else "%s-%s" % (table, name)
+            for direction in directions[table]:
+                self._add_rule_(
+                    jump.format(action='A',
+                                table=table,
+                                name=name,
+                                direction=direction,
+                                cidr=cidr,
+                                nextjump=nextjump
+                    )
+                )
+
     def _get_structured_rules_(self, rules=None):
         st_rules = {}
 
@@ -209,11 +181,12 @@ class Worker(ConsumerMixin):
             src_full = "%s:%s" % (src, src_port)
             dst = rule.get("dst") or "0.0.0.0/0"
             dst_port = rule.get("dst_port") or "any"
+            owner = rule.get("owner")
             policy = rule.get("policy") or "DROP"
 
             if not st_rules.has_key(table):
-                st_rules[table] = {}
-            st_rules_table = st_rules[table]
+                st_rules["%s-%s" % (owner, table)] = {}
+            st_rules_table = st_rules["%s-%s" % (owner, table)]
             if not st_rules_table.has_key(proto):
                 st_rules_table[proto] = {}
             st_rules_proto = st_rules_table[proto]
@@ -221,7 +194,6 @@ class Worker(ConsumerMixin):
                 st_rules_proto[src_full] = {}
             st_rules_src = st_rules_proto[src_full]
             if not st_rules_src.has_key(dst):
-                #st_rules_src[dst] = []
                 st_rules_src[dst] = {}
             st_rules_dst = st_rules_src[dst]
             if not st_rules_dst.has_key(policy):
@@ -254,7 +226,7 @@ class Worker(ConsumerMixin):
                             if dst_addr and dst_addr != "0.0.0.0/0":
                                 ipt_rule += " -d %s" % dst_addr
                             if proto == "gre":
-                                self._add_rule_(ipt_rule)
+                                self._add_rule_("%s -j %s" % (ipt_rule, policy))
                                 continue
                             if type(dst_ports) is list:
                                 if len(dst_ports) == 0:
@@ -266,21 +238,9 @@ class Worker(ConsumerMixin):
                                 for s_dst_ports in self._multiport_slice_(dst_ports):
                                     self._add_rule_("%s -m multiport --dports %s -j %s" % (ipt_rule, ",".join(s_dst_ports), policy))
                             else:
-                                self._add_rule_(ipt_rule)
+                                self._add_rule_("%s -j %s" % (ipt_rule, policy))
 
-    def _gen_iptables_save_(self, data):
-        #print json.dumps(data, sort_keys=True, indent=4)
-
-        print "========="
-        #print data.keys()
-        #for policy in data.get("policy"):
-        #    self._add_rule_(self._gen_rule_(policy))
-        #import pprint
-        #pprint.pprint(self._get_structured_rules_(data.get("policy", [])))
-        return self._add_firewall_mport_rules_(data.get("policy", []))
-
-    def _gen_iptables_save_old_(self, data):
-        logging.debug(json.dumps(data, sort_keys=True, indent=4))
+    def _gen_iptables_chains_(self, data):
         def rule_dzvs_block(infos):
             self._gen_jumps_(infos['table'], infos['datacenter'], infos['cidr'], infos['datacenter'], datacenter=True)
             self._gen_jumps_(infos['table'], infos['datacenter'], infos['cidr'], infos['zone'])
@@ -344,7 +304,6 @@ class Worker(ConsumerMixin):
 
             if 'ip' in data:
                 logging.debug('IP Chain')
-                #print json.dumps(data, sort_keys=True, indent=4)
                 infos = {'table': rule['table'],
                          'datacenter': data['datacenter'],
                          'cidr': data['subnet'],
@@ -353,11 +312,8 @@ class Worker(ConsumerMixin):
                 rule_dzvs_block(infos)
                 self._gen_jumps_(rule['table'], data['subnet'], data['ip'], data['ip'])
 
-            self._add_rule_(self._gen_rule_(rule))
-
             if 'ipanycast' in data:
                 logging.debug('IP Chain')
-                #print json.dumps(data, sort_keys=True, indent=4)
                 infos = {'table': rule['table'],
                          'datacenter': data['datacenter'],
                          'cidr': data['anycast'],
@@ -366,13 +322,20 @@ class Worker(ConsumerMixin):
                 rule_dzvs_block(infos)
                 self._gen_jumps_(rule['table'], data['anycast'], data['ipanycast'], data['anycast'])
 
-            self._add_rule_(self._gen_rule_(rule))
+
+    def _gen_iptables_save_(self, data):
+        print "========="
+        logging.debug(json.dumps(data, sort_keys=True, indent=4))
+        self._gen_iptables_chains_(data)
+        self._add_firewall_mport_rules_(data.get("policy", []))
+
 
 def help():
     print '%s::' % sys.argv[0]
     print '   -a action <stop|start|status|foreground>'
     print '   -u user <simplenet>'
     print '   -c config </etc/simplenet/agents.conf>'
+
 
 def main(user, config_file):
     config = ConfigParser.ConfigParser()
@@ -386,6 +349,7 @@ def main(user, config_file):
 
     with BrokerConnection(config.get('firewall','uri')) as conn:
         Worker(conn, config.get('firewall','lockfile'), config.get('firewall','iptables_file')).run()
+
 
 if __name__ == '__main__':
     try:
