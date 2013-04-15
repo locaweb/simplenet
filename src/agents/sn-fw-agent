@@ -17,7 +17,9 @@
 #
 # @author: Juliano Martinez (ncode), Locaweb.
 # @author: Luiz Ozaki, Locaweb.
+# @author: Eduardo S. Scarpellini, Locaweb.
 
+import re
 import getopt, sys
 
 from supay import Daemon
@@ -54,8 +56,15 @@ LOGGING_LEVELS = {'critical': logging.CRITICAL,
 
 myname = os.uname()[1]
 
-class Worker(ConsumerMixin):
 
+def _natural_sort_(l):
+    l = [str(i) for i in l]
+    convert = lambda s: int(s) if s.isdigit() else s.lower()
+    alphanum_key = lambda k: [convert(c) for c in re.split(r"([0-9]+)", k)]
+    return sorted(l, key=alphanum_key)
+
+
+class Worker(ConsumerMixin):
     def __init__(self, connection, lockfile, iptables_file):
         self.connection = connection
         self.lockfile = lockfile
@@ -75,38 +84,37 @@ class Worker(ConsumerMixin):
         self.iptables_save = []
         #self.info("Received payload %s" % json.dumps(body, sort_keys=True, indent=4))
 
-        lock = FileLock(self.lockfile.replace('.lock',''))
-        lock.acquire()
-        self._gen_iptables_save_(body)
-        self.iptables_save.append('COMMIT\n')
-        old = open(self.iptables_file, 'r').readlines()
-        open(self.iptables_file, 'w').write("\n".join(self.iptables_save))
-        new = open(self.iptables_file, 'r').readlines()
+        try:
+            lock = FileLock(self.lockfile.replace(".lock",""))
+            lock.acquire()
+            self._gen_iptables_save_(body)
+            self.iptables_save.append("COMMIT\n")
+            old = open(self.iptables_file, "r").readlines()
+            open(self.iptables_file, "w").write("\n".join(self.iptables_save))
+            new = open(self.iptables_file, "r").readlines()
 
-        for line in difflib.unified_diff(old,new):
-            logging.debug(line.rstrip())
+            for line in difflib.unified_diff(old,new):
+                logging.debug(line.rstrip())
 
-        logging.info("Worke done")
-        lock.release()
+            logging.info("Worke done")
+        finally:
+            lock.release()
         message.ack()
+
         b = datetime.now()
         c = b - a
-
         logging.debug(c)
 
-    def _add_rule(self, rule):
+    def _add_rule_(self, rule):
         if not len(self.iptables_save):
             self.iptables_save.append('*filter')
 
         if rule not in self.iptables_save:
             logging.debug(rule)
             self.iptables_save.append(rule)
+            print rule
 
     def _gen_jumps_(self, table, name, cidr, nextjump, datacenter=False):
-        #print 'Table' + table
-        #print 'Name' + name
-        #print 'CIDR' + cidr
-        #print 'Next' + nextjump
         try:
             if IPNetwork(nextjump).version == 6:
                 netid = hashlib.md5()
@@ -120,7 +128,7 @@ class Worker(ConsumerMixin):
             pass
 
         if table and name and cidr and nextjump:
-            self._add_rule(":%s-%s - [0:0]" % (table, nextjump))
+            self._add_rule_(":%s-%s - [0:0]" % (table, nextjump))
             jump = "-{action} {name} -{direction} {cidr} -j {table}-{nextjump}"
             directions = {
                 'FORWARD': ['s', 'd'],
@@ -130,7 +138,7 @@ class Worker(ConsumerMixin):
 
             name = table if datacenter else "%s-%s" % (table, name)
             for direction in directions[table]:
-                self._add_rule(
+                self._add_rule_(
                     jump.format(action='A',
                                 table=table,
                                 name=name,
@@ -168,7 +176,110 @@ class Worker(ConsumerMixin):
             iptables.append(' -j {policy}'.format(policy=rule['policy']))
         return "".join(iptables)
 
+    @staticmethod
+    def _multiport_slice_(ports=[], step=15):
+        # step => max-port per rule (iptables default => 15)
+        ports   = _natural_sort_(ports)
+        begin   = 0
+        end     = step
+        pslices = []
+        while True:
+            pslice = ports[begin:end]
+            if len(pslice) == 0:
+                break
+            ranges = map(lambda x: ":" in str(x), pslice).count(True)
+            if ranges == 0:
+                begin += step
+                end   += step
+            else:
+                pslice = ports[begin:end - ranges]
+                begin += step - ranges
+                end   += step - ranges
+            pslices.append(pslice)
+        return pslices
+
+    def _get_structured_rules_(self, rules=None):
+        st_rules = {}
+
+        for rule in rules:
+            table = rule.get("table")
+            proto = rule.get("proto", "").lower()
+            src = rule.get("src") or "0.0.0.0/0"
+            src_port = rule.get("src_port") or "any"
+            src_full = "%s:%s" % (src, src_port)
+            dst = rule.get("dst") or "0.0.0.0/0"
+            dst_port = rule.get("dst_port") or "any"
+            policy = rule.get("policy") or "DROP"
+
+            if not st_rules.has_key(table):
+                st_rules[table] = {}
+            st_rules_table = st_rules[table]
+            if not st_rules_table.has_key(proto):
+                st_rules_table[proto] = {}
+            st_rules_proto = st_rules_table[proto]
+            if not st_rules_proto.has_key(src_full):
+                st_rules_proto[src_full] = {}
+            st_rules_src = st_rules_proto[src_full]
+            if not st_rules_src.has_key(dst):
+                #st_rules_src[dst] = []
+                st_rules_src[dst] = {}
+            st_rules_dst = st_rules_src[dst]
+            if not st_rules_dst.has_key(policy):
+                st_rules_dst[policy] = []
+            st_rules_pol = st_rules_dst[policy]
+            if dst_port == "any":
+                if st_rules_pol != "any":
+                    st_rules_dst[policy] = "any"
+                    st_rules_pol = st_rules_dst[policy]
+            else:
+                if type(st_rules_pol) is list and dst_port not in st_rules_pol:
+                    st_rules_pol.append(dst_port)
+        return st_rules
+
+    def _add_firewall_mport_rules_(self, rules=None):
+        for table, rule_attrs in self._get_structured_rules_(rules).iteritems():
+            for proto in rule_attrs.iterkeys():
+                for src in rule_attrs[proto].iterkeys():
+                    src_addr, src_port = src.split(":")
+                    for dst_addr in rule_attrs[proto][src].iterkeys():
+                        for policy in rule_attrs[proto][src][dst_addr].iterkeys():
+                            dst_ports = rule_attrs[proto][src][dst_addr][policy]
+                            ipt_rule = "-A %s" % table
+                            if proto:
+                                ipt_rule += " -p %s" % proto
+                            if src_addr and src_addr != "0.0.0.0/0":
+                                ipt_rule += " -s %s" % src_addr
+                            if src_port and src_port != "any":
+                                ipt_rule += " --sport %s" % src_port
+                            if dst_addr and dst_addr != "0.0.0.0/0":
+                                ipt_rule += " -d %s" % dst_addr
+                            if proto == "gre":
+                                self._add_rule_(ipt_rule)
+                                continue
+                            if type(dst_ports) is list:
+                                if len(dst_ports) == 0:
+                                    self._add_rule_("%s -j %s" % (ipt_rule, policy))
+                                    continue
+                                if len(dst_ports) == 1:
+                                    self._add_rule_("%s --dport %s -j %s" % (ipt_rule, dst_ports[0], policy))
+                                    continue
+                                for s_dst_ports in self._multiport_slice_(dst_ports):
+                                    self._add_rule_("%s -m multiport --dports %s -j %s" % (ipt_rule, ",".join(s_dst_ports), policy))
+                            else:
+                                self._add_rule_(ipt_rule)
+
     def _gen_iptables_save_(self, data):
+        #print json.dumps(data, sort_keys=True, indent=4)
+
+        print "========="
+        #print data.keys()
+        #for policy in data.get("policy"):
+        #    self._add_rule_(self._gen_rule_(policy))
+        #import pprint
+        #pprint.pprint(self._get_structured_rules_(data.get("policy", [])))
+        return self._add_firewall_mport_rules_(data.get("policy", []))
+
+    def _gen_iptables_save_old_(self, data):
         logging.debug(json.dumps(data, sort_keys=True, indent=4))
         def rule_dzvs_block(infos):
             self._gen_jumps_(infos['table'], infos['datacenter'], infos['cidr'], infos['datacenter'], datacenter=True)
@@ -221,7 +332,7 @@ class Worker(ConsumerMixin):
                 rule_dzvs_block(infos)
                 [self._gen_jumps_(rule['table'], data['subnet'], ip['ip'], ip['ip']) for ip in data['ips']]
 
-            if ('anycast' in data) and ('anycastips' in data) :
+            if ('anycast' in data) and ('ipsanycast' in data) :
                 logging.debug('Anycast chain')
                 infos = {'table': rule['table'],
                          'datacenter': data['datacenter'],
@@ -229,7 +340,7 @@ class Worker(ConsumerMixin):
                          'zone': data['zone'],
                          'vlan': 'anycast'}
                 rule_dzvs_block(infos)
-                [self._gen_jumps_(rule['table'], data['anycast'], ip['ip'], ip['ip']) for ip in data['anycastips']]
+                [self._gen_jumps_(rule['table'], data['anycast'], ip['ip'], ip['ip']) for ip in data['ipsanycast']]
 
             if 'ip' in data:
                 logging.debug('IP Chain')
@@ -242,9 +353,9 @@ class Worker(ConsumerMixin):
                 rule_dzvs_block(infos)
                 self._gen_jumps_(rule['table'], data['subnet'], data['ip'], data['ip'])
 
-            self._add_rule(self._gen_rule_(rule))
+            self._add_rule_(self._gen_rule_(rule))
 
-            if 'anycastip' in data:
+            if 'ipanycast' in data:
                 logging.debug('IP Chain')
                 #print json.dumps(data, sort_keys=True, indent=4)
                 infos = {'table': rule['table'],
@@ -253,9 +364,9 @@ class Worker(ConsumerMixin):
                          'zone': data['zone'],
                          'vlan': 'anycast'}
                 rule_dzvs_block(infos)
-                self._gen_jumps_(rule['table'], data['anycast'], data['anycastip'], data['anycast'])
+                self._gen_jumps_(rule['table'], data['anycast'], data['ipanycast'], data['anycast'])
 
-            self._add_rule(self._gen_rule_(rule))
+            self._add_rule_(self._gen_rule_(rule))
 
 def help():
     print '%s::' % sys.argv[0]
@@ -284,7 +395,7 @@ if __name__ == '__main__':
 
     user = 'simplenet'
     action = 'start'
-    config = '/etc/simplenet/agents.cfg'
+    config = '/etc/simplenet/agents.conf'
     for o, a in opts:
         if o in ('-a', '--action'):
             action = a
