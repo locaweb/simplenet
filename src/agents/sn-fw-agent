@@ -114,7 +114,6 @@ class Worker(ConsumerMixin):
         if rule not in self.iptables_save:
             logging.debug(rule)
             self.iptables_save.append(rule)
-            print rule
 
     @staticmethod
     def _multiport_slice_(ports=[], step=15):
@@ -253,7 +252,9 @@ class Worker(ConsumerMixin):
                                     self._add_rule_("%s -m multiport --dports %s -j %s" % (ipt_rule, ",".join(s_dst_ports), policy))
                             else:
                                 self._add_rule_("%s -j %s" % (ipt_rule, policy))
-
+    #
+    # TODO: refactor this routine
+    #
     def _gen_iptables_chains_(self, data):
         def rule_dzvs_block(infos):
             self._gen_jumps_(infos['table'], infos['datacenter'], infos['cidr'], infos['datacenter'], datacenter=True)
@@ -297,7 +298,6 @@ class Worker(ConsumerMixin):
                     rule_dzvs_block(infos)
 
     def _gen_iptables_save_(self, data):
-        print "\n========="
         logging.debug(json.dumps(data, sort_keys=True, indent=4))
         self._gen_iptables_chains_(data)
         self._add_firewall_mport_rules_(data)
