@@ -35,7 +35,7 @@ if os.path.isfile(config_file):
 
 class StdOutAndErrWapper(object):
     def write(self, data):
-        if '\n' in  data:
+        if '\n' in data:
             for line in data.split('\n'):
                 logger.info(line)
         else:
