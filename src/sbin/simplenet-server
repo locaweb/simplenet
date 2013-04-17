@@ -30,7 +30,7 @@ import bottle
 from bottle import delete, put, get, post, error, run, debug
 from bottle import abort, request, ServerAdapter, response
 
-from simplenet.common.config import config, get_logger
+from simplenet.common.config import config, get_logger, StdOutAndErrWapper
 from simplenet.routes import base, policy, errors
 
 app = bottle.app()
@@ -49,10 +49,12 @@ def start():
 
 def main(action="foreground"):
     from supay import Daemon
-    daemon = Daemon(name="simplenet")
+    daemon = Daemon(name="simplenet", log=False)
 
     if action ==  "start":
         daemon.start()
+        sys.stdout = StdOutAndErrWapper()
+        sys.stderr = StdOutAndErrWapper()
         start()
     elif action == "foreground":
         start()
