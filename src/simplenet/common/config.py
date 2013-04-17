@@ -39,7 +39,7 @@ class StdOutAndErrWapper(object):
             for line in data.split('\n'):
                 logger.info(line)
         else:
-            logger.info(data)
+            logger.info(str(data).strip())
 
 class SyslogWrapper(object):
 
