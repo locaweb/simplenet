@@ -16,6 +16,7 @@
 # @author: Juliano Martinez (ncode), Locaweb.
 # @author: Luiz Ozaki, Locaweb.
 
+import json
 from simplenet.common import event
 from simplenet.common.config import config, get_logger
 from simplenet.db import models, db_utils
@@ -61,7 +62,10 @@ class Net(SimpleNet):
                 for subnet in self.subnet_list_by_vlan(vlan['vlan_id']): # Cascade thru the subnets of the vlan
                     logger.debug("Getting policy data from subnet: %s" % subnet)
                     policy_list = policy_list + self.policy_list_by_owner('subnet', subnet['id'])
+                    logger.debug("maldito %s" % json.dumps(subnet['id']))
+                    logger.debug("maldito %s" % json.dumps(self.ip_list_by_subnet(subnet['id'])))
                     for ip in self.ip_list_by_subnet(subnet['id']): # Cascade thru the IPs of the subnet
+                        logger.debug("maldito %s" % json.dumps(ip.keys()))
                         logger.debug("Getting policy data from ip: %s" % ip)
                         policy_list = policy_list + self.policy_list_by_owner('ip', ip['id'])
 
