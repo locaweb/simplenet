@@ -141,6 +141,7 @@ run_test "ip create 192.168.1.1 --subnet 192.168.0.1/24" '"message": "Ip:192.168
 run_firewall_test "firewall create" "subnet" "192.168.0.0/24 --dst 192.168.0.2 --proto tcp --table OUTPUT --policy DROP"
 run_firewall_test "firewall create" "subnet" "192.168.0.0/24 --dst 192.168.0.2 --proto tcp --table FORWARD --policy DROP"
 run_firewall_test "firewall create" "subnet" "192.168.0.0/24 --dst 192.168.0.2 --proto tcp --table INPUT --policy DROP"
+run_firewall_test "firewall create" "ip" "192.168.0.1 --dst 192.168.0.2 --proto tcp --table INPUT --policy DROP"
 run_test "ip info 192.168.0.1" '"ip": "192.168.0.1"'
 run_test "ip delete 192.168.0.1" '"message": "Successful deletetion"'
 run_test "subnet delete 192.168.0.0/24" '"message": "Successful deletetion"'

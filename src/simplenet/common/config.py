@@ -33,6 +33,14 @@ logger = None
 if os.path.isfile(config_file):
     config.read(config_file)
 
+class StdOutAndErrWapper(object):
+    def write(self, data):
+        if '\n' in data:
+            for line in data.split('\n'):
+                logger.info(line)
+        else:
+            logger.info(data)
+
 class SyslogWrapper(object):
 
     def __init__(self, config=None):
