@@ -58,7 +58,7 @@ class Net(SimpleNet):
             policy_list = policy_list + self.policy_list_by_owner('zone', zone_id)
             _data.update({'policy': self.policy_list_by_owner('zone', zone_id)})
             for vlan in self.vlan_list_by_device(dev_id): # Cascade thru the vlans of the device
-                logger.debug("Getting data from subnet %s" % subnet)
+                logger.debug("Getting data from subnet %s" % vlan)
                 _data.update(self._get_data_vlan_(vlan['vlan_id']))
                 policy_list = policy_list + self.policy_list_by_owner('vlan', vlan['vlan_id'])
                 for subnet in self.subnet_list_by_vlan(vlan['vlan_id']): # Cascade thru the subnets of the vlan
