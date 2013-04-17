@@ -521,7 +521,7 @@ class SimpleNet(object):
         return self._generic_list_("ips", models.Ip)
 
     def ip_list_by_subnet(self, subnet_id):
-        return self._generic_list_(
+        return self._generic_list_by_something_(
             "ip info by subnet", models.Ip, {'subnet_id': subnet_id}
         )
 
