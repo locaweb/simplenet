@@ -409,7 +409,7 @@ def device(action=None, name=None, zone=None, vlan=None, anycast=None):
              'table': 'table to apply the policy <INPUT|FORWARD|OUTPUT>',
              'policy': 'policy to use <ACCEPT|REJECT|DROP>' }
 )
-def policy(action=None, name=None, owner=None, dst=None, src=None, dst_port=None,
+def firewall(action=None, name=None, owner=None, dst=None, src=None, dst_port=None,
            src_port=None, proto=None, table=None, policy=None):
     base_url = '%s/firewall/policy' % server
     r = None
