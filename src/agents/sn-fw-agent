@@ -252,6 +252,7 @@ class Worker(ConsumerMixin):
                                     self._add_rule_("%s -m multiport --dports %s -j %s" % (ipt_rule, ",".join(s_dst_ports), policy))
                             else:
                                 self._add_rule_("%s -j %s" % (ipt_rule, policy))
+
     #
     # TODO: refactor this routine
     #
@@ -307,7 +308,7 @@ def help():
     print '%s::' % sys.argv[0]
     print '   -a action <stop|start|status|foreground>'
     print '   -u user <simplenet>'
-    print '   -c config </etc/simplenet/agents.conf>'
+    print '   -c config </etc/simplenet/agents.cfg>'
 
 
 def main(user, config_file):
@@ -332,7 +333,7 @@ if __name__ == '__main__':
 
     user = 'simplenet'
     action = 'start'
-    config = '/etc/simplenet/agents.conf'
+    config = '/etc/simplenet/agents.cfg'
     for o, a in opts:
         if o in ('-a', '--action'):
             action = a
