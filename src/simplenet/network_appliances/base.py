@@ -291,7 +291,7 @@ class SimpleNet(object):
         )
         session.begin(subtransactions=True)
         try:
-            session.add(models.Device(name=data['name'], zone_id=zone_id))
+            session.add(models.Firewall(name=data['name'], zone_id=zone_id))
             session.commit()
         except IntegrityError:
             session.rollback()
@@ -367,7 +367,7 @@ class SimpleNet(object):
 
     def device_list_by_zone(self, zone_id):
         return self._generic_list_by_something_(
-            "devices by zone", models.Device, {'zone_id': zone_id}
+            "devices by zone", models.Firewall, {'zone_id': zone_id}
         )
 
     def device_remove_vlan(self, device_id, vlan_id):

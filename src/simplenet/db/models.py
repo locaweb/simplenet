@@ -78,15 +78,40 @@ class Zone(Base):
             'datacenter_id': self.datacenter_id,
         }
 
-
 class Device(Base):
 
     __tablename__ = 'devices'
+    __mapper_args__ = {'polymorphic_on': 'type'}
 
     id = Column(String(255), primary_key=True)
     name = Column(String(255), unique=True)
     description = Column(String(255))
+    type = Column(String(255))
+
+    def __init__(self, name, description=''):
+        self.id = str(uuid.uuid4())
+        self.name = name
+        self.description = description
+
+    def __repr__(self):
+       return "<%s('%s','%s')>" % (self.type, self.id, self.name)
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'name': self.name,
+            'type': self.type,
+        }
+
+class Firewall(Device):
+
+    __tablename__ = 'firewalls'
+    __mapper_args__ = {'polymorphic_identity': 'firewall'}
+
+    id = Column(String(255), ForeignKey('devices.id'), primary_key=True)
     zone_id = Column(String(255), ForeignKey('zones.id'))
+    mac = Column(String(255))
+    address = Column(String(255))
     vlans_to_devices = relationship('Vlans_to_Device', cascade='all, delete-orphan')
     anycasts_to_devices = relationship('Anycasts_to_Device', cascade='all, delete-orphan')
     zone = relationship('Zone')
@@ -95,9 +120,10 @@ class Device(Base):
         self.id = str(uuid.uuid4())
         self.name = name
         self.zone_id = zone_id
+        self.description = description
 
     def __repr__(self):
-       return "<Device('%s','%s')>" % (self.id, self.name)
+       return "<Firewall('%s','%s')>" % (self.id, self.name)
 
     def to_dict(self):
         return {
@@ -105,8 +131,39 @@ class Device(Base):
             'name': self.name,
             'zone': self.zone.name,
             'zone_id': self.zone_id,
+            'mac': self.mac,
+            'address': self.address,
         }
 
+class Switch(Device):
+
+    __tablename__ = 'switches'
+    __mapper_args__ = {'polymorphic_identity': 'switch'}
+
+    id = Column(String(255), ForeignKey('devices.id'), primary_key=True)
+    vlans_to_devices = relationship('Vlans_to_Device', cascade='all, delete-orphan')
+    model_type = Column(String(255))
+    mac = Column(String(255))
+    address = Column(String(255))
+
+    def __init__(self, name, mac='', address='', description=''):
+        self.id = str(uuid.uuid4())
+        self.name = name
+        self.mac = mac
+        self.address = address
+        self.description = description
+
+    def __repr__(self):
+       return "<Switch('%s','%s','%s','%s')>" % (self.id, self.name, self.mac, self.address)
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'name': self.name,
+            'mac': self.mac,
+            'address': self.address,
+            'model_type': self.model_type,
+        }
 
 class Vlan(Base):
 
