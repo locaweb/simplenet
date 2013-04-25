@@ -84,6 +84,7 @@ run_test "firewall vlan_attach firewall01 --vlan vlan01" '"name": "firewall01"'
 run_test "firewall vlan_attach firewall01 --vlan vlan01" '"message": "Exception(FlushError(.*"'
 run_test "firewall vlan_detach firewall01 --vlan vlan01" '"message": "Successful deletetion"'
 run_test "firewall info firewall01" '"name": "firewall01"'
+
 run_test "vlan delete vlan01" '"message": "Successful deletetion"'
 run_test "firewall delete firewall01" '"message": "Successful deletetion"'
 run_test "zone create zone01 --datacenter datacenter01" '"message": "Zone:zone01 already exists Forbidden"'
@@ -149,6 +150,8 @@ run_firewall_test "firewallrule create" "subnet" "192.168.0.0/24 --dst 192.168.0
 run_firewall_test "firewallrule create" "subnet" "192.168.0.0/24 --dst 192.168.0.2 --proto tcp --table FORWARD --policy DROP"
 run_firewall_test "firewallrule create" "subnet" "192.168.0.0/24 --dst 192.168.0.2 --proto tcp --table INPUT --policy DROP"
 run_firewall_test "firewallrule create" "ip" "192.168.0.1 --dst 192.168.0.2 --proto tcp --table INPUT --policy DROP"
+run_test "ip vlan_info 192.168.0.1" '"name": "vlan01"'
+run_test "ip vlan_info 192.168.1.1" '"error": "EntityNotFound"'
 run_test "ip info 192.168.0.1" '"ip": "192.168.0.1"'
 run_test "ip delete 192.168.0.1" '"message": "Successful deletetion"'
 run_test "subnet delete 192.168.0.0/24" '"message": "Successful deletetion"'

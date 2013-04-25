@@ -263,7 +263,7 @@ def anycast(action=None, cidr=None):
 
 
 @baker.command(
-    params={ 'action': '<list all|create|delete|rename>',
+    params={ 'action': '<list all|create|delete|rename|info|vlan_info>',
              'ip': 'ip address',
              'subnet': 'subnet cidr' }
 )
@@ -286,6 +286,8 @@ def ip(action=None, ip=None, subnet=None):
         )
     elif action == 'info':
         r = __api_call("get", '%s/by-ip/%s' % (base_url, ip))
+    elif action == 'vlan_info':
+        r = __api_call("get", '%s/vlans/by-ip/%s' % (server, ip))
     else:
         baker.usage(sys._getframe().f_code.co_name)
         sys.exit(1)

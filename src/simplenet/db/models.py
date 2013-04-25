@@ -141,6 +141,44 @@ class Switch(Base):
             'address': self.address,
         }
 
+#class PortBindings(Base):
+#
+#    __tablename__ = 'portbindings'
+#
+#    id = Column(String(255), primary_key=True)
+#    interface_id = Column(String(255), ForeignKey('interfaces.mac'))
+#    interface = relationship('Interface')
+#    switch_id = Column(String(255), ForeignKey('switches.id'))
+#    switch = relationship('Switch')
+#    status = Column(String(100))
+#    switch_port = Column(String(100))
+
+class Interface(Base):
+
+    __tablename__ = 'interfaces'
+
+    mac = Column(String(255), primary_key=True)
+    ips_to_interfaces = relationship('Ips_to_Interface', cascade='all, delete-orphan')
+
+    def to_dict(self):
+        return {
+            'mac': self.mac,
+        }
+
+class Ips_to_Interface(Base):
+
+    __tablename__ = 'ips_to_interfaces'
+
+    ip_id = Column(String(255), ForeignKey('ips.id'), primary_key=True)
+    interface_id = Column(String(255), ForeignKey('interfaces.mac'), primary_key=True)
+    ip = relationship('Ip')
+    interface = relationship('Interface')
+
+    def to_dict(self):
+        return {
+            'ip': self.ip.to_dict(),
+        }
+
 class Vlan(Base):
 
     __tablename__ = 'vlans'
@@ -182,7 +220,6 @@ class Vlans_to_Firewall(Base):
         return {
             'vlan_id': self.vlan_id,
             'vlan': self.vlan.name,
-            'firewall': self.firewall.to_dict(),
         }
 
 class Anycasts_to_Firewall(Base):
@@ -197,10 +234,8 @@ class Anycasts_to_Firewall(Base):
 
     def to_dict(self):
         return {
-            'id': self.device.id,
             'anycast_id': self.anycast_id,
             'anycast_cidr': self.anycast.cidr,
-            'firewall': self.firewall.to_dict()
         }
 
 class Subnet(Base):

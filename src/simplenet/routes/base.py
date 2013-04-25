@@ -63,12 +63,20 @@ def generic_resources_list(resource):
 
     Retrieves all entries from resource
     """
-    manager = create_manager('base')
-    try:
-        _list = getattr(manager, '%s_list' % resource[:-1])
-        return _list()
-    except AttributeError:
-        raise FeatureNotAvailable()
+    if resource == 'firewalls':
+        manager = create_manager('firewall')
+        try:
+            _list = getattr(manager, '%s_list' % resource[:-1])
+            return _list()
+        except AttributeError:
+            raise FeatureNotAvailable()
+    else:
+        manager = create_manager('base')
+        try:
+            _list = getattr(manager, '%s_list' % resource[:-1])
+            return _list()
+        except AttributeError:
+            raise FeatureNotAvailable()
 
 
 ## Generic Resource Info
@@ -83,12 +91,20 @@ def generic_resource_info(resource, resource_id):
 
     Retrieves resource information
     """
-    manager = create_manager('base')
-    try:
-        _info = getattr(manager, '%s_info' % resource[:-1])
-        return _info(resource_id)
-    except AttributeError:
-        raise FeatureNotAvailable()
+    if resource == 'firewalls':
+        manager = create_manager('firewall')
+        try:
+            _info = getattr(manager, '%s_info' % resource[:-1])
+            return _info(resource_id)
+        except AttributeError:
+            raise FeatureNotAvailable()
+    else:
+        manager = create_manager('base')
+        try:
+            _info = getattr(manager, '%s_info' % resource[:-1])
+            return _info(resource_id)
+        except AttributeError:
+            raise FeatureNotAvailable()
 
 
 ## Generic Resource Info by name, cidr, ip
@@ -103,12 +119,20 @@ def generic_resource_info_by_field(resource, resource_type, resource_value):
 
     Retrieves resource information by type
     """
-    manager = create_manager('base')
-    try:
-        _info = getattr(manager, '%s_info_by_%s' % (resource[:-1], resource_type))
-        return _info(resource_value)
-    except AttributeError:
-        raise FeatureNotAvailable()
+    if resource == 'firewalls':
+        manager = create_manager('firewall')
+        try:
+            _info = getattr(manager, '%s_info_by_%s' % (resource[:-1], resource_type))
+            return _info(resource_value)
+        except AttributeError:
+            raise FeatureNotAvailable()
+    else:
+        manager = create_manager('base')
+        try:
+            _info = getattr(manager, '%s_info_by_%s' % (resource[:-1], resource_type))
+            return _info(resource_value)
+        except AttributeError:
+            raise FeatureNotAvailable()
 
 
 # Generic list by parent
@@ -123,12 +147,20 @@ def generic_resource_list_by_relationship(resource, relationship_type, relations
 
     List devices
     """
-    manager = create_manager('base')
-    try:
-        _list = getattr(manager, '%s_list_by_%s' % (resource[:-1], relationship_type))
-        return _list(relationship_value)
-    except AttributeError:
-        raise FeatureNotAvailable()
+    if resource == 'firewalls':
+        manager = create_manager('firewall')
+        try:
+            _list = getattr(manager, '%s_list_by_%s' % (resource[:-1], relationship_type))
+            return _list(relationship_value)
+        except AttributeError:
+            raise FeatureNotAvailable()
+    else:
+        manager = create_manager('base')
+        try:
+            _list = getattr(manager, '%s_list_by_%s' % (resource[:-1], relationship_type))
+            return _list(relationship_value)
+        except AttributeError:
+            raise FeatureNotAvailable()
 
 
 ## Generic Resource Deletion
@@ -143,12 +175,20 @@ def generic_resource_delete(resource, resource_id):
 
     Deletes resource
     """
-    manager = create_manager('base')
-    try:
-        _delete = getattr(manager, '%s_delete' % (resource[:-1]))
-        return _delete(resource_id)
-    except AttributeError:
-        raise FeatureNotAvailable()
+    if resource == 'firewalls':
+        manager = create_manager('firewall')
+        try:
+            _delete = getattr(manager, '%s_delete' % (resource[:-1]))
+            return _delete(resource_id)
+        except AttributeError:
+            raise FeatureNotAvailable()
+    else:
+        manager = create_manager('base')
+        try:
+            _delete = getattr(manager, '%s_delete' % (resource[:-1]))
+            return _delete(resource_id)
+        except AttributeError:
+            raise FeatureNotAvailable()
 
 
 @post('/datacenters')
@@ -209,7 +249,7 @@ def firewall_create():
 
     Create a new firewall device
     """
-    manager = create_manager('base')
+    manager = create_manager('firewall')
     data = request.body.readline()
     if not data:
         abort(400, 'No data received')
@@ -277,7 +317,7 @@ def firewall_add_vlan(firewall_id):
 
     Attach vlan to firewall device
     """
-    manager = create_manager('base')
+    manager = create_manager('firewall')
     data = request.body.readline()
     if not data:
         abort(400, 'No data received')
@@ -300,7 +340,7 @@ def firewall_add_anycast(firewall_id):
 
     Attach vlan to firewall device
     """
-    manager = create_manager('base')
+    manager = create_manager('firewall')
     data = request.body.readline()
     if not data:
         abort(400, 'No data received')
@@ -322,7 +362,7 @@ def firewall_remove_vlan(firewall_id, vlan_id):
 
     Attach vlan to firewall device
     """
-    manager = create_manager('base')
+    manager = create_manager('firewall')
     firewall = manager.firewall_remove_vlan(firewall_id, vlan_id)
     return firewall
 
@@ -338,7 +378,7 @@ def firewall_remove_anycast(firewall_id, anycast_id):
 
     Attach anycasts to firewall device
     """
-    manager = create_manager('base')
+    manager = create_manager('firewall')
     firewall = manager.firewall_remove_anycast(firewall_id, anycast_id)
     return firewall
 

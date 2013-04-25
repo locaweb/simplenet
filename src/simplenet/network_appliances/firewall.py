@@ -33,6 +33,118 @@ session = db_utils.get_database_session()
 
 class Net(SimpleNet):
 
+    def firewall_create(self, data):
+        logger.debug("Creating device using data: %s" % data)
+
+        session.begin(subtransactions=True)
+        try:
+            session.add(models.Firewall(name=data['name'], zone_id=data['zone_id']))
+            session.commit()
+        except IntegrityError:
+            session.rollback()
+            forbidden_msg = "%s already exists" % data['name']
+            raise OperationNotPermited('Firewall', forbidden_msg)
+        except Exception, e:
+            session.rollback()
+            raise Exception(e)
+        logger.debug("Created device using data: %s" % data)
+
+        return self.firewall_info_by_name(data['name'])
+
+    def firewall_list(self):
+        return self._generic_list_("firewalls", models.Firewall)
+
+    def firewall_add_vlan(self, firewall_id, data):
+        logger.debug("Adding vlan to device: %s using data: %s" %
+            (firewall_id, data)
+        )
+        firewall = session.query(models.Firewall).get(firewall_id)
+        vlan = session.query(models.Vlan).get(data['vlan_id'])
+
+        if firewall.zone_id != vlan.zone_id:
+            raise OperationNotPermited(
+                'Firewall', 'Firewall and Vlan must be from the same zone'
+            )
+
+        session.begin(subtransactions=True)
+        try:
+            relationship = models.Vlans_to_Firewall()
+            relationship.vlan = vlan
+            firewall.vlans_to_firewalls.append(relationship)
+            session.commit()
+        except Exception, e:
+            session.rollback()
+            raise Exception(e)
+        _data = firewall.to_dict()
+        logger.debug("Successful adding vlan to device:"
+            " %s device status: %s" % (firewall_id, _data)
+        )
+        return _data
+
+    def firewall_add_anycast(self, firewall_id, data):
+        logger.debug("Adding vlan to anycast: %s using data: %s" %
+            (firewall_id, data)
+        )
+        firewall = session.query(models.Firewall).get(firewall_id)
+        anycast = session.query(models.Anycast).get(data['anycast_id'])
+
+        session.begin(subtransactions=True)
+        try:
+            relationship = models.Anycasts_to_Firewall()
+            relationship.anycast = anycast
+            firewall.anycasts_to_firewalls.append(relationship)
+            session.commit()
+        except Exception, e:
+            session.rollback()
+            raise Exception(e)
+        _data = firewall.to_dict()
+        logger.debug("Successful adding vlan to anycast: %s device status: %s" %
+            (firewall_id, _data)
+        )
+        return _data
+
+    def firewall_list_by_vlan(self, vlan_id):
+        return self._generic_list_by_something_(
+            "firewalls by vlan", models.Vlans_to_Firewall, {'vlan_id': vlan_id}
+        )
+
+    def firewall_list_by_anycast(self, anycast_id):
+        return self._generic_list_by_something_(
+            "firewalls by anycast", models.Anycasts_to_Firewall,
+            {'anycast_id': anycast_id}
+        )
+
+    def firewall_list_by_zone(self, zone_id):
+        return self._generic_list_by_something_(
+            "firewalls by zone", models.Firewall, {'zone_id': zone_id}
+        )
+
+    def firewall_remove_vlan(self, firewall_id, vlan_id):
+        return self._generic_delete_(
+            "vlan from firewalls", models.Vlans_to_Firewall,
+            {'vlan_id': vlan_id, 'firewall_id': firewall_id}
+        )
+
+    def firewall_remove_anycast(self, firewall_id, anycast_id):
+        return self._generic_delete_(
+            "anycast from firewall", models.Anycasts_to_Firewall,
+            {'anycast_id': anycast_id, 'firewall_id': firewall_id}
+        )
+
+    def firewall_info(self, id):
+        return self._generic_info_("firewall", models.Firewall, {'id': id})
+
+    def firewall_info_by_name(self, name):
+        return self._generic_info_(
+            "firewall", models.Firewall, {'name': name}
+        )
+
+    def firewall_update(self, *args, **kawrgs):
+        raise FeatureNotImplemented()
+
+    def firewall_delete(self, id):
+        return self._generic_delete_("firewall", models.Firewall, {'id': id})
+
     def _enqueue_rules_(self, owner_type, owner_id):
         logger.debug("Getting rules from %s with id %s" % (owner_type, owner_id))
         policy_list = []
