@@ -323,7 +323,6 @@ def anycastip(action=None, ip=None, anycast=None):
 @baker.command(
     params={ 'action': '<list all|create|delete|vlan_attach|vlan_create|vlan_list|anycast_attach>',
              'name': 'firewall device name',
-             'type': '<firewall|switch>',
              'zone': 'zone to create a new device',
              'anycast': 'attach anycast to a device',
              'vlan': 'vlan to attach vlans to devices' }
@@ -391,6 +390,42 @@ def firewall(action=None, name=None, zone=None, vlan=None, anycast=None):
         r = __api_call("get", '%s/anycasts/list-by-firewall/%s' %
             (server, fetch_id('firewalls', name))
         )
+    else:
+        baker.usage(sys._getframe().f_code.co_name)
+        sys.exit(1)
+    pretty_output(r)
+
+
+@baker.command(
+    params={ 'action': '<list all|create|delete>',
+             'name': 'switch device name',
+             'model_type': '<openvswitch>',
+             'mac': 'device mac address',
+             'address': 'admin uri' }
+)
+def switch(action=None, name=None, model_type=None, mac=None, address=None):
+    base_url = '%s/switchs' % (server)
+    r = None
+    if action == 'list':
+        r = __api_call("get", '%s/list' % base_url)
+    elif action == 'create':
+        if model_type == 'openvswitch':
+            if mac == None or address == None:
+                print "Missing mac or address atributes"
+                sys.exit(1)
+            r = __api_call("post", '%s/switchs' % (server),
+                    data=json.dumps({'name': name, 'model_type': model_type,
+                                    'address': address, 'mac': mac})
+            )
+        else:
+            print "Unknown model_type"
+            sys.exit(1)
+    elif action == 'delete':
+        r = __api_call("delete", '%s/%s/delete' % (
+            base_url, fetch_id('switchs', name))
+        )
+    elif action == 'info':
+        r = __api_call("get", '%s/by-name/%s' % (base_url, name))
     else:
         baker.usage(sys._getframe().f_code.co_name)
         sys.exit(1)

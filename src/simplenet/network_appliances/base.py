@@ -311,7 +311,8 @@ class SimpleNet(object):
 
         session.begin(subtransactions=True)
         try:
-            session.add(models.Switch(name=data['name']))
+            session.add(models.Switch(name=data['name'], mac=data['mac'],
+                                    address=data['address'], model_type=data['model_type']))
             session.commit()
         except IntegrityError:
             session.rollback()
@@ -410,11 +411,26 @@ class SimpleNet(object):
             "firewall", models.Firewall, {'name': name}
         )
 
+    def switch_info(self, id):
+        return self._generic_info_("switch", models.Switch, {'id': id})
+
+
+    def switch_info_by_name(self, name):
+        return self._generic_info_(
+            "switch", models.Switch, {'name': name}
+        )
+
+    def switch_update(self, *args, **kawrgs):
+        raise FeatureNotImplemented()
+
     def firewall_update(self, *args, **kawrgs):
         raise FeatureNotImplemented()
 
     def firewall_delete(self, id):
         return self._generic_delete_("firewall", models.Firewall, {'id': id})
+
+    def switch_delete(self, id):
+        return self._generic_delete_("switch", models.Switch, {'id': id})
 
     def vlan_list(self):
         return self._generic_list_("vlans", models.Vlan)

@@ -117,27 +117,28 @@ class Switch(Base):
     __tablename__ = 'switches'
 
     id = Column(String(255), primary_key=True)
+    name = Column(String(255), unique=True)
     model_type = Column(String(255))
     mac = Column(String(255))
     address = Column(String(255))
 
-    def __init__(self, name, mac='', address='', description=''):
+    def __init__(self, name, mac='', address='', model_type=''):
         self.id = str(uuid.uuid4())
         self.name = name
         self.mac = mac
         self.address = address
-        self.description = description
+        self.model_type = model_type
 
     def __repr__(self):
-       return "<Switch('%s','%s','%s','%s')>" % (self.id, self.name, self.mac, self.address)
+       return "<Switch('%s','%s','%s','%s')>" % (self.id, self.name, self.model_type, self.mac, self.address)
 
     def to_dict(self):
         return {
             'id': self.id,
             'name': self.name,
+            'model_type': self.model_type,
             'mac': self.mac,
             'address': self.address,
-            'model_type': self.model_type,
         }
 
 class Vlan(Base):

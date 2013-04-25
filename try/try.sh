@@ -74,7 +74,7 @@ run_test "zone info zone01" '"name": "zone01"'
 run_test "zone delete zone01" '"message": "Successful deletetion"'
 run_test "datacenter delete datacenter01" '"message": "Successful deletetion"'
 
-echo -e "\n::::: Starting Device Tests "
+echo -e "\n::::: Starting Firewall Device Tests "
 run_test "datacenter create datacenter01" '"name": "datacenter01"'
 run_test "zone create zone01 --datacenter datacenter01" '"name": "zone01"'
 run_test "firewall create firewall01 --zone zone01" '"name": "firewall01"'
@@ -89,6 +89,13 @@ run_test "firewall delete firewall01" '"message": "Successful deletetion"'
 run_test "zone create zone01 --datacenter datacenter01" '"message": "Zone:zone01 already exists Forbidden"'
 run_test "zone delete zone01" '"message": "Successful deletetion"'
 run_test "datacenter delete datacenter01" '"message": "Successful deletetion"'
+
+echo -e "\n::::: Starting Switch Device Tests "
+run_test "switch create sw01 --model_type openvswitch --address tcp:10.30.83.20:6640 --mac 10:1F:74:32:F7:49" '"name": "sw01"'
+run_test "switch create sw01 --model_type openvswitch --address tcp:10.30.83.20:6640 --mac 10:1F:74:32:F7:49" '"message": "Switch:sw01 already exists Forbidden"'
+run_test "switch info sw01" '"address": "tcp:10.30.83.20:6640"'
+run_test "switch delete sw01" '"message": "Successful deletetion"'
+run_test "switch delete sw01" '"error": "EntityNotFound"'
 
 echo -e "\n::::: Starting Vlan Tests "
 run_test "datacenter create datacenter01" '"name": "datacenter01"'
