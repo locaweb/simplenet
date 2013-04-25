@@ -74,14 +74,14 @@ class SimpleNet(object):
         logger.debug("Received %s: %s from [%s]" % (name, _values, value))
         return _values
 
-    def _get_data_device_(self, id):
+    def _get_data_firewall_(self, id):
         logger.debug("Getting device data %s" % id)
-        device = self.device_info(id)
-        zone = self.zone_info(device['zone_id'])
+        firewall = self.firewall_info(id)
+        zone = self.zone_info(firewall['zone_id'])
         datacenter = self.datacenter_info(zone['datacenter_id'])
         logger.debug("Received device: %s zone: %s "
             "datacenter: %s from [%s]" %
-            (device, zone, datacenter, id)
+            (firewall, zone, datacenter, id)
         )
         return {
             'zone': zone['name'],
@@ -282,127 +282,147 @@ class SimpleNet(object):
     def zone_delete(self, id):
         return self._generic_delete_("zone", models.Zone, {'id': id})
 
-    def device_list(self):
-        return self._generic_list_("devices", models.Device)
+    def firewall_list(self):
+        return self._generic_list_("firewalls", models.Firewall)
 
-    def device_create(self, zone_id, data):
-        logger.debug("Creating device on zone: %s using data: %s" %
-            (zone_id, data)
-        )
+    def switch_list(self):
+        return self._generic_list_("switches", models.Switch)
+
+    def firewall_create(self, data):
+        logger.debug("Creating device using data: %s" % data)
+
         session.begin(subtransactions=True)
         try:
-            session.add(models.Firewall(name=data['name'], zone_id=zone_id))
+            session.add(models.Firewall(name=data['name'], zone_id=data['zone_id']))
             session.commit()
         except IntegrityError:
             session.rollback()
             forbidden_msg = "%s already exists" % data['name']
-            raise OperationNotPermited('Device', forbidden_msg)
+            raise OperationNotPermited('Firewall', forbidden_msg)
         except Exception, e:
             session.rollback()
             raise Exception(e)
-        logger.debug("Created device on zone: %s using data: %s" %
-            (zone_id, data)
-        )
-        return self.device_info_by_name(data['name'])
+        logger.debug("Created device using data: %s" % data)
 
-    def device_add_vlan(self, device_id, data):
+        return self.firewall_info_by_name(data['name'])
+
+    def switch_create(self, data):
+        logger.debug("Creating device using data: %s" % data)
+
+        session.begin(subtransactions=True)
+        try:
+            session.add(models.Switch(name=data['name']))
+            session.commit()
+        except IntegrityError:
+            session.rollback()
+            forbidden_msg = "%s already exists" % data['name']
+            raise OperationNotPermited('Switch', forbidden_msg)
+        except Exception, e:
+            session.rollback()
+            raise Exception(e)
+        logger.debug("Created device using data: %s" % data)
+
+        return self.switch_info_by_name(data['name'])
+
+
+    def firewall_add_vlan(self, firewall_id, data):
         logger.debug("Adding vlan to device: %s using data: %s" %
-            (device_id, data)
+            (firewall_id, data)
         )
-        device = session.query(models.Device).get(device_id)
+        firewall = session.query(models.Firewall).get(firewall_id)
         vlan = session.query(models.Vlan).get(data['vlan_id'])
 
-        if device.zone_id != vlan.zone_id:
+        if firewall.zone_id != vlan.zone_id:
             raise OperationNotPermited(
-                'Device', 'Device and Vlan must be from the same zone'
+                'Firewall', 'Firewall and Vlan must be from the same zone'
             )
 
         session.begin(subtransactions=True)
         try:
-            relationship = models.Vlans_to_Device()
+            relationship = models.Vlans_to_Firewall()
             relationship.vlan = vlan
-            device.vlans_to_devices.append(relationship)
+            firewall.vlans_to_firewalls.append(relationship)
             session.commit()
         except Exception, e:
             session.rollback()
             raise Exception(e)
-        _data = device.to_dict()
+        _data = firewall.to_dict()
         logger.debug("Successful adding vlan to device:"
-            " %s device status: %s" % (device_id, _data)
+            " %s device status: %s" % (firewall_id, _data)
         )
         return _data
 
-    def device_add_anycast(self, device_id, data):
+    def firewall_add_anycast(self, firewall_id, data):
         logger.debug("Adding vlan to anycast: %s using data: %s" %
-            (device_id, data)
+            (firewall_id, data)
         )
-        device = session.query(models.Device).get(device_id)
+        firewall = session.query(models.Firewall).get(firewall_id)
         anycast = session.query(models.Anycast).get(data['anycast_id'])
 
         session.begin(subtransactions=True)
         try:
-            relationship = models.Anycasts_to_Device()
+            relationship = models.Anycasts_to_Firewall()
             relationship.anycast = anycast
-            device.anycasts_to_devices.append(relationship)
+            firewall.anycasts_to_firewalls.append(relationship)
             session.commit()
         except Exception, e:
             session.rollback()
             raise Exception(e)
-        _data = device.to_dict()
+        _data = firewall.to_dict()
         logger.debug("Successful adding vlan to anycast: %s device status: %s" %
-            (device_id, _data)
+            (firewall_id, _data)
         )
         return _data
 
-    def device_list_by_vlan(self, vlan_id):
+    def firewall_list_by_vlan(self, vlan_id):
         return self._generic_list_by_something_(
-            "devices by vlan", models.Vlans_to_Device, {'vlan_id': vlan_id}
+            "firewalls by vlan", models.Vlans_to_Firewall, {'vlan_id': vlan_id}
         )
 
-    def device_list_by_anycast(self, anycast_id):
+    def firewall_list_by_anycast(self, anycast_id):
         return self._generic_list_by_something_(
-            "devices by anycast", models.Anycasts_to_Device,
+            "firewalls by anycast", models.Anycasts_to_Firewall,
             {'anycast_id': anycast_id}
         )
 
-    def device_list_by_zone(self, zone_id):
+    def firewall_list_by_zone(self, zone_id):
         return self._generic_list_by_something_(
-            "devices by zone", models.Firewall, {'zone_id': zone_id}
+            "firewalls by zone", models.Firewall, {'zone_id': zone_id}
         )
 
-    def device_remove_vlan(self, device_id, vlan_id):
+    def firewall_remove_vlan(self, firewall_id, vlan_id):
         return self._generic_delete_(
-            "vlan from device", models.Vlans_to_Device,
-            {'vlan_id': vlan_id, 'device_id': device_id}
+            "vlan from firewalls", models.Vlans_to_Firewall,
+            {'vlan_id': vlan_id, 'firewall_id': firewall_id}
         )
 
-    def device_remove_anycast(self, device_id, anycast_id):
+    def firewall_remove_anycast(self, firewall_id, anycast_id):
         return self._generic_delete_(
-            "anycast from device", models.Anycasts_to_Device,
-            {'anycast_id': anycast_id, 'device_id': device_id}
+            "anycast from firewall", models.Anycasts_to_Firewall,
+            {'anycast_id': anycast_id, 'firewall_id': firewall_id}
         )
 
-    def device_info(self, id):
-        return self._generic_info_("device", models.Device, {'id': id})
+    def firewall_info(self, id):
+        return self._generic_info_("firewall", models.Firewall, {'id': id})
 
-    def device_info_by_name(self, name):
+    def firewall_info_by_name(self, name):
         return self._generic_info_(
-            "device", models.Device, {'name': name}
+            "firewall", models.Firewall, {'name': name}
         )
 
-    def device_update(self, *args, **kawrgs):
+    def firewall_update(self, *args, **kawrgs):
         raise FeatureNotImplemented()
 
-    def device_delete(self, id):
-        return self._generic_delete_("device", models.Device, {'id': id})
+    def firewall_delete(self, id):
+        return self._generic_delete_("firewall", models.Firewall, {'id': id})
 
     def vlan_list(self):
         return self._generic_list_("vlans", models.Vlan)
 
-    def vlan_list_by_device(self, device_id):
+    def vlan_list_by_firewall(self, firewall_id):
         return self._generic_list_by_something_(
-            "vlans by device", models.Vlans_to_Device,
-            {'device_id': device_id}
+            "vlans by firewall", models.Vlans_to_Firewall,
+            {'firewall_id': firewall_id}
         )
 
     def vlan_list_by_zone(self, zone_id):
@@ -450,10 +470,10 @@ class SimpleNet(object):
     def anycast_list(self):
         return self._generic_list_("anycasts", models.Anycast)
 
-    def anycast_list_by_device(self, device_id):
+    def anycast_list_by_firewall(self, firewall_id):
         return self._generic_list_by_something_(
-            "anycasts by device", models.Anycasts_to_Device,
-            {'device_id': device_id}
+            "anycasts by firewall", models.Anycasts_to_Firewall,
+            {'firewall_id': firewall_id}
         )
 
     def subnet_list_by_vlan(self, vlan_id):

@@ -171,7 +171,7 @@ def zone(action=None, name=None, datacenter=None):
 
 
 @baker.command(
-    params={ 'action': '<list all|create|delete|device_list>',
+    params={ 'action': '<list all|create|delete|firewall_list>',
              'name': 'vlan name',
              'zone': 'zone_id to create a new vlan'}
 )
@@ -195,8 +195,8 @@ def vlan(action=None, name=None, zone=None):
         )
     elif action == 'info':
         r = __api_call("get", '%s/by-name/%s' % (base_url, name))
-    elif action == 'device_list':
-        r = __api_call("get", '%s/devices/list-by-vlan/%s' % (server, fetch_id('vlans', name)))
+    elif action == 'firewall_list':
+        r = __api_call("get", '%s/firewalls/list-by-vlan/%s' % (server, fetch_id('vlans', name)))
     else:
         baker.usage(sys._getframe().f_code.co_name)
         sys.exit(1)
@@ -322,13 +322,14 @@ def anycastip(action=None, ip=None, anycast=None):
 
 @baker.command(
     params={ 'action': '<list all|create|delete|vlan_attach|vlan_create|vlan_list|anycast_attach>',
-             'name': 'device name',
+             'name': 'firewall device name',
+             'type': '<firewall|switch>',
              'zone': 'zone to create a new device',
              'anycast': 'attach anycast to a device',
              'vlan': 'vlan to attach vlans to devices' }
 )
-def device(action=None, name=None, zone=None, vlan=None, anycast=None):
-    base_url = '%s/devices' % (server)
+def firewall(action=None, name=None, zone=None, vlan=None, anycast=None):
+    base_url = '%s/firewalls' % (server)
     r = None
     if action == 'list':
         r = __api_call("get", '%s/list' % base_url)
@@ -336,14 +337,13 @@ def device(action=None, name=None, zone=None, vlan=None, anycast=None):
         if not zone:
             print 'Missing zone to create'
             sys.exit(1)
-
         zone_id = fetch_id('zones', zone)
-        r = __api_call("post", '%s/zones/%s/devices' %
-            (server, zone_id), data=json.dumps({'name': name})
+        r = __api_call("post", '%s/firewalls' % (server),
+                data=json.dumps({'name': name, 'zone_id': zone_id})
         )
     elif action == 'delete':
         r = __api_call("delete", '%s/%s/delete' % (
-            base_url, fetch_id('devices', name))
+            base_url, fetch_id('firewalls', name))
         )
     elif action == 'info':
         r = __api_call("get", '%s/by-name/%s' % (base_url, name))
@@ -354,7 +354,7 @@ def device(action=None, name=None, zone=None, vlan=None, anycast=None):
 
         vlan_id = fetch_id('vlans', vlan)
         r = __api_call("post", '%s/%s/vlans' %
-            (base_url, fetch_id('devices', name)),
+            (base_url, fetch_id('firewalls', name)),
             data=json.dumps({'vlan_id': vlan_id})
         )
     elif action == 'anycast_attach':
@@ -364,7 +364,7 @@ def device(action=None, name=None, zone=None, vlan=None, anycast=None):
 
         anycast_id = fetch_id('anycasts', anycast)
         r = __api_call("post", '%s/%s/anycasts' %
-            (base_url, fetch_id('devices', name)),
+            (base_url, fetch_id('firewalls', name)),
             data=json.dumps({'anycast_id': anycast_id})
         )
     elif action == 'vlan_detach':
@@ -373,7 +373,7 @@ def device(action=None, name=None, zone=None, vlan=None, anycast=None):
             sys.exit(1)
 
         r = __api_call("delete", '%s/%s/vlans/%s' % (
-            base_url, fetch_id('devices', name), fetch_id('vlans', vlan))
+            base_url, fetch_id('firewalls', name), fetch_id('vlans', vlan))
         )
     elif action == 'anycast_detach':
         if not anycast:
@@ -381,15 +381,15 @@ def device(action=None, name=None, zone=None, vlan=None, anycast=None):
             sys.exit(1)
 
         r = __api_call("delete", '%s/%s/anycasts/%s' % (
-            base_url, fetch_id('devices', name), fetch_id('anycasts', anycast))
+            base_url, fetch_id('firewalls', name), fetch_id('anycasts', anycast))
         )
     elif action == 'vlan_list':
-        r = __api_call("get", '%s/vlans/list-by-device/%s' %
-            (server, fetch_id('devices', name))
+        r = __api_call("get", '%s/vlans/list-by-firewall/%s' %
+            (server, fetch_id('firewalls', name))
         )
     elif action == 'anycast_list':
-        r = __api_call("get", '%s/anycasts/list-by-device/%s' %
-            (server, fetch_id('devices', name))
+        r = __api_call("get", '%s/anycasts/list-by-firewall/%s' %
+            (server, fetch_id('firewalls', name))
         )
     else:
         baker.usage(sys._getframe().f_code.co_name)
@@ -409,7 +409,7 @@ def device(action=None, name=None, zone=None, vlan=None, anycast=None):
              'table': 'table to apply the policy <INPUT|FORWARD|OUTPUT>',
              'policy': 'policy to use <ACCEPT|REJECT|DROP>' }
 )
-def firewall(action=None, name=None, owner=None, dst=None, src=None, dst_port=None,
+def firewallrule(action=None, name=None, owner=None, dst=None, src=None, dst_port=None,
            src_port=None, proto=None, table=None, policy=None):
     base_url = '%s/firewall/policy' % server
     r = None

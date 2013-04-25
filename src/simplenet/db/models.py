@@ -78,42 +78,19 @@ class Zone(Base):
             'datacenter_id': self.datacenter_id,
         }
 
-class Device(Base):
 
-    __tablename__ = 'devices'
-    __mapper_args__ = {'polymorphic_on': 'type'}
+class Firewall(Base):
+
+    __tablename__ = 'firewalls'
 
     id = Column(String(255), primary_key=True)
     name = Column(String(255), unique=True)
     description = Column(String(255))
-    type = Column(String(255))
-
-    def __init__(self, name, description=''):
-        self.id = str(uuid.uuid4())
-        self.name = name
-        self.description = description
-
-    def __repr__(self):
-       return "<%s('%s','%s')>" % (self.type, self.id, self.name)
-
-    def to_dict(self):
-        return {
-            'id': self.id,
-            'name': self.name,
-            'type': self.type,
-        }
-
-class Firewall(Device):
-
-    __tablename__ = 'firewalls'
-    __mapper_args__ = {'polymorphic_identity': 'firewall'}
-
-    id = Column(String(255), ForeignKey('devices.id'), primary_key=True)
     zone_id = Column(String(255), ForeignKey('zones.id'))
     mac = Column(String(255))
     address = Column(String(255))
-    vlans_to_devices = relationship('Vlans_to_Device', cascade='all, delete-orphan')
-    anycasts_to_devices = relationship('Anycasts_to_Device', cascade='all, delete-orphan')
+    vlans_to_firewalls = relationship('Vlans_to_Firewall', cascade='all, delete-orphan')
+    anycasts_to_firewalls = relationship('Anycasts_to_Firewall', cascade='all, delete-orphan')
     zone = relationship('Zone')
 
     def __init__(self, name, zone_id, description=''):
@@ -135,13 +112,11 @@ class Firewall(Device):
             'address': self.address,
         }
 
-class Switch(Device):
+class Switch(Base):
 
     __tablename__ = 'switches'
-    __mapper_args__ = {'polymorphic_identity': 'switch'}
 
-    id = Column(String(255), ForeignKey('devices.id'), primary_key=True)
-    vlans_to_devices = relationship('Vlans_to_Device', cascade='all, delete-orphan')
+    id = Column(String(255), primary_key=True)
     model_type = Column(String(255))
     mac = Column(String(255))
     address = Column(String(255))
@@ -192,46 +167,39 @@ class Vlan(Base):
         }
 
 
-class Vlans_to_Device(Base):
+class Vlans_to_Firewall(Base):
 
-    __tablename__ = 'vlans_to_devices'
+    __tablename__ = 'vlans_to_firewalls'
 
     vlan_id = Column(String(255), ForeignKey('vlans.id'), primary_key=True)
-    device_id = Column(String(255), ForeignKey('devices.id'), primary_key=True)
+    firewall_id = Column(String(255), ForeignKey('firewalls.id'), primary_key=True)
     description = Column(String(255))
     vlan = relationship('Vlan')
-    device = relationship('Device')
+    firewall = relationship('Firewall')
 
     def to_dict(self):
         return {
-            'id': self.device.id,
             'vlan_id': self.vlan_id,
-            'device_id': self.device_id,
             'vlan': self.vlan.name,
-            'name': self.device.name,
-            'zone_id': self.device.zone_id,
-            'zone': self.device.zone.name,
+            'firewall': self.firewall.to_dict(),
         }
 
-class Anycasts_to_Device(Base):
+class Anycasts_to_Firewall(Base):
 
-    __tablename__ = 'anycasts_to_devices'
+    __tablename__ = 'anycasts_to_firewalls'
 
     anycast_id = Column(String(255), ForeignKey('anycasts.id'), primary_key=True)
-    device_id = Column(String(255), ForeignKey('devices.id'), primary_key=True)
+    firewall_id = Column(String(255), ForeignKey('firewalls.id'), primary_key=True)
     description = Column(String(255))
     anycast = relationship('Anycast')
-    device = relationship('Device')
+    firewall = relationship('Firewall')
 
     def to_dict(self):
         return {
             'id': self.device.id,
             'anycast_id': self.anycast_id,
             'anycast_cidr': self.anycast.cidr,
-            'device_id': self.device_id,
-            'name': self.device.name,
-            'zone_id': self.device.zone_id,
-            'zone': self.device.zone.name,
+            'firewall': self.firewall.to_dict()
         }
 
 class Subnet(Base):

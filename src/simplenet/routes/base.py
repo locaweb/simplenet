@@ -197,28 +197,50 @@ def datacenter_zone_create(datacenter_id):
     return zone
 
 
-@post('/zones/<zone_id>/devices')
+@post('/firewalls')
 @handle_auth
 @validate_input(name=str)
 @reply_json
-def zone_device_create(zone_id):
+def firewall_create():
     """
     ::
 
-      POST /zones/<zone_id>/devices
+      POST /firewalls
 
-    Create a new device in zone
+    Create a new firewall device
     """
     manager = create_manager('base')
     data = request.body.readline()
     if not data:
         abort(400, 'No data received')
     data = json.loads(data)
-    device = manager.device_create(zone_id, data)
-    location = "devices/%s" % (device['id'])
+    firewall = manager.firewall_create(data=data)
+    location = "firewalls/%s" % (firewall['id'])
     response.set_header("Location", location)
-    return device
+    return firewall
 
+
+@post('/switchs')
+@handle_auth
+@validate_input(name=str)
+@reply_json
+def switch_create():
+    """
+    ::
+
+      POST /switchs
+
+    Create a new switch device
+    """
+    manager = create_manager('base')
+    data = request.body.readline()
+    if not data:
+        abort(400, 'No data received')
+    data = json.loads(data)
+    switch = manager.switch_create(data=data)
+    location = "switchs/%s" % (switch['id'])
+    response.set_header("Location", location)
+    return switch
 
 @post('/zones/<zone_id>/vlans')
 @handle_auth
@@ -243,82 +265,82 @@ def zone_vlan_create(zone_id):
     return vlan
 
 
-@post('/devices/<device_id>/vlans')
+@post('/firewalls/<firewall_id>/vlans')
 @handle_auth
 @validate_input(vlan_id=str)
 @reply_json
-def device_add_vlan(device_id):
+def firewall_add_vlan(firewall_id):
     """
     ::
 
-      POST /devices/<device_id>/vlans
+      POST /firewalls/<firewall_id>/vlans
 
-    Attach vlan to device
+    Attach vlan to firewall device
     """
     manager = create_manager('base')
     data = request.body.readline()
     if not data:
         abort(400, 'No data received')
     data = json.loads(data)
-    device = manager.device_add_vlan(device_id, data)
-    location = "devices/relationship/%s" % (device['id'])
+    firewall = manager.firewall_add_vlan(firewall_id, data)
+    location = "firewalls/relationship/%s" % (firewall['id'])
     response.set_header("Location", location)
-    return device
+    return firewall
 
 
-@post('/devices/<device_id>/anycasts')
+@post('/firewalls/<firewall_id>/anycasts')
 @handle_auth
 @validate_input(anycast_id=str)
 @reply_json
-def device_add_anycast(device_id):
+def firewall_add_anycast(firewall_id):
     """
     ::
 
-      POST /devices/<device_id>/anycasts
+      POST /firewalls/<firewall_id>/anycasts
 
-    Attach vlan to device
+    Attach vlan to firewall device
     """
     manager = create_manager('base')
     data = request.body.readline()
     if not data:
         abort(400, 'No data received')
     data = json.loads(data)
-    device = manager.device_add_anycast(device_id, data)
-    location = "devices/relationship/%s" % (device['id'])
+    firewall = manager.firewall_add_anycast(firewall_id, data)
+    location = "firewall/relationship/%s" % (firewall['id'])
     response.set_header("Location", location)
-    return device
+    return firewall
 
 
-@delete('/devices/<device_id>/vlans/<vlan_id>')
+@delete('/firewalls/<firewall_id>/vlans/<vlan_id>')
 @handle_auth
 @reply_json
-def device_remove_vlan(device_id, vlan_id):
+def firewall_remove_vlan(firewall_id, vlan_id):
     """
     ::
 
-      POST /devices/<device_id>/vlans/<vlan_id>
+      POST /firewalls/<firewall_id>/vlans/<vlan_id>
 
-    Attach vlan to device
+    Attach vlan to firewall device
     """
     manager = create_manager('base')
-    device = manager.device_remove_vlan(device_id, vlan_id)
-    return device
+    firewall = manager.firewall_remove_vlan(firewall_id, vlan_id)
+    return firewall
 
 
-@delete('/devices/<device_id>/anycasts/<anycast_id>')
+@delete('/firewalls/<firewall_id>/anycasts/<anycast_id>')
 @handle_auth
 @reply_json
-def device_remove_anycast(device_id, anycast_id):
+def firewall_remove_anycast(firewall_id, anycast_id):
     """
     ::
 
-      POST /devices/<device_id>/anycasts/<anycast_id>
+      POST /firewalls/<firewall_id>/anycasts/<anycast_id>
 
-    Attach anycasts to device
+    Attach anycasts to firewall device
     """
     manager = create_manager('base')
-    device = manager.device_remove_anycast(device_id, anycast_id)
-    return device
+    firewall = manager.firewall_remove_anycast(firewall_id, anycast_id)
+    return firewall
 
 
 @post('/anycasts')
