@@ -33,6 +33,14 @@ from simplenet.exceptions import (
 
 logger = get_logger()
 
+def generic_router(resource):
+    if resource == 'firewalls':
+        return 'firewall'
+    elif resource == 'switchs':
+        return 'switch'
+    else:
+        return 'base'
+
 @get('/prober')
 @handle_auth
 @reply_json
@@ -63,20 +71,12 @@ def generic_resources_list(resource):
 
     Retrieves all entries from resource
     """
-    if resource == 'firewalls':
-        manager = create_manager('firewall')
-        try:
-            _list = getattr(manager, '%s_list' % resource[:-1])
-            return _list()
-        except AttributeError:
-            raise FeatureNotAvailable()
-    else:
-        manager = create_manager('base')
-        try:
-            _list = getattr(manager, '%s_list' % resource[:-1])
-            return _list()
-        except AttributeError:
-            raise FeatureNotAvailable()
+    manager = create_manager(generic_router(resource))
+    try:
+        _list = getattr(manager, '%s_list' % resource[:-1])
+        return _list()
+    except AttributeError:
+        raise FeatureNotAvailable()
 
 
 ## Generic Resource Info
@@ -91,20 +91,12 @@ def generic_resource_info(resource, resource_id):
 
     Retrieves resource information
     """
-    if resource == 'firewalls':
-        manager = create_manager('firewall')
-        try:
-            _info = getattr(manager, '%s_info' % resource[:-1])
-            return _info(resource_id)
-        except AttributeError:
-            raise FeatureNotAvailable()
-    else:
-        manager = create_manager('base')
-        try:
-            _info = getattr(manager, '%s_info' % resource[:-1])
-            return _info(resource_id)
-        except AttributeError:
-            raise FeatureNotAvailable()
+    manager = create_manager(generic_router(resource))
+    try:
+        _info = getattr(manager, '%s_info' % resource[:-1])
+        return _info(resource_id)
+    except AttributeError:
+        raise FeatureNotAvailable()
 
 
 ## Generic Resource Info by name, cidr, ip
@@ -119,21 +111,12 @@ def generic_resource_info_by_field(resource, resource_type, resource_value):
 
     Retrieves resource information by type
     """
-    if resource == 'firewalls':
-        manager = create_manager('firewall')
-        try:
-            _info = getattr(manager, '%s_info_by_%s' % (resource[:-1], resource_type))
-            return _info(resource_value)
-        except AttributeError:
-            raise FeatureNotAvailable()
-    else:
-        manager = create_manager('base')
-        try:
-            _info = getattr(manager, '%s_info_by_%s' % (resource[:-1], resource_type))
-            return _info(resource_value)
-        except AttributeError:
-            raise FeatureNotAvailable()
-
+    manager = create_manager(generic_router(resource))
+    try:
+        _info = getattr(manager, '%s_info_by_%s' % (resource[:-1], resource_type))
+        return _info(resource_value)
+    except AttributeError:
+        raise FeatureNotAvailable()
 
 # Generic list by parent
 @get('/<resource>/list-by-<relationship_type>/<relationship_value>')
@@ -147,21 +130,12 @@ def generic_resource_list_by_relationship(resource, relationship_type, relations
 
     List devices
     """
-    if resource == 'firewalls':
-        manager = create_manager('firewall')
-        try:
-            _list = getattr(manager, '%s_list_by_%s' % (resource[:-1], relationship_type))
-            return _list(relationship_value)
-        except AttributeError:
-            raise FeatureNotAvailable()
-    else:
-        manager = create_manager('base')
-        try:
-            _list = getattr(manager, '%s_list_by_%s' % (resource[:-1], relationship_type))
-            return _list(relationship_value)
-        except AttributeError:
-            raise FeatureNotAvailable()
-
+    manager = create_manager(generic_router(resource))
+    try:
+        _list = getattr(manager, '%s_list_by_%s' % (resource[:-1], relationship_type))
+        return _list(relationship_value)
+    except AttributeError:
+        raise FeatureNotAvailable()
 
 ## Generic Resource Deletion
 @delete('/<resource>/<resource_id>/delete')
@@ -175,21 +149,12 @@ def generic_resource_delete(resource, resource_id):
 
     Deletes resource
     """
-    if resource == 'firewalls':
-        manager = create_manager('firewall')
-        try:
-            _delete = getattr(manager, '%s_delete' % (resource[:-1]))
-            return _delete(resource_id)
-        except AttributeError:
-            raise FeatureNotAvailable()
-    else:
-        manager = create_manager('base')
-        try:
-            _delete = getattr(manager, '%s_delete' % (resource[:-1]))
-            return _delete(resource_id)
-        except AttributeError:
-            raise FeatureNotAvailable()
-
+    manager = create_manager(generic_router(resource))
+    try:
+        _delete = getattr(manager, '%s_delete' % (resource[:-1]))
+        return _delete(resource_id)
+    except AttributeError:
+        raise FeatureNotAvailable()
 
 @post('/datacenters')
 @handle_auth
@@ -259,28 +224,6 @@ def firewall_create():
     response.set_header("Location", location)
     return firewall
 
-
-@post('/switchs')
-@handle_auth
-@validate_input(name=str)
-@reply_json
-def switch_create():
-    """
-    ::
-
-      POST /switchs
-
-    Create a new switch device
-    """
-    manager = create_manager('base')
-    data = request.body.readline()
-    if not data:
-        abort(400, 'No data received')
-    data = json.loads(data)
-    switch = manager.switch_create(data=data)
-    location = "switchs/%s" % (switch['id'])
-    response.set_header("Location", location)
-    return switch
 
 @post('/zones/<zone_id>/vlans')
 @handle_auth

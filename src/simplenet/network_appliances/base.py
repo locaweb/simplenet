@@ -282,44 +282,6 @@ class SimpleNet(object):
     def zone_delete(self, id):
         return self._generic_delete_("zone", models.Zone, {'id': id})
 
-    def switch_list(self):
-        return self._generic_list_("switches", models.Switch)
-
-    def switch_create(self, data):
-        logger.debug("Creating device using data: %s" % data)
-
-        session.begin(subtransactions=True)
-        try:
-            session.add(models.Switch(name=data['name'], mac=data['mac'],
-                                    address=data['address'], model_type=data['model_type']))
-            session.commit()
-        except IntegrityError:
-            session.rollback()
-            forbidden_msg = "%s already exists" % data['name']
-            raise OperationNotPermited('Switch', forbidden_msg)
-        except Exception, e:
-            session.rollback()
-            raise Exception(e)
-        logger.debug("Created device using data: %s" % data)
-
-        return self.switch_info_by_name(data['name'])
-
-
-    def switch_info(self, id):
-        return self._generic_info_("switch", models.Switch, {'id': id})
-
-
-    def switch_info_by_name(self, name):
-        return self._generic_info_(
-            "switch", models.Switch, {'name': name}
-        )
-
-    def switch_update(self, *args, **kawrgs):
-        raise FeatureNotImplemented()
-
-    def switch_delete(self, id):
-        return self._generic_delete_("switch", models.Switch, {'id': id})
-
     def vlan_list(self):
         return self._generic_list_("vlans", models.Vlan)
 
