@@ -523,5 +523,62 @@ class SimpleNet(object):
     def policy_delete(self, *args, **kawrgs):
         raise FeatureNotImplemented()
 
+    def interface_list(self):
+        return self._generic_list_("interfaces", models.Interface)
+
+    def interface_create(self, data):
+        logger.debug("Creating interface using data: %s" % data)
+
+        session.begin(subtransactions=True)
+        try:
+            session.add(models.Interface(mac=data['mac']))
+            session.commit()
+        except IntegrityError:
+            session.rollback()
+            forbidden_msg = "%s already exists" % data['mac']
+            raise OperationNotPermited('Interface', forbidden_msg)
+        except Exception, e:
+            session.rollback()
+            raise Exception(e)
+
+        return self.interface_info_by_mac(data['mac'])
+
+    def interface_delete(self, data):
+        return self._generic_delete_("interface", models.Interface, {'mac': data['mac']})
+
+    def interface_info_by_mac(self, mac):
+        return self._generic_info_("interface", models.Interface, {'mac': mac})
+
+    def interface_add_ip(self, interface_id, data):
+        logger.debug("Adding IP to interface using data: %s" % data)
+
+        interface = session.query(models.Interface).get(interface_id)
+        ip = session.query(models.Ip).filter_by(**data).first()
+
+        if not ip:
+            raise EntityNotFound('Ip', data)
+        elif not interface:
+            raise EntityNotFound('Interface', interface_id)
+
+        session.begin(subtransactions=True)
+        try:
+            relationship = models.Ips_to_Interface()
+            relationship.ip = ip
+            interface.ips_to_interfaces.append(relationship)
+            session.commit()
+        except Exception, e:
+            session.rollback()
+            raise Exception(e)
+        _data = interface.to_dict()
+        logger.debug("Successful adding IP to interface status: %s" % _data)
+
+        return _data
+
+    def interface_remove_ip(self, interface_id, ip_id):
+        return self._generic_delete_(
+            "ip from interfaces", models.Ips_to_Interface,
+            {'interface_id': interface_id, 'ip_id': ip_id}
+        )
+
 class Net(SimpleNet):
     pass

@@ -416,3 +416,60 @@ def subnet_ip_create(subnet_id):
     location = "ips/%s" % (ip['id'])
     response.set_header("Location", location)
     return ip
+
+
+@post('/interfaces')
+@handle_auth
+@reply_json
+def interface_create():
+    """
+    ::
+
+      POST /interfaces
+
+    Create a new interface
+    """
+    manager = create_manager('base')
+    data = request.body.readline()
+    if not data:
+        abort(400, 'No data received')
+    data = json.loads(data)
+    interface = manager.interface_create(data)
+    location = "interfaces/%s" % (interface['mac'])
+    response.set_header("Location", location)
+    return interface
+
+
+@post('/interfaces/<interface_id>/ips')
+@handle_auth
+@reply_json
+def interface_add_ip(interface_id):
+    """
+    ::
+
+      POST /interfaces/<interface_id>/ips
+
+    Attach IP to interface
+    """
+    manager = create_manager('base')
+    data = request.body.readline()
+    if not data:
+        abort(400, 'No data received')
+    data = json.loads(data)
+    interface = manager.interface_add_ip(interface_id, data)
+    return interface
+
+@delete('/interfaces/<interface_id>/ips/<ip_id>')
+@handle_auth
+@reply_json
+def interface_remove_ip(interface_id, ip_id):
+    """
+    ::
+
+      DELETE /interfaces/<interface_id>/ips/<ip_id>
+
+    Detach ip from interface
+    """
+    manager = create_manager('base')
+    interface = manager.interface_remove_ip(interface_id, ip_id)
+    return interface

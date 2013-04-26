@@ -160,16 +160,20 @@ class Interface(Base):
     mac = Column(String(255), primary_key=True)
     ips_to_interfaces = relationship('Ips_to_Interface', cascade='all, delete-orphan')
 
+    def __init__(self, mac):
+        self.mac = mac
+
     def to_dict(self):
         return {
             'mac': self.mac,
+            'ips': [x.to_dict()['ip'] for x in self.ips_to_interfaces],
         }
 
 class Ips_to_Interface(Base):
 
     __tablename__ = 'ips_to_interfaces'
 
-    ip_id = Column(String(255), ForeignKey('ips.id'), primary_key=True)
+    ip_id = Column(String(255), ForeignKey('ips.id'), primary_key=True, unique=True)
     interface_id = Column(String(255), ForeignKey('interfaces.mac'), primary_key=True)
     ip = relationship('Ip')
     interface = relationship('Interface')

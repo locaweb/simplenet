@@ -51,10 +51,8 @@ class Net(SimpleNet):
         except Exception, e:
             session.rollback()
             raise Exception(e)
-        logger.debug("Created device using data: %s" % data)
 
         return self.switch_info_by_name(data['name'])
-
 
     def switch_info(self, id):
         return self._generic_info_("switch", models.Switch, {'id': id})
@@ -70,32 +68,4 @@ class Net(SimpleNet):
 
     def switch_delete(self, id):
         return self._generic_delete_("switch", models.Switch, {'id': id})
-
-    def firewall_add_anycast(self, firewall_id, data):
-        logger.debug("Adding vlan to anycast: %s using data: %s" %
-            (firewall_id, data)
-        )
-        firewall = session.query(models.Firewall).get(firewall_id)
-        anycast = session.query(models.Anycast).get(data['anycast_id'])
-
-        session.begin(subtransactions=True)
-        try:
-            relationship = models.Anycasts_to_Firewall()
-            relationship.anycast = anycast
-            firewall.anycasts_to_firewalls.append(relationship)
-            session.commit()
-        except Exception, e:
-            session.rollback()
-            raise Exception(e)
-        _data = firewall.to_dict()
-        logger.debug("Successful adding vlan to anycast: %s device status: %s" %
-            (firewall_id, _data)
-        )
-        return _data
-
-    def firewall_remove_anycast(self, firewall_id, anycast_id):
-        return self._generic_delete_(
-            "anycast from firewall", models.Anycasts_to_Firewall,
-            {'anycast_id': anycast_id, 'firewall_id': firewall_id}
-        )
 

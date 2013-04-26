@@ -435,6 +435,42 @@ def switch(action=None, name=None, model_type=None, mac=None, address=None):
 
 
 @baker.command(
+    params={ 'action': '<list all|create|delete|attach_ip|detach_ip>',
+             'mac': 'interface mac address',
+             'ip': 'IP address' }
+)
+def interface(action=None, mac=None, ip=None):
+    base_url = '%s/interfaces' % (server)
+    r = None
+    if action == 'list':
+        r = __api_call("get", '%s/list' % base_url)
+    elif action == 'create':
+        r = __api_call("post", '%s' % (base_url),
+                data=json.dumps({'mac': mac }))
+    elif action == 'delete':
+        r = __api_call("delete", '%s/%s/delete' % (
+            base_url, fetch_id('interfaces', mac))
+        )
+    elif action == 'attach_ip':
+        if not ip:
+            print 'Missing ip to attach'
+            sys.exit(1)
+
+        r = __api_call("post", '%s/%s/ips' %
+            (base_url, mac), data=json.dumps({'ip': ip}))
+    elif action == 'detach_ip':
+        if not ip:
+            print 'Missing ip to detach'
+            sys.exit(1)
+        r = __api_call("delete", '%s/%s/ips/%s' %
+            (base_url, mac, fetch_id('ips', ip)))
+    else:
+        baker.usage(sys._getframe().f_code.co_name)
+        sys.exit(1)
+    pretty_output(r)
+
+
+@baker.command(
     params={ 'action': '<list all|attach|create|delete|rename>',
              'name': 'type of owner <zone|vlan|subnet|ip|anycast|anycastip>',
              'owner': 'policy owner name',
