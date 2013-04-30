@@ -531,7 +531,7 @@ class SimpleNet(object):
 
         session.begin(subtransactions=True)
         try:
-            session.add(models.Interface(mac=data['mac']))
+            session.add(models.Interface(id=data['mac']))
             session.commit()
         except IntegrityError:
             session.rollback()
@@ -544,10 +544,10 @@ class SimpleNet(object):
         return self.interface_info_by_mac(data['mac'])
 
     def interface_delete(self, data):
-        return self._generic_delete_("interface", models.Interface, {'mac': data['mac']})
+        return self._generic_delete_("interface", models.Interface, {'id': data})
 
     def interface_info_by_mac(self, mac):
-        return self._generic_info_("interface", models.Interface, {'mac': mac})
+        return self._generic_info_("interface", models.Interface, {'id': mac})
 
     def interface_add_ip(self, interface_id, data):
         logger.debug("Adding IP to interface using data: %s" % data)

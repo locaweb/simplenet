@@ -435,7 +435,7 @@ def interface_create():
         abort(400, 'No data received')
     data = json.loads(data)
     interface = manager.interface_create(data)
-    location = "interfaces/%s" % (interface['mac'])
+    location = "interfaces/%s" % (interface['id'])
     response.set_header("Location", location)
     return interface
 

@@ -69,3 +69,40 @@ class Net(SimpleNet):
     def switch_delete(self, id):
         return self._generic_delete_("switch", models.Switch, {'id': id})
 
+    def switch_add_interface(self, switch_id, int_id):
+        logger.debug("Adding interface using data: %s" % int_id)
+
+        interface = session.query(models.Interface).get(int_id)
+        sw = session.query(models.Switch).get(switch_id)
+
+        if not sw:
+            raise EntityNotFound('Switch', switch_id)
+        elif not interface:
+            raise EntityNotFound('Interface', int_id)
+
+        session.begin(subtransactions=True)
+        try:
+            interface.switch_id = sw.id
+            session.commit()
+        except Exception, e:
+            session.rollback()
+            raise Exception(e)
+        _data = interface.to_dict()
+        logger.debug("Successful adding Interface to Switch status: %s" % _data)
+
+        return _data
+
+    def switch_remove_interface(self, switch_id, int_id):
+        interface = session.query(models.Interface).get(int_id)
+        if not interface:
+            raise EntityNotFound('Interface', int_id)
+
+        if interface.switch_id == switch_id:
+            session.begin(subtransactions=True)
+            try:
+                interface.switch_id = ''
+                session.commit()
+            except Exception, e:
+                session.rollback()
+                raise Exception(e)
+        return interface.to_dict()

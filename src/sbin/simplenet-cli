@@ -98,6 +98,8 @@ def fetch_id(_type, _data):
         )
     elif _type in ('ips', 'anycastips'):
         data = __api_call("get", '%s/%s/by-ip/%s' % (server, _type, _data))
+    elif _type == 'interfaces':
+        data = __api_call("get", '%s/%s/by-mac/%s' % (server, _type, _data))
     else:
         data = __api_call("get", '%s/%s/by-name/%s' % (server, _type, _data))
 
@@ -399,13 +401,14 @@ def firewall(action=None, name=None, zone=None, vlan=None, anycast=None):
 
 
 @baker.command(
-    params={ 'action': '<list all|create|delete>',
+    params={ 'action': '<list all|create|delete|int_attach|int_detach>',
              'name': 'switch device name',
              'model_type': '<openvswitch>',
              'mac': 'device mac address',
+             'inter': 'interface' ,
              'address': 'admin uri' }
 )
-def switch(action=None, name=None, model_type=None, mac=None, address=None):
+def switch(action=None, name=None, model_type=None, mac=None, address=None, inter=None):
     base_url = '%s/switchs' % (server)
     r = None
     if action == 'list':
@@ -428,6 +431,23 @@ def switch(action=None, name=None, model_type=None, mac=None, address=None):
         )
     elif action == 'info':
         r = __api_call("get", '%s/by-name/%s' % (base_url, name))
+    elif action == 'int_attach':
+        if not inter:
+            print 'Missing interface to attach'
+            sys.exit(1)
+
+        r = __api_call("post", '%s/%s/interfaces' %
+            (base_url, fetch_id('switchs', name)),
+            data=json.dumps({'interface_id': inter})
+        )
+    elif action == 'int_detach':
+        if not inter:
+            print 'Missing interface to detach'
+            sys.exit(1)
+
+        r = __api_call("delete", '%s/%s/interfaces/%s' %
+            (base_url, fetch_id('switchs', name), inter)
+        )
     else:
         baker.usage(sys._getframe().f_code.co_name)
         sys.exit(1)
@@ -435,7 +455,7 @@ def switch(action=None, name=None, model_type=None, mac=None, address=None):
 
 
 @baker.command(
-    params={ 'action': '<list all|create|delete|attach_ip|detach_ip>',
+    params={ 'action': '<list all|create|delete|ip_attach|ip_detach>',
              'mac': 'interface mac address',
              'ip': 'IP address' }
 )
@@ -445,20 +465,28 @@ def interface(action=None, mac=None, ip=None):
     if action == 'list':
         r = __api_call("get", '%s/list' % base_url)
     elif action == 'create':
+        if not mac:
+            print 'Missing mac to create'
+            sys.exit(1)
+
         r = __api_call("post", '%s' % (base_url),
                 data=json.dumps({'mac': mac }))
     elif action == 'delete':
+        if not mac:
+            print 'Missing mac to delete'
+            sys.exit(1)
+
         r = __api_call("delete", '%s/%s/delete' % (
             base_url, fetch_id('interfaces', mac))
         )
-    elif action == 'attach_ip':
+    elif action == 'ip_attach':
         if not ip:
             print 'Missing ip to attach'
             sys.exit(1)
 
         r = __api_call("post", '%s/%s/ips' %
             (base_url, mac), data=json.dumps({'ip': ip}))
-    elif action == 'detach_ip':
+    elif action == 'ip_detach':
         if not ip:
             print 'Missing ip to detach'
             sys.exit(1)

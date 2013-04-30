@@ -54,3 +54,36 @@ def switch_create():
     response.set_header("Location", location)
     return switch
 
+@post('/switchs/<switch_id>/interfaces')
+@handle_auth
+@reply_json
+def switch_add_interface(switch_id):
+    """
+    ::
+
+      POST /switchs/<switch_id>/interfaces
+
+    Attach Interface to Switch
+    """
+    manager = create_manager('switch')
+    data = request.body.readline()
+    if not data:
+        abort(400, 'No data received')
+    data = json.loads(data)
+    interface = manager.switch_add_interface(switch_id, data['interface_id'])
+    return interface
+
+@delete('/switchs/<switch_id>/interfaces/<interface_id>')
+@handle_auth
+@reply_json
+def switch_remove_interface(switch_id, interface_id):
+    """
+    ::
+
+      DELETE /switchs/<switch_id>/interfaces/<interface_id>
+
+    Detach Interface to Switch
+    """
+    manager = create_manager('switch')
+    interface = manager.switch_remove_interface(switch_id, interface_id)
+    return interface

@@ -121,6 +121,7 @@ class Switch(Base):
     model_type = Column(String(255))
     mac = Column(String(255))
     address = Column(String(255))
+    ports = relationship('Interface', cascade='all, delete-orphan')
 
     def __init__(self, name, mac='', address='', model_type=''):
         self.id = str(uuid.uuid4())
@@ -130,7 +131,7 @@ class Switch(Base):
         self.model_type = model_type
 
     def __repr__(self):
-       return "<Switch('%s','%s','%s','%s')>" % (self.id, self.name, self.model_type, self.mac, self.address)
+       return "<Switch('%s','%s','%s','%s', '%s')>" % (self.id, self.name, self.model_type, self.mac, self.address)
 
     def to_dict(self):
         return {
@@ -141,31 +142,22 @@ class Switch(Base):
             'address': self.address,
         }
 
-#class PortBindings(Base):
-#
-#    __tablename__ = 'portbindings'
-#
-#    id = Column(String(255), primary_key=True)
-#    interface_id = Column(String(255), ForeignKey('interfaces.mac'))
-#    interface = relationship('Interface')
-#    switch_id = Column(String(255), ForeignKey('switches.id'))
-#    switch = relationship('Switch')
-#    status = Column(String(100))
-#    switch_port = Column(String(100))
 
 class Interface(Base):
 
     __tablename__ = 'interfaces'
 
-    mac = Column(String(255), primary_key=True)
+    id = Column(String(255), primary_key=True, unique=True)
+    switch_id = Column(String(255), ForeignKey('switches.id'))
     ips_to_interfaces = relationship('Ips_to_Interface', cascade='all, delete-orphan')
 
-    def __init__(self, mac):
-        self.mac = mac
+    def __init__(self, id):
+        self.id = id
 
     def to_dict(self):
         return {
-            'mac': self.mac,
+            'id': self.id,
+            'switch_id': self.switch_id,
             'ips': [x.to_dict()['ip'] for x in self.ips_to_interfaces],
         }
 
@@ -174,7 +166,7 @@ class Ips_to_Interface(Base):
     __tablename__ = 'ips_to_interfaces'
 
     ip_id = Column(String(255), ForeignKey('ips.id'), primary_key=True, unique=True)
-    interface_id = Column(String(255), ForeignKey('interfaces.mac'), primary_key=True)
+    interface_id = Column(String(255), ForeignKey('interfaces.id'), primary_key=True)
     ip = relationship('Ip')
     interface = relationship('Interface')
 
