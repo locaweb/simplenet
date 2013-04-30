@@ -214,8 +214,13 @@ class Vlans_to_Firewall(Base):
 
     def to_dict(self):
         return {
+            'id': self.firewall.id,
             'vlan_id': self.vlan_id,
+            'device_id': self.firewall_id,
             'vlan': self.vlan.name,
+            'name': self.firewall.name,
+            'zone_id': self.firewall.zone_id,
+            'zone': self.firewall.zone.name,
         }
 
 class Anycasts_to_Firewall(Base):
