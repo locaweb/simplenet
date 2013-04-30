@@ -158,7 +158,7 @@ class Net(SimpleNet):
             logger.debug("Getting devices by anycast: %s" % _data['anycast_id'])
             devices = self.firewall_list_by_anycast(_data['anycast_id'])
         else:
-            logger.debug("Getting devices by anycast: %s" % _data['zone_id'])
+            logger.debug("Getting devices by zone: %s" % _data['zone_id'])
             devices = self.firewall_list_by_zone(_data['zone_id'])
 
         for device in devices:
