@@ -100,7 +100,7 @@ class Net(SimpleNet):
         if interface.switch_id == switch_id:
             session.begin(subtransactions=True)
             try:
-                interface.switch_id = ''
+                interface.switch_id = None
                 session.commit()
             except Exception, e:
                 session.rollback()
