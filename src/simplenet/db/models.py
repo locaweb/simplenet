@@ -78,7 +78,6 @@ class Zone(Base):
             'datacenter_id': self.datacenter_id,
         }
 
-
 class Firewall(Base):
 
     __tablename__ = 'firewalls'
@@ -103,6 +102,16 @@ class Firewall(Base):
        return "<Firewall('%s','%s')>" % (self.id, self.name)
 
     def to_dict(self):
+        return {
+            'id': self.id,
+            'name': self.name,
+            'zone': self.zone.name,
+            'zone_id': self.zone_id,
+            'mac': self.mac,
+            'address': self.address,
+        }
+
+    def tree_dict(self):
         return {
             'id': self.id,
             'name': self.name,
@@ -142,6 +151,14 @@ class Switch(Base):
             'address': self.address,
         }
 
+    def tree_dict(self):
+        return {
+            'id': self.id,
+            'name': self.name,
+            'model_type': self.model_type,
+            'mac': self.mac,
+            'address': self.address,
+        }
 
 class Interface(Base):
 
@@ -149,6 +166,8 @@ class Interface(Base):
 
     id = Column(String(255), primary_key=True, unique=True)
     switch_id = Column(String(255), ForeignKey('switches.id'))
+    status = Column(String(255))
+    switch = relationship('Switch')
     ips_to_interfaces = relationship('Ips_to_Interface', cascade='all, delete-orphan')
 
     def __init__(self, id):
@@ -157,8 +176,16 @@ class Interface(Base):
     def to_dict(self):
         return {
             'id': self.id,
-            'switch_id': self.switch_id,
+            'switch_id': self.switch.id if self.switch else None,
             'ips': [x.to_dict()['ip'] for x in self.ips_to_interfaces],
+        }
+
+    def tree_dict(self):
+        return {
+            'id': self.id,
+            'status': self.status,
+            'switch_id': self.switch.tree_dict(),
+            'ips': [x.tree_dict()['ip'] for x in self.ips_to_interfaces],
         }
 
 class Ips_to_Interface(Base):
@@ -175,6 +202,11 @@ class Ips_to_Interface(Base):
             'ip': self.ip.to_dict(),
         }
 
+    def tree_dict(self):
+        return {
+            'ip': self.ip.tree_dict(),
+        }
+
 class Vlan(Base):
 
     __tablename__ = 'vlans'
@@ -184,6 +216,7 @@ class Vlan(Base):
     description = Column(String(255))
     zone_id = Column(String(255), ForeignKey('zones.id'))
     zone = relationship('Zone')
+    firewall_to_vlan = relationship('Vlans_to_Firewall', cascade='all, delete-orphan')
 
     def __init__(self, name, zone_id, description=''):
         self.id = str(uuid.uuid4())
@@ -201,6 +234,12 @@ class Vlan(Base):
             'zone_id': self.zone_id,
         }
 
+    def tree_dict(self):
+        return {
+            'id': self.id,
+            'firewall': [x.tree_dict()['firewall'] for x in self.firewall_to_vlan],
+            'name': self.name,
+        }
 
 class Vlans_to_Firewall(Base):
 
@@ -221,6 +260,11 @@ class Vlans_to_Firewall(Base):
             'name': self.firewall.name,
             'zone_id': self.firewall.zone_id,
             'zone': self.firewall.zone.name,
+        }
+
+    def tree_dict(self):
+        return {
+            'firewall': self.firewall.tree_dict()
         }
 
 class Anycasts_to_Firewall(Base):
@@ -277,6 +321,12 @@ class Subnet(Base):
             'vlan_id': self.vlan_id,
         }
 
+    def tree_dict(self):
+        return {
+            'id': self.id,
+            'cidr': self.cidr,
+            'vlan': self.vlan.tree_dict()
+        }
 
 class Ip(Base):
 
@@ -304,6 +354,12 @@ class Ip(Base):
             'subnet_id': self.subnet_id,
         }
 
+    def tree_dict(self):
+        return {
+            'id': self.id,
+            'ip': self.ip,
+            'subnet': self.subnet.tree_dict()
+        }
 
 class Anycast(Base):
 

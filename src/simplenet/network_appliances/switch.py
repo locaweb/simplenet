@@ -73,22 +73,20 @@ class Net(SimpleNet):
         logger.debug("Adding interface using data: %s" % int_id)
 
         interface = session.query(models.Interface).get(int_id)
-        sw = session.query(models.Switch).get(switch_id)
 
-        if not sw:
-            raise EntityNotFound('Switch', switch_id)
-        elif not interface:
+        if not interface:
             raise EntityNotFound('Interface', int_id)
 
         session.begin(subtransactions=True)
         try:
-            interface.switch_id = sw.id
+            interface.switch_id = switch_id
             session.commit()
         except Exception, e:
             session.rollback()
             raise Exception(e)
-        _data = interface.to_dict()
+        _data = interface.tree_dict()
         logger.debug("Successful adding Interface to Switch status: %s" % _data)
+        event.EventManager().raise_event(_data['switch_id']['name'], _data)
 
         return _data
 
