@@ -92,11 +92,12 @@ class Firewall(Base):
     anycasts_to_firewalls = relationship('Anycasts_to_Firewall', cascade='all, delete-orphan')
     zone = relationship('Zone')
 
-    def __init__(self, name, zone_id, description=''):
+    def __init__(self, name, zone_id, mac, description=''):
         self.id = str(uuid.uuid4())
         self.name = name
         self.zone_id = zone_id
         self.description = description
+        self.mac = mac
 
     def __repr__(self):
        return "<Firewall('%s','%s')>" % (self.id, self.name)

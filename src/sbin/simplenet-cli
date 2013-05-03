@@ -328,10 +328,11 @@ def anycastip(action=None, ip=None, anycast=None):
     params={ 'action': '<list all|create|delete|vlan_attach|vlan_create|vlan_list|anycast_attach>',
              'name': 'firewall device name',
              'zone': 'zone to create a new device',
+             'vlan': 'vlan to attach vlans to devices',
              'anycast': 'attach anycast to a device',
-             'vlan': 'vlan to attach vlans to devices' }
+             'mac': 'Firewall MAC address' }
 )
-def firewall(action=None, name=None, zone=None, vlan=None, anycast=None):
+def firewall(action=None, name=None, zone=None, vlan=None, anycast=None, mac=None):
     base_url = '%s/firewalls' % (server)
     r = None
     if action == 'list':
@@ -342,7 +343,8 @@ def firewall(action=None, name=None, zone=None, vlan=None, anycast=None):
             sys.exit(1)
         zone_id = fetch_id('zones', zone)
         r = __api_call("post", '%s/firewalls' % (server),
-                data=json.dumps({'name': name, 'zone_id': zone_id})
+                data=json.dumps({'name': name, 'zone_id': zone_id,
+                                'mac': mac})
         )
     elif action == 'delete':
         r = __api_call("delete", '%s/%s/delete' % (
@@ -455,7 +457,7 @@ def switch(action=None, name=None, model_type=None, mac=None, address=None, inte
 
 
 @baker.command(
-    params={ 'action': '<list all|create|delete|ip_attach|ip_detach>',
+    params={ 'action': '<list all|info|create|delete|ip_attach|ip_detach>',
              'mac': 'interface mac address',
              'ip': 'IP address' }
 )
@@ -464,6 +466,8 @@ def interface(action=None, mac=None, ip=None):
     r = None
     if action == 'list':
         r = __api_call("get", '%s/list' % base_url)
+    elif action == 'info':
+        r = __api_call("get", '%s/by-mac/%s' % (base_url, mac))
     elif action == 'create':
         if not mac:
             print 'Missing mac to create'

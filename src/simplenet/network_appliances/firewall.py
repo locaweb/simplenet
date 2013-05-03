@@ -38,7 +38,8 @@ class Net(SimpleNet):
 
         session.begin(subtransactions=True)
         try:
-            session.add(models.Firewall(name=data['name'], zone_id=data['zone_id']))
+            session.add(models.Firewall(name=data['name'], zone_id=data['zone_id'],
+                                        mac=data['mac']))
             session.commit()
         except IntegrityError:
             session.rollback()
