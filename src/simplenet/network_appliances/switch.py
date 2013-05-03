@@ -69,23 +69,29 @@ class Net(SimpleNet):
     def switch_delete(self, id):
         return self._generic_delete_("switch", models.Switch, {'id': id})
 
-    def switch_add_interface(self, switch_id, int_id):
-        logger.debug("Adding interface using data: %s" % int_id)
+    def switch_add_interface(self, switch_id, data):
+        logger.debug("Adding interface using data: %s" % data)
 
-        interface = session.query(models.Interface).get(int_id)
+        interface = session.query(models.Interface).get(data['interface_id'])
 
         if not interface:
-            raise EntityNotFound('Interface', int_id)
+            raise EntityNotFound('Interface', data['interface_id'])
+
+        if interface.switch_id:
+            raise Exception("Interface already attached")
 
         session.begin(subtransactions=True)
         try:
             interface.switch_id = switch_id
+            interface.name = data['int_name']
             session.commit()
         except Exception, e:
             session.rollback()
             raise Exception(e)
         _data = interface.tree_dict()
         logger.debug("Successful adding Interface to Switch status: %s" % _data)
+        _data['action'] = "plug"
+        _data['ofport'] = data['ofport']
         event.EventManager().raise_event(_data['switch_id']['name'], _data)
 
         return _data
@@ -95,7 +101,10 @@ class Net(SimpleNet):
         if not interface:
             raise EntityNotFound('Interface', int_id)
 
-        if interface.switch_id == switch_id:
+        if not interface.switch_id:
+            return
+        elif interface.switch_id == switch_id:
+            _data = interface.tree_dict()
             session.begin(subtransactions=True)
             try:
                 interface.switch_id = None
@@ -103,4 +112,10 @@ class Net(SimpleNet):
             except Exception, e:
                 session.rollback()
                 raise Exception(e)
-        return interface.to_dict()
+
+            _data['action'] = "unplug"
+            event.EventManager().raise_event(_data['switch_id']['name'], _data)
+
+            return _data
+        else:
+            raise Exception("Interface not plugged into the switch")

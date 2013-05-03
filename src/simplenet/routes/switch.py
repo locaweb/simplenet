@@ -70,7 +70,7 @@ def switch_add_interface(switch_id):
     if not data:
         abort(400, 'No data received')
     data = json.loads(data)
-    interface = manager.switch_add_interface(switch_id, data['interface_id'])
+    interface = manager.switch_add_interface(switch_id, data)
     return interface
 
 @delete('/switchs/<switch_id>/interfaces/<interface_id>')

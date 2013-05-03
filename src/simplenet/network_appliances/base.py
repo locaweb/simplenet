@@ -302,7 +302,8 @@ class SimpleNet(object):
         )
         session.begin(subtransactions=True)
         try:
-            session.add(models.Vlan(name=data['name'], zone_id=zone_id))
+            session.add(models.Vlan(name=data['name'], zone_id=zone_id,
+                                    type=data['type']))
             session.commit()
         except IntegrityError:
             session.rollback()

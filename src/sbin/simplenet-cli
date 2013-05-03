@@ -175,9 +175,10 @@ def zone(action=None, name=None, datacenter=None):
 @baker.command(
     params={ 'action': '<list all|create|delete|firewall_list>',
              'name': 'vlan name',
+             'type': 'vlan type',
              'zone': 'zone_id to create a new vlan'}
 )
-def vlan(action=None, name=None, zone=None):
+def vlan(action=None, name=None, zone=None, type=None):
     base_url = '%s/vlans' % (server)
     r = None
     if action == 'list':
@@ -189,7 +190,7 @@ def vlan(action=None, name=None, zone=None):
 
         zone_id = fetch_id('zones', zone)
         r = __api_call("post", '%s/zones/%s/vlans' % (server, zone_id),
-            data=json.dumps({'name': name})
+            data=json.dumps({'name': name, 'type': type})
         )
     elif action == 'delete':
         r = __api_call("delete", '%s/%s/delete' %
@@ -408,9 +409,10 @@ def firewall(action=None, name=None, zone=None, vlan=None, anycast=None, mac=Non
              'model_type': '<openvswitch>',
              'mac': 'device mac address',
              'inter': 'interface' ,
+             'int_name': 'interface binding name' ,
              'address': 'admin uri' }
 )
-def switch(action=None, name=None, model_type=None, mac=None, address=None, inter=None):
+def switch(action=None, name=None, model_type=None, mac=None, address=None, inter=None, int_name=None, ofport=None):
     base_url = '%s/switchs' % (server)
     r = None
     if action == 'list':
@@ -434,13 +436,13 @@ def switch(action=None, name=None, model_type=None, mac=None, address=None, inte
     elif action == 'info':
         r = __api_call("get", '%s/by-name/%s' % (base_url, name))
     elif action == 'int_attach':
-        if not inter:
-            print 'Missing interface to attach'
+        if not inter or not int_name:
+            print 'Missing interface or interface name to attach'
             sys.exit(1)
 
         r = __api_call("post", '%s/%s/interfaces' %
             (base_url, fetch_id('switchs', name)),
-            data=json.dumps({'interface_id': inter})
+            data=json.dumps({'interface_id': inter, 'int_name': int_name, 'ofport': ofport})
         )
     elif action == 'int_detach':
         if not inter:

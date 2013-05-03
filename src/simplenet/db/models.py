@@ -168,6 +168,7 @@ class Interface(Base):
     id = Column(String(255), primary_key=True, unique=True)
     switch_id = Column(String(255), ForeignKey('switches.id'))
     status = Column(String(255))
+    name = Column(String(255))
     switch = relationship('Switch')
     ips_to_interfaces = relationship('Ips_to_Interface', cascade='all, delete-orphan')
 
@@ -177,6 +178,7 @@ class Interface(Base):
     def to_dict(self):
         return {
             'id': self.id,
+            'name': self.name,
             'switch_id': self.switch.id if self.switch else None,
             'ips': [x.to_dict()['ip'] for x in self.ips_to_interfaces],
         }
@@ -184,6 +186,7 @@ class Interface(Base):
     def tree_dict(self):
         return {
             'id': self.id,
+            'name': self.name,
             'status': self.status,
             'switch_id': self.switch.tree_dict(),
             'ips': [x.tree_dict()['ip'] for x in self.ips_to_interfaces],
@@ -214,15 +217,17 @@ class Vlan(Base):
 
     id = Column(String(255), primary_key=True)
     name = Column(String(255), unique=True)
+    type = Column(String(255))
     description = Column(String(255))
     zone_id = Column(String(255), ForeignKey('zones.id'))
     zone = relationship('Zone')
     firewall_to_vlan = relationship('Vlans_to_Firewall', cascade='all, delete-orphan')
 
-    def __init__(self, name, zone_id, description=''):
+    def __init__(self, name, zone_id, type, description=''):
         self.id = str(uuid.uuid4())
         self.name = name
         self.zone_id = zone_id
+        self.type = type
 
     def __repr__(self):
        return "<Vlan('%s','%s')>" % (self.id, self.name)
@@ -231,6 +236,7 @@ class Vlan(Base):
         return {
             'id': self.id,
             'name': self.name,
+            'type': self.type,
             'zone': self.zone.name,
             'zone_id': self.zone_id,
         }
@@ -238,6 +244,7 @@ class Vlan(Base):
     def tree_dict(self):
         return {
             'id': self.id,
+            'type': self.type,
             'firewall': [x.tree_dict()['firewall'] for x in self.firewall_to_vlan],
             'name': self.name,
         }
