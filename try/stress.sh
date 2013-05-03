@@ -103,7 +103,10 @@ do
     run_test "interface create $mac" "\"id\": \"$mac\""
     run_test "interface ip_attach $mac 192.168.$range.$i" "\"id\": \"$mac\""
     swmac=`(date; cat /proc/interrupts) | md5sum | sed -r 's/^(.{12}).*$/\1/; s/([0-9a-f]{2})/\1:/g; s/:$//;'`
-    run_test "switch int_attach sw$sw --inter $mac" "\"id\": \"$mac\""
+    a=$(( $RANDOM % 100 + 1 ))
+    b=$(( $RANDOM % 100 + 1 ))
+    c=$(( $RANDOM % 100 + 1 ))
+    run_test "switch int_attach sw$sw --inter $mac --int_name vif$a.$b --ofport $c" "\"id\": \"$mac\""
 done
 for i in `seq 1 5`;
 do
