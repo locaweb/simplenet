@@ -91,7 +91,8 @@ range=$(( $RANDOM % 253 + 1 ))
 
 echo -e "\n::::: Starting Interface Tests "
 run_test "vlan create vlan$vlan --zone zone01" "\"name\": \"vlan$vlan\""
-run_test "firewall create firewall$firewall --zone zone01" "\"name\": \"firewall$firewall\""
+fwmac=`(date; cat /proc/interrupts) | md5sum | sed -r 's/^(.{12}).*$/\1/; s/([0-9a-f]{2})/\1:/g; s/:$//;'`
+run_test "firewall create firewall$firewall --zone zone01 --mac $fwmac" "\"name\": \"firewall$firewall\""
 run_test "firewall vlan_attach firewall$firewall --vlan vlan$vlan" "\"name\": \"firewall$firewall\""
 run_test "subnet create 192.168.$range.0/24 --vlan vlan$vlan" "\"cidr\": \"192.168.$range.0/24\""
 run_test "switch create sw$sw --model_type openvswitch --address tcp:10.30.83.20:6640 --mac $swmac" "\"name\": \"sw$sw\""
@@ -107,7 +108,8 @@ done
 for i in `seq 1 5`;
 do
     firewall=$(( $RANDOM % 400 + 1 ))
-    run_test "firewall create firewall$firewall --zone zone01" "\"name\": \"firewall$firewall\""
+    fwmac=`(date; cat /proc/interrupts) | md5sum | sed -r 's/^(.{12}).*$/\1/; s/([0-9a-f]{2})/\1:/g; s/:$//;'`
+    run_test "firewall create firewall$firewall --zone zone01 --mac $fwmac" "\"name\": \"firewall$firewall\""
     run_test "firewall vlan_attach firewall$firewall --vlan vlan$vlan" "\"name\": \"firewall$firewall\""
 done
 done
