@@ -1,0 +1,278 @@
+#!/usr/bin/python
+
+# Copyright 2012 Locaweb.
+# All Rights Reserved.
+#
+#    Licensed under the Apache License, Version 2.0 (the "License");
+#    you may not use this file except in compliance with the License.
+#    You may obtain a copy of the License at
+#
+#        http://www.apache.org/licenses/LICENSE-2.0
+#
+#    Unless required by applicable law or agreed to in writing, software
+#    distributed under the License is distributed on an "AS IS" BASIS,
+#    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#    See the License for the specific language governing permissions and
+#    limitations under the License.
+#
+# @author: Juliano Martinez (ncode), Locaweb.
+# @author: Luiz Ozaki, Locaweb.
+# @author: Eduardo S. Scarpellini, Locaweb.
+
+import re
+import getopt, sys
+
+from supay import Daemon
+from datetime import datetime
+
+import hashlib
+import os
+import sys
+import json
+import fcntl
+import ConfigParser
+
+from ipaddr import IPv4Network, IPv4Address, IPv6Network, IPv6Address, IPNetwork, IPAddress
+
+from lockfile import FileLock, LockTimeout
+
+from kombu import Exchange, Queue
+from kombu import BrokerConnection
+
+from kombu.mixins import ConsumerMixin
+
+from kombu.utils import kwdict, reprcall
+from kombu.utils.debug import setup_logging
+
+import difflib
+import logging
+
+
+setup_logging(loglevel="INFO")
+LOGGING_LEVELS = {'critical': logging.CRITICAL,
+                  'error': logging.ERROR,
+                  'warning': logging.WARNING,
+                  'info': logging.INFO,
+                  'debug': logging.DEBUG}
+
+
+myname = os.uname()[1]
+
+class AgentException(Exception):
+    pass
+
+def _natural_sort_(l):
+    l = [str(i) for i in l]
+    convert = lambda s: int(s) if s.isdigit() else s.lower()
+    alphanum_key = lambda k: [convert(c) for c in re.split(r"([0-9]+)", k)]
+    return sorted(l, key=alphanum_key)
+
+
+class NetworkWorker(object):
+#    def add_main_vif_gateway_flows(self, gateway_id):
+#        gateway = plugin_api.gateway_get(gateway_id)
+#        network = gateway.network
+#        for port in network.ports:
+#            if port.port_binding:
+#                port_binding = port.port_binding
+#                switch = port_binding.switch
+#                mac = port.interface_id
+#                gw_to_mac = "priority=25000 dl_src=%s dl_dst=%s "
+#                gw_to_mac += "actions=strip_vlan,output:%s"
+#                switch.add_flow(gw_to_mac %
+#                        (gateway.mac, mac, port_binding.switch_port))
+#
+#                gw_broadcast = "priority=25000 dl_src=%s dl_dst=%s "
+#                gw_broadcast += "actions=strip_vlan,normal"
+#                switch.add_flow(gw_broadcast %
+#                        (gateway.mac, "ff:ff:ff:ff:ff:ff"))
+#
+#    def remove_main_vif_gateway_flows(self, gateway_id):
+#        gateway = plugin_api.gateway_get(gateway_id)
+#        network = gateway.network
+#        for port in network.ports:
+#            if port.port_binding:
+#                switch = port.port_binding.switch
+#                switch.remove_flow("dl_src=%s" % (gateway.mac), strict=False)
+
+    def add(self, data):
+        for ip in data['ips']:
+            if ip['subnet']['vlan']['type'] == "private_vlan":
+                self.add_to_private_vlan(ip, data)
+            elif ip['subnet']['vlan']['type'] == "dedicated":
+                self.add_to_vlan(ip, data)
+            else:
+                raise AgentException("Type unknown")
+
+    def remove(self, data):
+        for ip in data['ips']:
+            if ip['subnet']['vlan']['type'] == "private_vlan":
+                self.remove_from_private_vlan(data)
+            elif ip['subnet']['vlan']['type'] == "dedicated":
+                self.remove_from_vlan(ip, data)
+            else:
+                raise AgentException("Type unknown")
+
+    def flush(self, switch_id):
+        switch = plugin_api.switch_get(switch_id)
+        switch.remove_flow("", strict=False)
+
+    def add_to_private_vlan(self, ip, data):
+        vlan_id = re.search('vlan(\d+)', ip['subnet']['vlan']['name'], re.I).group(1)
+        #print "ovs-vsctl --timeout 2 --db=%s set port %s tag=%s" % (data['switch_id']['address'], data['name'], vlan_id)
+        #FIXME OFPorts for output
+        output_ports = "bundle(eth_src,0,hrw,ofport,slaves:1,2)"
+        actions = "mod_vlan_vid:%s,%s" % (vlan_id, output_ports)
+        allow_ipv4 = "in_port=%s priority=40000 dl_type=0x0800 "
+        allow_ipv4 += "dl_src=%s nw_src=%s actions=%s"
+        print allow_ipv4 % (data['ofport'], data['id'], ip['ip'], actions)
+
+        allow_arp = "in_port=%s priority=40000 dl_type=0x0806 "
+        allow_arp += "dl_src=%s nw_src=%s actions=%s"
+        print allow_arp % (data['ofport'], data['id'], ip['ip'], actions)
+
+        print "in_port=%s priority=30000 action=drop" % data['ofport']
+
+        for gateway in ip['subnet']['vlan']['firewall']:
+            gw_to_mac = "priority=25000 dl_src=%s dl_dst=%s "
+            gw_to_mac += "actions=strip_vlan,output:%s"
+            print gw_to_mac % (gateway['mac'], data['id'], data['ofport'])
+
+            gw_broadcast = "priority=25000 dl_src=%s dl_dst=%s "
+            gw_broadcast += "actions=strip_vlan,normal"
+            print gw_broadcast % (gateway['mac'], "ff:ff:ff:ff:ff:ff")
+
+        dhcp_request = "priority=41000,udp,tp_src=68,tp_dst=67 "
+        dhcp_request += "actions=mod_dl_dst:%s,local"
+        print dhcp_request % (data['switch_id']['mac'])
+
+        dhcp_src = "priority=29000,arp,dl_src=%s actions=normal"
+        print dhcp_src % (data['switch_id']['mac'])
+
+        dhcp_dst = "priority=41000,arp,dl_dst=%s actions=local"
+        print dhcp_dst % (data['switch_id']['mac'])
+
+        dhcp_reply = "priority=41000,udp,dl_src=%s,tp_src=67,"
+        dhcp_reply += "tp_dst=68 actions=normal"
+        print dhcp_reply % (data['switch_id']['mac'])
+
+    def remove_from_private_vlan(self, data):
+        print "dl_src=%s" % data['id']
+        print "dl_dst=%s" % data['id']
+
+    def add_to_vlan(self, ip, data):
+        vlan_id = re.search('vlan(\d+)', ip['subnet']['vlan']['name'], re.I).group(1)
+        print "ovs-vsctl --timeout 2 --db=%s set port %s tag=%s" % (data['switch_id']['address'], data['name'], vlan_id)
+
+    def remove_from_vlan(self, ip, data):
+        print "ovs-vsctl --timeout 2 --db=%s set port %s tag=" % (data['switch_id']['address'], data['name'])
+
+    def bond0(self, switch):
+        output_ports = switch.output_ports or "1,2"
+        bond0 = "bundle(eth_src,0,hrw,ofport,slaves:%s)" % output_ports
+        return bond0
+
+
+class Worker(ConsumerMixin):
+    def __init__(self, connection, lockfile):
+        self.connection = connection
+        self.lockfile = lockfile
+        if os.path.isfile(self.lockfile):
+            os.unlink(self.lockfile)
+
+    def get_consumers(self, Consumer, channel):
+        return [Consumer(queues=Queue(
+            myname, Exchange(myname, type="direct"),
+            routing_key=myname),
+        callbacks=[self.process_task])]
+
+    def process_task(self, body, message):
+        logging.debug("TASK")
+        a = datetime.now()
+        self.iptables_save = []
+        #self.info("Received payload %s" % json.dumps(body, sort_keys=True, indent=4))
+
+        try:
+            lock = FileLock(self.lockfile.replace(".lock",""))
+            lock.acquire()
+            callback(body, message)
+        finally:
+            lock.release()
+        #message.ack()
+
+        b = datetime.now()
+        c = b - a
+        logging.debug(c)
+
+def callback(body, message):
+    logging.debug("Processing message with body: %s" % (body))
+    try:
+        nw = NetworkWorker()
+        if body["action"] == "plug":
+            nw.add(body)
+        elif body["action"] == "unplug":
+            nw.remove(body)
+        #elif body["action"] == "add_gw":
+        #    nw.add_main_vif_gateway_flows(body["gateway_id"])
+        #elif body["action"] == "del_gw":
+        #    nw.remove_main_vif_gateway_flows(body["gateway_id"])
+        #    plugin_api.gateway_destroy(body["gateway_id"])
+        elif body["action"] == "flush":
+            nw.flush(body["switch_id"])
+        else:
+            logging.warn("Action not implemented: " + body["action"])
+        message.ack()
+    except Exception as inst:
+        raise AgentException(inst)
+
+def help():
+    print '%s::' % sys.argv[0]
+    print '   -a action <stop|start|status|foreground>'
+    print '   -u user <simplenet>'
+    print '   -c config </etc/simplenet/agents.cfg>'
+
+
+def main(user, config_file):
+    config = ConfigParser.ConfigParser()
+    config.read(config_file)
+
+    if config.has_option('ovs','hostname'):
+        global myname
+        myname = config.get('ovs','hostname')
+
+    logging.basicConfig(level=LOGGING_LEVELS.get(config.get('ovs','logging')), filename='/var/log/simplenet.log')
+
+    with BrokerConnection(config.get('ovs','uri')) as conn:
+        Worker(conn, config.get('ovs','lockfile')).run()
+
+
+if __name__ == '__main__':
+    try:
+        opts, args = getopt.getopt(sys.argv[1:], 'a:u:c:', ['action=', 'user=', 'config='])
+    except getopt.GetoptError, err:
+        help()
+
+    user = 'simplenet'
+    action = 'start'
+    config = '/etc/simplenet/agents.cfg'
+    for o, a in opts:
+        if o in ('-a', '--action'):
+            action = a
+        elif o in ('-u', '--user'):
+            user = a
+        elif o in ('-c', '--config'):
+            config = a
+        else:
+            help()
+
+    daemon = Daemon(name='simplenet', catch_all_log='/var/log/simplenet.log')
+    if action == 'start':
+        daemon.start()
+        main(user, config)
+    elif action == 'status':
+        daemon.status()
+    elif action == 'stop':
+        daemon.stop()
+    elif action == 'foreground':
+        main(user, config)
+
