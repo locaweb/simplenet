@@ -88,6 +88,7 @@ class Net(SimpleNet):
         except Exception, e:
             session.rollback()
             raise Exception(e)
+
         _data = interface.tree_dict()
         logger.debug("Successful adding Interface to Switch status: %s" % _data)
         _data['action'] = "plug"

@@ -102,7 +102,7 @@ class NetworkWorker(object):
             elif ip['subnet']['vlan']['type'] == "dedicated":
                 self.add_to_vlan(ip, data)
             else:
-                raise AgentException("Type unknown")
+                logging.info("Unknown type. Ignoring...")
 
     def remove(self, data):
         for ip in data['ips']:
@@ -111,7 +111,7 @@ class NetworkWorker(object):
             elif ip['subnet']['vlan']['type'] == "dedicated":
                 self.remove_from_vlan(ip, data)
             else:
-                raise AgentException("Type unknown")
+                logging.info("Unknown type. Ignoring...")
 
     def flush(self, switch_id):
         switch = plugin_api.switch_get(switch_id)

@@ -90,7 +90,7 @@ range=$(( $RANDOM % 253 + 1 ))
 #run_firewall_test "firewallrule create" "ip" "192.168.$range.1 --dst 192.168.0.2 --proto tcp --table INPUT --policy DROP"
 
 echo -e "\n::::: Starting Interface Tests "
-run_test "vlan create vlan$vlan --zone zone01" "\"name\": \"vlan$vlan\""
+run_test "vlan create vlan$vlan --zone zone01 --type private_vlan" "\"name\": \"vlan$vlan\""
 fwmac=`(date; cat /proc/interrupts) | md5sum | sed -r 's/^(.{12}).*$/\1/; s/([0-9a-f]{2})/\1:/g; s/:$//;'`
 run_test "firewall create firewall$firewall --zone zone01 --mac $fwmac" "\"name\": \"firewall$firewall\""
 run_test "firewall vlan_attach firewall$firewall --vlan vlan$vlan" "\"name\": \"firewall$firewall\""
