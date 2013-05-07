@@ -257,7 +257,7 @@ class Vlans_to_Firewall(Base):
     firewall_id = Column(String(255), ForeignKey('firewalls.id'), primary_key=True)
     description = Column(String(255))
     vlan = relationship('Vlan')
-    firewall = relationship('Firewall')
+    firewall = relationship('Firewall', cascade="all")
 
     def to_dict(self):
         return {
