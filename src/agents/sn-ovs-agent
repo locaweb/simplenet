@@ -65,10 +65,13 @@ class AgentException(Exception):
 
 def _run_cmd(args):
     logging.warn("Running command: %s" % (" ".join(args)))
-    p = Popen(args, stdout=PIPE)
-    retval = p.communicate()[0]
+    p = Popen(args, stdout=PIPE, stderr=PIPE)
+    retval, reterr = p.communicate()
     if p.returncode == -(signal.SIGALRM):
         logging.error("## timeout running command: " + " ".join(args))
+    if p.returncode != 0:
+        raise AgentException("Failed to run command %s.\nOutput %s" % (args, reterr))
+
     return retval
 
 def add_flow(addr, flow):
@@ -82,6 +85,24 @@ def del_flow(addr, flow):
     # TODO: configure ovs remote access using
     # run ovs-vsctl set-controller xapi<number> pssl:port
     command = ["ovs-ofctl", "del-flows", addr, flow]
+    print command
+    _run_cmd(command)
+
+def add_vlan(addr, port, tag, ovsdb):
+    # TODO: configure ovsdb remote access using
+    # ovsdb-server --remote=ptcp:port
+    addr = ":".join(addr.split(":")[0:2] + [ovsdb])
+    command = ["ovs-vsctl", "-t 2", "--db=%s" % addr,
+               "set", "port", port, "tag=%s" % tag]
+    print command
+    _run_cmd(command)
+
+def remove_vlan(addr, port, ovsdb):
+    # TODO: configure ovsdb remote access using
+    # ovsdb-server --remote=ptcp:port
+    addr = ":".join(addr.split(":")[0:2] + [ovsdb])
+    command = ["ovs-vsctl", "-t 2", "--db=%s" % addr,
+               "clear", "port", port, "tag"]
     print command
     _run_cmd(command)
 
@@ -137,82 +158,76 @@ class NetworkWorker(object):
             else:
                 logging.info("Unknown type. Ignoring...")
 
-    def flush(self, switch_id):
-        switch = plugin_api.switch_get(switch_id)
-        switch.remove_flow("", strict=False)
+#    def flush(self, switch_id):
+#        switch = plugin_api.switch_get(switch_id)
+#        switch.remove_flow("", strict=False)
 
     def add_to_private_vlan(self, ip, data):
         vlan_id = re.search('vlan(\d+)', ip['subnet']['vlan']['name'], re.I).group(1)
-        #print "ovs-vsctl --timeout 2 --db=%s set port %s tag=%s" % (data['switch_id']['address'], data['name'], vlan_id)
         #FIXME OFPorts for output
         output_ports = "bundle(eth_src,0,hrw,ofport,slaves:1,2)"
         actions = "mod_vlan_vid:%s,%s" % (vlan_id, output_ports)
         allow_ipv4 = "in_port=%s priority=40000 dl_type=0x0800 "
         allow_ipv4 += "dl_src=%s nw_src=%s actions=%s"
-        add_flow("tcp:127.0.0.1:8088",
+        add_flow(data['switch_id']['address'],
                 allow_ipv4 % (data['ofport'], data['id'], ip['ip'], actions))
 
         allow_arp = "in_port=%s priority=40000 dl_type=0x0806 "
         allow_arp += "dl_src=%s nw_src=%s actions=%s"
-        add_flow("tcp:127.0.0.1:8088",
+        add_flow(data['switch_id']['address'],
                 allow_arp % (data['ofport'], data['id'], ip['ip'], actions))
 
         drop = "in_port=%s priority=30000 action=drop"
-        add_flow("tcp:127.0.0.1:8088",
+        add_flow(data['switch_id']['address'],
                 drop % data['ofport'])
 
         for gateway in ip['subnet']['vlan']['firewall']:
             gw_to_mac = "priority=25000 dl_src=%s dl_dst=%s "
             gw_to_mac += "actions=strip_vlan,output:%s"
-            add_flow("tcp:127.0.0.1:8088",
+            add_flow(data['switch_id']['address'],
                     gw_to_mac % (gateway['mac'], data['id'], data['ofport']))
 
             gw_broadcast = "priority=25000 dl_src=%s dl_dst=%s "
             gw_broadcast += "actions=strip_vlan,normal"
-            add_flow("tcp:127.0.0.1:8088",
+            add_flow(data['switch_id']['address'],
                     gw_broadcast % (gateway['mac'], "ff:ff:ff:ff:ff:ff"))
 
         dhcp_request = "priority=41000,udp,tp_src=68,tp_dst=67 "
         dhcp_request += "actions=mod_dl_dst:%s,local"
-        add_flow("tcp:127.0.0.1:8088",
+        add_flow(data['switch_id']['address'],
                 dhcp_request % (data['switch_id']['mac']))
 
         dhcp_src = "priority=29000,arp,dl_src=%s actions=normal"
-        add_flow("tcp:127.0.0.1:8088",
+        add_flow(data['switch_id']['address'],
                 dhcp_src % (data['switch_id']['mac']))
 
         dhcp_dst = "priority=41000,arp,dl_dst=%s actions=local"
-        add_flow("tcp:127.0.0.1:8088",
+        add_flow(data['switch_id']['address'],
                 dhcp_dst % (data['switch_id']['mac']))
 
         dhcp_reply = "priority=41000,udp,dl_src=%s,tp_src=67,"
         dhcp_reply += "tp_dst=68 actions=normal"
-        add_flow("tcp:127.0.0.1:8088",
+        add_flow(data['switch_id']['address'],
                 dhcp_reply % (data['switch_id']['mac']))
 
     def remove_from_private_vlan(self, data):
-        del_flow("tcp:127.0.0.1:8088",
+        del_flow(data['switch_id']['address'],
                 "dl_src=%s" % data['id'])
-        del_flow("tcp:127.0.0.1:8088",
+        del_flow(data['switch_id']['address'],
                 "dl_dst=%s" % data['id'])
 
     def add_to_vlan(self, ip, data):
         vlan_id = re.search('vlan(\d+)', ip['subnet']['vlan']['name'], re.I).group(1)
-        print "ovs-vsctl --timeout 2 --db=%s set port %s tag=%s" % (data['switch_id']['address'], data['name'], vlan_id)
+        add_vlan(data['switch_id']['address'], data['name'], vlan_id, data['ovsdb'])
 
     def remove_from_vlan(self, ip, data):
-        print "ovs-vsctl --timeout 2 --db=%s set port %s tag=" % (data['switch_id']['address'], data['name'])
-
-    def bond0(self, switch):
-        output_ports = switch.output_ports or "1,2"
-        bond0 = "bundle(eth_src,0,hrw,ofport,slaves:%s)" % output_ports
-        return bond0
-
+        remove_vlan(data['switch_id']['address'], data['name'], data['ovsdb'])
 
 class Worker(ConsumerMixin):
-    def __init__(self, connection, lockfile):
+    def __init__(self, connection, lockfile, ovsdb):
         self.connection = connection
         self.lockfile = lockfile
+        self.ovsdb = ovsdb
         if os.path.isfile(self.lockfile):
             os.unlink(self.lockfile)
 
@@ -225,16 +240,14 @@ class Worker(ConsumerMixin):
     def process_task(self, body, message):
         logging.debug("TASK")
         a = datetime.now()
-        self.iptables_save = []
-        #self.info("Received payload %s" % json.dumps(body, sort_keys=True, indent=4))
 
         try:
             lock = FileLock(self.lockfile.replace(".lock",""))
             lock.acquire()
+            body['ovsdb'] = self.ovsdb
             callback(body, message)
         finally:
             lock.release()
-        #message.ack()
 
         b = datetime.now()
         c = b - a
@@ -253,13 +266,13 @@ def callback(body, message):
         #elif body["action"] == "del_gw":
         #    nw.remove_main_vif_gateway_flows(body["gateway_id"])
         #    plugin_api.gateway_destroy(body["gateway_id"])
-        elif body["action"] == "flush":
-            nw.flush(body["switch_id"])
+        #elif body["action"] == "flush":
+        #    nw.flush(body["switch_id"])
         else:
             logging.warn("Action not implemented: " + body["action"])
         message.ack()
-    except Exception as inst:
-        raise AgentException(inst)
+    except AgentException as inst:
+        logging.error(inst)
 
 def help():
     print '%s::' % sys.argv[0]
@@ -279,7 +292,7 @@ def main(user, config_file):
     logging.basicConfig(level=LOGGING_LEVELS.get(config.get('ovs','logging')), filename='/var/log/simplenet.log')
 
     with BrokerConnection(config.get('ovs','uri')) as conn:
-        Worker(conn, config.get('ovs','lockfile')).run()
+        Worker(conn, config.get('ovs','lockfile'), config.get('ovs','ovsdb-port')).run()
 
 
 if __name__ == '__main__':
@@ -301,7 +314,7 @@ if __name__ == '__main__':
         else:
             help()
 
-    daemon = Daemon(name='simplenet', catch_all_log='/var/log/simplenet.log')
+    daemon = Daemon(name='simplenet', catch_all_log='/var/log/simplenet-ovs.log')
     if action == 'start':
         daemon.start()
         main(user, config)
