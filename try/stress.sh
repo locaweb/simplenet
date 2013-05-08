@@ -98,10 +98,11 @@ run_test "subnet create 192.168.$range.0/24 --vlan vlan$vlan" "\"cidr\": \"192.1
 run_test "switch create sw$sw --model_type openvswitch --address tcp:10.30.83.20:6640 --mac $swmac" "\"name\": \"sw$sw\""
 for i in `seq 1 10`;
 do
-    run_test "ip create 192.168.$range.$i --subnet 192.168.$range.0/24" "\"ip\": \"192.168.$range.$i\""
+    ip=$(( $RANDOM % 253 + 1 ))
+    run_test "ip create 192.168.$range.$ip --subnet 192.168.$range.0/24" "\"ip\": \"192.168.$range.$ip\""
     mac=`(date; cat /proc/interrupts) | md5sum | sed -r 's/^(.{12}).*$/\1/; s/([0-9a-f]{2})/\1:/g; s/:$//;'`
     run_test "interface create $mac" "\"id\": \"$mac\""
-    run_test "interface ip_attach $mac 192.168.$range.$i" "\"id\": \"$mac\""
+    run_test "interface ip_attach $mac 192.168.$range.$ip" "\"id\": \"$mac\""
     swmac=`(date; cat /proc/interrupts) | md5sum | sed -r 's/^(.{12}).*$/\1/; s/([0-9a-f]{2})/\1:/g; s/:$//;'`
     a=$(( $RANDOM % 100 + 1 ))
     b=$(( $RANDOM % 100 + 1 ))
