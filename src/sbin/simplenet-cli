@@ -32,11 +32,12 @@ config_file = '/etc/simplenet/simplenet-cli.cfg'
 config = ConfigParser.ConfigParser()
 config.read(config_file)
 
-server              = config.get("server", "api_endpoint")
-CAS_ENDPOINT        = config.get("authentication", "cas_endpoint")
-CAS_SERVICE         = config.get("authentication", "cas_service")
-__cas_username    = ""
-__cas_passwd      = ""
+serve = config.get("server", "api_endpoint")
+CAS_ENDPOINT = config.get("authentication", "cas_endpoint")
+CAS_SERVICE = config.get("authentication", "cas_service")
+__cas_username = ""
+__cas_passwd = ""
+
 
 def __authpair_prompt():
     global __cas_username, __cas_passwd
@@ -46,20 +47,24 @@ def __authpair_prompt():
         __cas_passwd = getpass("Type your CAS password: ")
     print ""
 
+
 def __gen_authtk():
     try:
         f = open(os.path.expanduser("~/.simplecli"), "r")
     except:
         __authpair_prompt()
         try:
-            cas_cli = cas.CASClient(server=CAS_ENDPOINT, username=__cas_username, password=__cas_passwd)
-            cas_tk  = cas_cli.generate_ticket(service=CAS_SERVICE)
+            cas_cli = cas.CASClient(server=CAS_ENDPOINT,
+                                    username=__cas_username,
+                                    password=__cas_passwd)
+            cas_tk = cas_cli.generate_ticket(service=CAS_SERVICE)
         except cas.CasTGTError:
             return
         f = open(os.path.expanduser("~/.simplecli"), "w+")
         f.write(cas_tk)
         return cas_tk
     return f.read()
+
 
 def __api_call(method, url, data=None):
     if (method == 'get'):
@@ -91,10 +96,11 @@ def __api_call(method, url, data=None):
 
     return ret
 
+
 def fetch_id(_type, _data):
     if (_type == 'subnets') or (_type == 'anycasts'):
         data = __api_call("get", '%s/%s/by-cidr/%s' %
-            (server, _type, _data.replace('/','_'))
+            (server, _type, _data.replace('/', '_'))
         )
     elif _type in ('ips', 'anycastips'):
         data = __api_call("get", '%s/%s/by-ip/%s' % (server, _type, _data))
@@ -109,6 +115,7 @@ def fetch_id(_type, _data):
         pretty_output(data)
         sys.exit(1)
 
+
 def pretty_output(r):
     data = r.text
     try:
@@ -120,9 +127,10 @@ def pretty_output(r):
         sys.exit(1)
     sys.exit(0)
 
+
 @baker.command(
-    params={ 'action': '<list all|info|create|delete>',
-             'name': 'datacenter name'}
+    params={'action': '<list all|info|create|delete>',
+            'name': 'datacenter name'}
 )
 def datacenter(action=None, name=None):
     base_url = '%s/datacenters' % (server)
@@ -142,9 +150,10 @@ def datacenter(action=None, name=None):
         sys.exit(1)
     pretty_output(r)
 
+
 @baker.command(
-    params={ 'action': '<list all|info|create|delete>',
-             'name': 'zone name'}
+    params={'action': '<list all|info|create|delete>',
+            'name': 'zone name'}
 )
 def zone(action=None, name=None, datacenter=None):
     base_url = '%s/zones' % (server)
@@ -157,7 +166,8 @@ def zone(action=None, name=None, datacenter=None):
             sys.exit(1)
 
         datacenter_id = fetch_id('datacenters', datacenter)
-        r = __api_call("post", '%s/datacenters/%s/zones' % (server, datacenter_id),
+        r = __api_call("post", '%s/datacenters/%s/zones' %
+            (server, datacenter_id),
             data=json.dumps({'name': name, 'datacenter_id': datacenter_id})
         )
     elif action == 'delete':
@@ -173,10 +183,10 @@ def zone(action=None, name=None, datacenter=None):
 
 
 @baker.command(
-    params={ 'action': '<list all|create|delete|firewall_list>',
-             'name': 'vlan name',
-             'type': 'vlan type',
-             'zone': 'zone_id to create a new vlan'}
+    params={'action': '<list all|create|delete|firewall_list>',
+            'name': 'vlan name',
+            'type': 'vlan type',
+            'zone': 'zone_id to create a new vlan'}
 )
 def vlan(action=None, name=None, zone=None, type=None):
     base_url = '%s/vlans' % (server)
@@ -199,22 +209,25 @@ def vlan(action=None, name=None, zone=None, type=None):
     elif action == 'info':
         r = __api_call("get", '%s/by-name/%s' % (base_url, name))
     elif action == 'firewall_list':
-        r = __api_call("get", '%s/firewalls/list-by-vlan/%s' % (server, fetch_id('vlans', name)))
+        r = __api_call("get", '%s/firewalls/list-by-vlan/%s' %
+            (server, fetch_id('vlans', name))
+        )
     else:
         baker.usage(sys._getframe().f_code.co_name)
         sys.exit(1)
     pretty_output(r)
 
+
 @baker.command(
-    params={ 'action': '<list all|create|delete|rename>',
-             'cidr': 'subnet cidr',
-             'vlan': 'vlan to create a new subnet' }
+    params={'action': '<list all|create|delete|rename>',
+            'cidr': 'subnet cidr',
+            'vlan': 'vlan to create a new subnet'}
 )
 def subnet(action=None, cidr=None, vlan=None):
     base_url = '%s/subnets' % (server)
     r = None
     if action == 'list':
-        r = __api_call("get", '%s/list' %  base_url)
+        r = __api_call("get", '%s/list' % base_url)
     elif action == 'create':
         if not vlan:
             print 'Missing vlan to create'
@@ -239,14 +252,14 @@ def subnet(action=None, cidr=None, vlan=None):
 
 
 @baker.command(
-    params={ 'action': '<list all|create|delete|rename>',
-             'cidr': 'subnet cidr',}
+    params={'action': '<list all|create|delete|rename>',
+            'cidr': 'subnet cidr'}
 )
 def anycast(action=None, cidr=None):
     base_url = '%s/anycasts' % (server)
     r = None
     if action == 'list':
-        r = __api_call("get", '%s/list' %  base_url)
+        r = __api_call("get", '%s/list' % base_url)
     elif action == 'create':
         r = __api_call("post", '%s/anycasts' % (server),
              data=json.dumps({'cidr': cidr})
@@ -266,21 +279,22 @@ def anycast(action=None, cidr=None):
 
 
 @baker.command(
-    params={ 'action': '<list all|create|delete|rename|info|vlan_info>',
-             'ip': 'ip address',
-             'subnet': 'subnet cidr' }
+    params={'action': '<list all|create|delete|rename|info|vlan_info>',
+            'ip': 'ip address',
+            'subnet': 'subnet cidr'}
 )
 def ip(action=None, ip=None, subnet=None):
     base_url = '%s/ips' % (server)
     r = None
     if action == 'list':
-        r = __api_call("get", '%s/list' %  base_url)
+        r = __api_call("get", '%s/list' % base_url)
     elif action == 'create':
         if not subnet:
             print 'Missing subnet to create'
             sys.exit(1)
 
-        r = __api_call("post", '%s/subnets/%s/ips' % (server, fetch_id('subnets', subnet)),
+        r = __api_call("post", '%s/subnets/%s/ips' %
+            (server, fetch_id('subnets', subnet)),
             data=json.dumps({'ip': ip})
         )
     elif action == 'delete':
@@ -296,22 +310,24 @@ def ip(action=None, ip=None, subnet=None):
         sys.exit(1)
     pretty_output(r)
 
+
 @baker.command(
-    params={ 'action': '<list all|create|delete|rename>',
-             'ip': 'ip address',
-             'anycast': 'anycast cidr' }
+    params={'action': '<list all|create|delete|rename>',
+            'ip': 'ip address',
+            'anycast': 'anycast cidr'}
 )
 def anycastip(action=None, ip=None, anycast=None):
     base_url = '%s/anycastips' % (server)
     r = None
     if action == 'list':
-        r = __api_call("get", '%s/list' %  base_url)
+        r = __api_call("get", '%s/list' % base_url)
     elif action == 'create':
         if not anycast:
             print 'Missing anycast subnet to create'
             sys.exit(1)
 
-        r = __api_call("post", '%s/anycasts/%s/anycastips' % (server, fetch_id('anycasts', anycast)),
+        r = __api_call("post", '%s/anycasts/%s/anycastips' %
+            (server, fetch_id('anycasts', anycast)),
             data=json.dumps({'ip': ip})
         )
     elif action == 'delete':
@@ -325,15 +341,18 @@ def anycastip(action=None, ip=None, anycast=None):
         sys.exit(1)
     pretty_output(r)
 
+
 @baker.command(
-    params={ 'action': '<list all|create|delete|vlan_attach|vlan_create|vlan_list|anycast_attach>',
-             'name': 'firewall device name',
-             'zone': 'zone to create a new device',
-             'vlan': 'vlan to attach vlans to devices',
-             'anycast': 'attach anycast to a device',
-             'mac': 'Firewall MAC address' }
+    params={'action': '<list all|create|delete|vlan_attach' \
+            '|vlan_create|vlan_list|anycast_attach>',
+            'name': 'firewall device name',
+            'zone': 'zone to create a new device',
+            'vlan': 'vlan to attach vlans to devices',
+            'anycast': 'attach anycast to a device',
+            'mac': 'Firewall MAC address'}
 )
-def firewall(action=None, name=None, zone=None, vlan=None, anycast=None, mac=None):
+def firewall(action=None, name=None, zone=None,
+             vlan=None, anycast=None, mac=None):
     base_url = '%s/firewalls' % (server)
     r = None
     if action == 'list':
@@ -387,7 +406,9 @@ def firewall(action=None, name=None, zone=None, vlan=None, anycast=None, mac=Non
             sys.exit(1)
 
         r = __api_call("delete", '%s/%s/anycasts/%s' % (
-            base_url, fetch_id('firewalls', name), fetch_id('anycasts', anycast))
+            base_url,
+            fetch_id('firewalls', name),
+            fetch_id('anycasts', anycast))
         )
     elif action == 'vlan_list':
         r = __api_call("get", '%s/vlans/list-by-firewall/%s' %
@@ -404,15 +425,16 @@ def firewall(action=None, name=None, zone=None, vlan=None, anycast=None, mac=Non
 
 
 @baker.command(
-    params={ 'action': '<list all|create|delete|int_attach|int_detach>',
-             'name': 'switch device name',
-             'model_type': '<openvswitch>',
-             'mac': 'device mac address',
-             'inter': 'interface' ,
-             'int_name': 'interface binding name' ,
-             'address': 'admin uri' }
+    params={'action': '<list all|create|delete|int_attach|int_detach>',
+            'name': 'switch device name',
+            'model_type': '<openvswitch>',
+            'mac': 'device mac address',
+            'inter': 'interface',
+            'int_name': 'interface binding name',
+            'address': 'admin uri'}
 )
-def switch(action=None, name=None, model_type=None, mac=None, address=None, inter=None, int_name=None, ofport=None):
+def switch(action=None, name=None, model_type=None, mac=None,
+           address=None, inter=None, int_name=None, ofport=None):
     base_url = '%s/switchs' % (server)
     r = None
     if action == 'list':
@@ -442,7 +464,9 @@ def switch(action=None, name=None, model_type=None, mac=None, address=None, inte
 
         r = __api_call("post", '%s/%s/interfaces' %
             (base_url, fetch_id('switchs', name)),
-            data=json.dumps({'interface_id': inter, 'int_name': int_name, 'ofport': ofport})
+            data=json.dumps({'interface_id': inter,
+                            'int_name': int_name,
+                            'ofport': ofport})
         )
     elif action == 'int_detach':
         if not inter:
@@ -459,9 +483,9 @@ def switch(action=None, name=None, model_type=None, mac=None, address=None, inte
 
 
 @baker.command(
-    params={ 'action': '<list all|info|create|delete|ip_attach|ip_detach>',
-             'mac': 'interface mac address',
-             'ip': 'IP address' }
+    params={'action': '<list all|info|create|delete|ip_attach|ip_detach>',
+            'mac': 'interface mac address',
+            'ip': 'IP address'}
 )
 def interface(action=None, mac=None, ip=None):
     base_url = '%s/interfaces' % (server)
@@ -476,7 +500,7 @@ def interface(action=None, mac=None, ip=None):
             sys.exit(1)
 
         r = __api_call("post", '%s' % (base_url),
-                data=json.dumps({'mac': mac }))
+                data=json.dumps({'mac': mac}))
     elif action == 'delete':
         if not mac:
             print 'Missing mac to delete'
@@ -505,26 +529,29 @@ def interface(action=None, mac=None, ip=None):
 
 
 @baker.command(
-    params={ 'action': '<list all|attach|create|delete|rename>',
-             'name': 'type of owner <zone|vlan|subnet|ip|anycast|anycastip>',
-             'owner': 'policy owner name',
-             'src': 'source ip or subnet',
-             'src_port': 'source port',
-             'dst': 'destination ip or subnet',
-             'dst_port': 'destination port',
-             'proto': 'protocol name or number',
-             'table': 'table to apply the policy <INPUT|FORWARD|OUTPUT>',
-             'policy': 'policy to use <ACCEPT|REJECT|DROP>' }
+    params={'action': '<list all|attach|create|delete|rename>',
+            'name': 'type of owner <zone|vlan|subnet|ip|anycast|anycastip>',
+            'owner': 'policy owner name',
+            'src': 'source ip or subnet',
+            'src_port': 'source port',
+            'dst': 'destination ip or subnet',
+            'dst_port': 'destination port',
+            'proto': 'protocol name or number',
+            'table': 'table to apply the policy <INPUT|FORWARD|OUTPUT>',
+            'policy': 'policy to use <ACCEPT|REJECT|DROP>'}
 )
-def firewallrule(action=None, name=None, owner=None, dst=None, src=None, dst_port=None,
-           src_port=None, proto=None, table=None, policy=None):
+def firewallrule(action=None, name=None, owner=None, dst=None,
+                src=None, dst_port=None, src_port=None, proto=None,
+                table=None, policy=None):
     base_url = '%s/firewall/policy' % server
     r = None
     if action == 'list':
         if owner == 'all':
             r = __api_call("get", '%s/by-type/%s/list' % (base_url, name))
         else:
-            r = __api_call("get", '%s/by-owner/%s/%s/list' % (base_url, name, fetch_id('%ss' % name, owner)))
+            r = __api_call("get", '%s/by-owner/%s/%s/list' %
+                (base_url, name, fetch_id('%ss' % name, owner))
+            )
     elif action == 'create':
         owner_id = fetch_id('%ss' % name, owner)
         if not table:
