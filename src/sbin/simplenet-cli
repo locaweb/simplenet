@@ -32,7 +32,7 @@ config_file = '/etc/simplenet/simplenet-cli.cfg'
 config = ConfigParser.ConfigParser()
 config.read(config_file)
 
-serve = config.get("server", "api_endpoint")
+server = config.get("server", "api_endpoint")
 CAS_ENDPOINT = config.get("authentication", "cas_endpoint")
 CAS_SERVICE = config.get("authentication", "cas_service")
 __cas_username = ""
@@ -353,6 +353,7 @@ def anycastip(action=None, ip=None, anycast=None):
 )
 def firewall(action=None, name=None, zone=None,
              vlan=None, anycast=None, mac=None):
+
     base_url = '%s/firewalls' % (server)
     r = None
     if action == 'list':
