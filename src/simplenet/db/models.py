@@ -78,6 +78,46 @@ class Zone(Base):
             'datacenter_id': self.datacenter_id,
         }
 
+class Dhcp(Base):
+
+    __tablename__ = 'dhcps'
+
+    id = Column(String(255), primary_key=True)
+    name = Column(String(255), unique=True)
+    vlans_to_dhcps = relationship('Vlans_to_Dhcp', cascade='all, delete-orphan')
+
+    def __init__(self, name):
+        self.id = str(uuid.uuid4())
+        self.name = name
+
+    def __repr__(self):
+       return "<Dhcp('%s','%s')>" % (self.id, self.name)
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'name': self.name,
+        }
+
+
+class Vlans_to_Dhcp(Base):
+
+    __tablename__ = 'vlans_to_dhcps'
+
+    vlan_id = Column(String(255), ForeignKey('vlans.id'), primary_key=True)
+    dhcp_id = Column(String(255), ForeignKey('dhcps.id'), primary_key=True)
+    vlan = relationship('Vlan')
+    dhcp = relationship('Dhcp', cascade="all")
+
+    def to_dict(self):
+        return {
+            'vlan_id': self.vlan_id,
+            'dhcp_id': self.dhcp_id,
+            'vlan': self.vlan.name,
+            'name': self.dhcp.name,
+        }
+
+
 class Firewall(Base):
 
     __tablename__ = 'firewalls'
