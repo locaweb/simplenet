@@ -212,6 +212,10 @@ def vlan(action=None, name=None, zone=None, type=None):
         r = __api_call("get", '%s/firewalls/list-by-vlan/%s' %
             (server, fetch_id('vlans', name))
         )
+    elif action == 'dhcp_list':
+        r = __api_call("get", '%s/dhcps/list-by-vlan/%s' %
+            (server, fetch_id('vlans', name))
+        )
     else:
         baker.usage(sys._getframe().f_code.co_name)
         sys.exit(1)

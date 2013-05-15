@@ -291,6 +291,12 @@ class SimpleNet(object):
             {'firewall_id': firewall_id}
         )
 
+    def vlan_list_by_dhcp(self, dhcp_id):
+        return self._generic_list_by_something_(
+            "vlans by dhcp", models.Vlans_to_Dhcp,
+            {'dhcp_id': dhcp_id}
+        )
+
     def vlan_list_by_zone(self, zone_id):
         return self._generic_list_by_something_(
             "vlans by zone", models.Vlan, {'zone_id': zone_id}
