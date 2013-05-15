@@ -67,12 +67,14 @@ class Net(SimpleNet):
                 'Firewall', 'Firewall and Vlan must be from the same zone'
             )
 
+        session.expire_all()
         session.begin(subtransactions=True)
         try:
             relationship = models.Vlans_to_Firewall()
             relationship.vlan = vlan
             firewall.vlans_to_firewalls.append(relationship)
             session.commit()
+            session.flush()
         except Exception, e:
             session.rollback()
             raise Exception(e)

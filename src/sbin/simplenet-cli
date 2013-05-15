@@ -426,6 +426,57 @@ def firewall(action=None, name=None, zone=None,
 
 
 @baker.command(
+    params={'action': '<list all|create|delete|vlan_attach' \
+            '|vlan_list|vlan_detach>',
+            'name': 'dhcp device name',
+            'vlan': 'vlan to attach vlans to devices'}
+)
+def dhcp(action=None, name=None, vlan=None):
+
+    base_url = '%s/dhcps' % (server)
+    r = None
+    if action == 'list':
+        r = __api_call("get", '%s/list' % base_url)
+    elif action == 'create':
+        vlan_id = fetch_id('vlans', vlan) if vlan else None
+        r = __api_call("post", '%s/dhcps' % (server),
+                data=json.dumps({'name': name, 'vlan_id': vlan_id})
+        )
+    elif action == 'delete':
+        r = __api_call("delete", '%s/%s/delete' % (
+            base_url, fetch_id('dhcps', name))
+        )
+    elif action == 'info':
+        r = __api_call("get", '%s/by-name/%s' % (base_url, name))
+    elif action == 'vlan_attach':
+        if not vlan:
+            print 'Missing vlan to attach'
+            sys.exit(1)
+
+        vlan_id = fetch_id('vlans', vlan)
+        r = __api_call("post", '%s/%s/vlans' %
+            (base_url, fetch_id('dhcps', name)),
+            data=json.dumps({'vlan_id': vlan_id})
+        )
+    elif action == 'vlan_detach':
+        if not vlan:
+            print 'Missing vlan to attach'
+            sys.exit(1)
+
+        r = __api_call("delete", '%s/%s/vlans/%s' % (
+            base_url, fetch_id('dhcps', name), fetch_id('vlans', vlan))
+        )
+    elif action == 'vlan_list':
+        r = __api_call("get", '%s/vlans/list-by-dhcp/%s' %
+            (server, fetch_id('dhcps', name))
+        )
+    else:
+        baker.usage(sys._getframe().f_code.co_name)
+        sys.exit(1)
+    pretty_output(r)
+
+
+@baker.command(
     params={'action': '<list all|create|delete|int_attach|int_detach>',
             'name': 'switch device name',
             'model_type': '<openvswitch>',

@@ -107,7 +107,7 @@ class Vlans_to_Dhcp(Base):
     vlan_id = Column(String(255), ForeignKey('vlans.id'), primary_key=True)
     dhcp_id = Column(String(255), ForeignKey('dhcps.id'), primary_key=True)
     vlan = relationship('Vlan')
-    dhcp = relationship('Dhcp', cascade="all")
+    dhcp = relationship('Dhcp')
 
     def to_dict(self):
         return {
@@ -297,7 +297,7 @@ class Vlans_to_Firewall(Base):
     firewall_id = Column(String(255), ForeignKey('firewalls.id'), primary_key=True)
     description = Column(String(255))
     vlan = relationship('Vlan')
-    firewall = relationship('Firewall', cascade="all")
+    firewall = relationship('Firewall')
 
     def to_dict(self):
         return {

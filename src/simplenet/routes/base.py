@@ -38,6 +38,8 @@ def generic_router(resource):
         return 'firewall'
     elif resource == 'switchs':
         return 'switch'
+    elif resource == 'dhcps':
+        return 'dhcp'
     else:
         return 'base'
 
@@ -200,6 +202,68 @@ def datacenter_zone_create(datacenter_id):
     location = "zones/%s" % (zone['id'])
     response.set_header("Location", location)
     return zone
+
+
+@post('/dhcps')
+@handle_auth
+@validate_input(name=str)
+@reply_json
+def dhcp_create():
+    """
+    ::
+
+      POST /dhcps
+
+    Create a new DHCP device
+    """
+    manager = create_manager('dhcp')
+    data = request.body.readline()
+    if not data:
+        abort(400, 'No data received')
+    data = json.loads(data)
+    dhcp = manager.dhcp_create(data=data)
+    location = "dhcps/%s" % (dhcp['id'])
+    response.set_header("Location", location)
+    return dhcp
+
+
+@post('/dhcps/<dhcp_id>/vlans')
+@handle_auth
+@validate_input(vlan_id=str)
+@reply_json
+def dhcp_add_vlan(dhcp_id):
+    """
+    ::
+
+      POST /dhcps/<dhcp_id>/vlans
+
+    Attach vlan to DHCP device
+    """
+    manager = create_manager('dhcp')
+    data = request.body.readline()
+    if not data:
+        abort(400, 'No data received')
+    data = json.loads(data)
+    dhcp = manager.dhcp_add_vlan(dhcp_id, data)
+    location = "dhcps/relationship/%s" % (dhcp['id'])
+    response.set_header("Location", location)
+    return dhcp
+
+
+@delete('/dhcps/<dhcp_id>/vlans/<vlan_id>')
+@handle_auth
+@reply_json
+def dhcp_remove_vlan(dhcp_id, vlan_id):
+    """
+    ::
+
+      POST /dhcps/<dhcp_id>/vlans/<vlan_id>
+
+    Attach vlan to DHCP device
+    """
+    manager = create_manager('dhcp')
+    dhcp = manager.dhcp_remove_vlan(dhcp_id, vlan_id)
+    return dhcp
 
 
 @post('/firewalls')
