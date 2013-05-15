@@ -563,9 +563,7 @@ class SimpleNet(object):
 
         session.begin(subtransactions=True)
         try:
-            relationship = models.Ips_to_Interface()
-            relationship.ip = ip
-            interface.ips_to_interfaces.append(relationship)
+            interface.ips.add(ip)
             session.commit()
         except Exception, e:
             session.rollback()
@@ -576,10 +574,27 @@ class SimpleNet(object):
         return _data
 
     def interface_remove_ip(self, interface_id, ip_id):
-        return self._generic_delete_(
-            "ip from interfaces", models.Ips_to_Interface,
-            {'interface_id': interface_id, 'ip_id': ip_id}
-        )
+        interface = session.query(models.Interface).get(interface_id)
+        ip = session.query(models.Ip).get(ip_id)
+
+        if not ip:
+            raise EntityNotFound('Ip', data)
+        elif not interface:
+            raise EntityNotFound('Interface', interface_id)
+
+        if ip in interface.ips:
+            session.begin(subtransactions=True)
+            try:
+                interface.ips.remove(ip)
+                session.commit()
+            except Exception, e:
+                session.rollback()
+                raise Exception(e)
+            _data = interface.to_dict()
+            logger.debug("Successful adding IP to interface status: %s" % _data)
+        else:
+            _data = interface.to_dict()
+        return _data
 
 class Net(SimpleNet):
     pass

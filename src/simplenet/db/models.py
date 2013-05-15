@@ -210,7 +210,6 @@ class Interface(Base):
     status = Column(String(255))
     name = Column(String(255))
     switch = relationship('Switch')
-    ips_to_interfaces = relationship('Ips_to_Interface', cascade='all, delete-orphan')
 
     def __init__(self, id):
         self.id = id
@@ -220,7 +219,7 @@ class Interface(Base):
             'id': self.id,
             'name': self.name,
             'switch_id': self.switch.id if self.switch else None,
-            'ips': [x.to_dict()['ip'] for x in self.ips_to_interfaces],
+            'ips': [x.to_dict()['ip'] for x in self.ips],
         }
 
     def tree_dict(self):
@@ -229,27 +228,9 @@ class Interface(Base):
             'name': self.name,
             'status': self.status,
             'switch_id': self.switch.tree_dict(),
-            'ips': [x.tree_dict()['ip'] for x in self.ips_to_interfaces],
+            'ips': [x.tree_dict() for x in self.ips],
         }
 
-class Ips_to_Interface(Base):
-
-    __tablename__ = 'ips_to_interfaces'
-
-    ip_id = Column(String(255), ForeignKey('ips.id'), primary_key=True, unique=True)
-    interface_id = Column(String(255), ForeignKey('interfaces.id'), primary_key=True)
-    ip = relationship('Ip')
-    interface = relationship('Interface')
-
-    def to_dict(self):
-        return {
-            'ip': self.ip.to_dict(),
-        }
-
-    def tree_dict(self):
-        return {
-            'ip': self.ip.tree_dict(),
-        }
 
 class Vlan(Base):
 
@@ -385,6 +366,8 @@ class Ip(Base):
     description = Column(String(255))
     subnet_id = Column(String(255), ForeignKey('subnets.id'))
     subnet = relationship('Subnet')
+    interface_id = Column(String(255), ForeignKey('interfaces.id'))
+    interface = relationship("Interface", collection_class=set, backref=backref("ips", collection_class=set))
 
     def __init__(self, ip, subnet_id, description=''):
         self.id = str(uuid.uuid4())
