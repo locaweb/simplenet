@@ -244,7 +244,7 @@ def dhcp_add_vlan(dhcp_id):
     if not data:
         abort(400, 'No data received')
     data = json.loads(data)
-    dhcp = manager.dhcp_add_vlan(dhcp_id, data)
+    dhcp = manager.dhcp_add_vlan(dhcp_id, data['vlan_id'])
     location = "dhcps/relationship/%s" % (dhcp['id'])
     response.set_header("Location", location)
     return dhcp

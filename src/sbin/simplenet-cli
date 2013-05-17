@@ -183,7 +183,7 @@ def zone(action=None, name=None, datacenter=None):
 
 
 @baker.command(
-    params={'action': '<list all|create|delete|firewall_list>',
+    params={'action': '<list all|create|delete|firewall_list|dhcp_list>',
             'name': 'vlan name',
             'type': 'vlan type',
             'zone': 'zone_id to create a new vlan'}

@@ -48,13 +48,20 @@ class EventManager(object):
                         routing_key=event_type
                 )
 
-                queue(conn.channel()).declare()
-                routing_key = event_type
+                if params['action'] == 'new' or params['action'] == 'rebuild_queues':
+                    queue(conn.channel()).declare()
+                    return
+                elif params['action'] == 'remove':
+                    queue(conn.channel()).unbind()
+                    return
+                else:
+                    routing_key = event_type
 
             with conn.Producer(exchange=media_exchange, serializer="json",
                                routing_key=routing_key) as producer:
                     logger.info("Publishing %s" % params)
                     producer.publish(params)
+
 
     def raise_event(self, event_type, params, **kwargs):
         logger.debug("Raising event %s with params: %s" % (event_type, params))

@@ -54,12 +54,19 @@ class Net(SimpleNet):
     def dhcp_list(self):
         return self._generic_list_("dhcps", models.Dhcp)
 
-    def dhcp_add_vlan(self, dhcp_id, data):
+    def dhcp_rebuild_queues(self, vlan_id):
+        logger.debug("Rebuilding queue for %s" %
+            (vlan_id)
+        )
+        vlan = session.query(models.Vlan).get(vlan_id)
+        self._enqueue_dhcp_(vlan.name, vlan.id, '', 'rebuild_queues')
+
+    def dhcp_add_vlan(self, dhcp_id, vlan_id):
         logger.debug("Adding vlan to device: %s using data: %s" %
-            (dhcp_id, data)
+            (dhcp_id, vlan_id)
         )
         dhcp = session.query(models.Dhcp).get(dhcp_id)
-        vlan = session.query(models.Vlan).get(data['vlan_id'])
+        vlan = session.query(models.Vlan).get(vlan_id)
 
         session.expire_all()
         session.begin(subtransactions=True)
@@ -72,6 +79,7 @@ class Net(SimpleNet):
         except Exception, e:
             session.rollback()
             raise Exception(e)
+        self._enqueue_dhcp_(vlan.name, vlan.id, dhcp.name, 'new')
         _data = dhcp.to_dict()
         logger.debug("Successful adding vlan to device:"
             " %s device status: %s" % (dhcp_id, _data)
@@ -84,10 +92,18 @@ class Net(SimpleNet):
         )
 
     def dhcp_remove_vlan(self, dhcp_id, vlan_id):
-        return self._generic_delete_(
-            "vlan from dhcps", models.Vlans_to_Dhcp,
-            {'vlan_id': vlan_id, 'dhcp_id': dhcp_id}
-        )
+        dhcp = session.query(models.Dhcp).get(dhcp_id)
+        vlan = session.query(models.Vlan).get(vlan_id)
+        try:
+            ret = self._generic_delete_(
+                "vlan from dhcps", models.Vlans_to_Dhcp,
+                {'vlan_id': vlan_id, 'dhcp_id': dhcp_id}
+            )
+        except Exception, e:
+            raise Exception(e)
+
+        self._enqueue_dhcp_(vlan.name, vlan.id, dhcp.name, 'remove')
+        return ret
 
     def dhcp_info(self, id):
         return self._generic_info_("dhcp", models.Dhcp, {'id': id})
@@ -103,53 +119,17 @@ class Net(SimpleNet):
     def dhcp_delete(self, id):
         return self._generic_delete_("dhcp", models.Dhcp, {'id': id})
 
-    def _enqueue_dhcp_entries_(self, dhcp_id):
-        logger.debug("Getting rules from %s with id %s" % (owner_type, owner_id))
-        policy_list = []
-        _get_data = getattr(self, "_get_data_%s_" % owner_type)
-        _data = _get_data(owner_id)
+    def _enqueue_dhcp_(self, vlan_name, vlan_id, dhcp_name, action):
+        _data = {}
+        _data['action'] = action
+        for subnet in self.subnet_list_by_vlan(vlan_id):
+            _data[subnet['cidr']] = {}
+            for ip in self.ip_list_by_subnet(subnet['id']):
+                _data[subnet['cidr']][ip['ip']] = ip['interface_id']
 
-        if (owner_type != 'zone') and ('vlan_id' in _data):
-            logger.debug("Getting devices by vlan: %s" % _data['vlan_id'])
-            devices = self.firewall_list_by_vlan(_data['vlan_id'])
-        elif ('anycast_id' in _data):
-            logger.debug("Getting devices by anycast: %s" % _data['anycast_id'])
-            devices = self.firewall_list_by_anycast(_data['anycast_id'])
+        if action == 'rebuild_queues':
+            for dhcp in self.dhcp_list_by_vlan(vlan_id):
+                event.EventManager().raise_fanout_event(vlan_name, 'dhcp:'+dhcp['name'], _data)
         else:
-            logger.debug("Getting devices by zone: %s" % _data['zone_id'])
-            devices = self.firewall_list_by_zone(_data['zone_id'])
-
-        for device in devices:
-            logger.debug("Getting data from device: %s" % device['id'])
-            zone_id = device['zone_id']
-            dev_id = device['device_id'] if (owner_type != 'zone') else device['id']
-
-            policy_list = policy_list + self.policy_list_by_owner('zone', zone_id)
-            _data.update({'policy': self.policy_list_by_owner('zone', zone_id)})
-            for vlan in self.vlan_list_by_firewall(dev_id): # Cascade thru the vlans of the device
-                logger.debug("Getting policy data from vlan: %s" % vlan)
-                policy_list = policy_list + self.policy_list_by_owner('vlan', vlan['vlan_id'])
-                for subnet in self.subnet_list_by_vlan(vlan['vlan_id']): # Cascade thru the subnets of the vlan
-                    logger.debug("Getting policy data from subnet: %s" % subnet)
-                    policy_list = policy_list + self.policy_list_by_owner('subnet', subnet['id'])
-                    logger.debug("maldito %s" % json.dumps(subnet['id']))
-                    logger.debug("maldito %s" % json.dumps(self.ip_list_by_subnet(subnet['id'])))
-                    for ip in self.ip_list_by_subnet(subnet['id']): # Cascade thru the IPs of the subnet
-                        logger.debug("maldito %s" % json.dumps(ip.keys()))
-                        logger.debug("Getting policy data from ip: %s" % ip)
-                        policy_list = policy_list + self.policy_list_by_owner('ip', ip['id'])
-
-            for anycast in self.anycast_list_by_firewall(dev_id): # Cascade thru the anycasts of the device
-                logger.debug("Getting policy data from anycast %s" % anycast)
-                policy_list = policy_list + self.policy_list_by_owner('anycast', anycast['anycast_id'])
-                for anycastip in self.anycastip_list_by_anycast(anycast['anycast_id']): # Cascade thru the IPs of the anycast subnet
-                    logger.debug("Getting policy data from anycasip %s" % anycastip)
-                    policy_list = policy_list + self.policy_list_by_owner('anycastip', anycastip['id'])
-
-            _data.update({'policy': policy_list})
-            logger.debug("Received rules: %s from %s with id %s and device %s" % (
-                _data, owner_type, id, device['name'])
-            )
-            if policy_list:
-                event.EventManager().raise_event(device['name'], _data)
-
+            event.EventManager().raise_fanout_event(vlan_name, 'dhcp:'+dhcp_name, _data)
+            event.EventManager().raise_event('dhcp:'+dhcp_name, _data)

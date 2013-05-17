@@ -375,7 +375,7 @@ class Ip(Base):
         self.subnet_id = subnet_id
 
     def __repr__(self):
-       return "<Ip('%s','%s')>" % (self.id, self.ip)
+       return "<Ip('%s','%s','%s')>" % (self.id, self.ip, self.interface_id)
 
     def to_dict(self):
         return {
@@ -383,6 +383,7 @@ class Ip(Base):
             'ip': self.ip,
             'subnet': self.subnet.cidr,
             'subnet_id': self.subnet_id,
+            'interface_id': self.interface_id,
         }
 
     def tree_dict(self):

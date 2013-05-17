@@ -16,6 +16,7 @@
 # @author: Juliano Martinez (ncode), Locaweb.
 # @author: Luiz Ozaki, Locaweb.
 
+from simplenet.common import event
 from simplenet.common.config import config, get_logger
 from simplenet.db import models, db_utils
 from simplenet.exceptions import (
@@ -367,6 +368,8 @@ class SimpleNet(object):
         except Exception, e:
             session.rollback()
             raise Exception(e)
+        vlan = session.query(models.Vlan).get(vlan_id)
+        self._enqueue_dhcp_entries_(vlan.id, vlan.name, 'new', cidr=data['cidr'])
         return self.subnet_info_by_cidr(data['cidr'])
 
     def anycast_create(self, data):
@@ -405,7 +408,13 @@ class SimpleNet(object):
         raise FeatureNotImplemented()
 
     def subnet_delete(self, id):
-        return self._generic_delete_("subnet", models.Subnet, {'id': id})
+        subnet = session.query(models.Subnet).get(id)
+        try:
+            ret = self._generic_delete_("subnet", models.Subnet, {'id': id})
+        except Exception, e:
+            raise Exception(e)
+        self._enqueue_dhcp_entries_(subnet.vlan.id, subnet.vlan.name, 'delete', cidr=subnet.cidr)
+        return ret
 
     def anycast_delete(self, id):
         return self._generic_delete_("anycast", models.Anycast, {'id': id})
@@ -574,6 +583,7 @@ class SimpleNet(object):
         except Exception, e:
             session.rollback()
             raise Exception(e)
+        self._enqueue_dhcp_entries_(ip.subnet.vlan.id, ip.subnet.vlan.name, 'update', cidr=ip.subnet.cidr)
         _data = interface.to_dict()
         logger.debug("Successful adding IP to interface status: %s" % _data)
 
@@ -600,7 +610,31 @@ class SimpleNet(object):
             logger.debug("Successful adding IP to interface status: %s" % _data)
         else:
             _data = interface.to_dict()
+        self._enqueue_dhcp_entries_(ip.subnet.vlan.id, ip.subnet.vlan.name, 'update', cidr=ip.subnet.cidr)
         return _data
+
+    def _enqueue_dhcp_entries_(self, vlan_id, vlan_name, action, cidr=None):
+        # action
+        #   new = New subnet
+        #   delete = Remove subnet
+        if action in ('new','delete'):
+            for dhcp in self._generic_list_by_something_("dhcps by vlan", models.Vlans_to_Dhcp, {'vlan_id': vlan_id}):
+                if cidr == None:
+                    raise OperationNotPermited('DhcpQueue', "Missing subnet")
+                else:
+                    event.EventManager().raise_fanout_event(vlan_name, 'dhcp:'+dhcp['name'], {cidr: {}, 'action': action})
+        else:
+            _data = {}
+            for subnet in self.subnet_list_by_vlan(vlan_id):
+                _data[subnet['cidr']] = {}
+                _data['action'] = action
+                for ip in self.ip_list_by_subnet(subnet['id']):
+                    _data[subnet['cidr']][ip['ip']] = ip['interface_id']
+
+            if cidr == None:
+                event.EventManager().raise_fanout_event(vlan_name, '', _data)
+            else:
+                event.EventManager().raise_fanout_event(vlan_name, '', {cidr: _data[cidr], 'action': action})
 
 class Net(SimpleNet):
     pass
