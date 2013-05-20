@@ -369,7 +369,7 @@ class SimpleNet(object):
             session.rollback()
             raise Exception(e)
         vlan = session.query(models.Vlan).get(vlan_id)
-        self._enqueue_dhcp_entries_(vlan.id, vlan.name, 'new', cidr=data['cidr'])
+        self._enqueue_dhcp_entries_(vlan.id, vlan.name, 'new', network=vlan.subnet.network())
         return self.subnet_info_by_cidr(data['cidr'])
 
     def anycast_create(self, data):
@@ -413,7 +413,7 @@ class SimpleNet(object):
             ret = self._generic_delete_("subnet", models.Subnet, {'id': id})
         except Exception, e:
             raise Exception(e)
-        self._enqueue_dhcp_entries_(subnet.vlan.id, subnet.vlan.name, 'delete', cidr=subnet.cidr)
+        self._enqueue_dhcp_entries_(subnet.vlan.id, subnet.vlan.name, 'delete', network=subnet.network())
         return ret
 
     def anycast_delete(self, id):
@@ -583,7 +583,7 @@ class SimpleNet(object):
         except Exception, e:
             session.rollback()
             raise Exception(e)
-        self._enqueue_dhcp_entries_(ip.subnet.vlan.id, ip.subnet.vlan.name, 'update', cidr=ip.subnet.cidr)
+        self._enqueue_dhcp_entries_(ip.subnet.vlan.id, ip.subnet.vlan.name, 'update', network=ip.subnet.network())
         _data = interface.to_dict()
         logger.debug("Successful adding IP to interface status: %s" % _data)
 
@@ -607,13 +607,13 @@ class SimpleNet(object):
                 session.rollback()
                 raise Exception(e)
             _data = interface.to_dict()
-            logger.debug("Successful adding IP to interface status: %s" % _data)
+            logger.debug("Successful removing IP to interface status: %s" % _data)
         else:
             _data = interface.to_dict()
-        self._enqueue_dhcp_entries_(ip.subnet.vlan.id, ip.subnet.vlan.name, 'update', cidr=ip.subnet.cidr)
+        self._enqueue_dhcp_entries_(ip.subnet.vlan.id, ip.subnet.vlan.name, 'update', network=ip.subnet.network())
         return _data
 
-    def _enqueue_dhcp_entries_(self, vlan_id, vlan_name, action, cidr=None):
+    def _enqueue_dhcp_entries_(self, vlan_id, vlan_name, action, network=None):
         # action
         #   new = New subnet
         #   delete = Remove subnet
@@ -622,19 +622,20 @@ class SimpleNet(object):
                 if cidr == None:
                     raise OperationNotPermited('DhcpQueue', "Missing subnet")
                 else:
-                    event.EventManager().raise_fanout_event(vlan_name, 'dhcp:'+dhcp['name'], {cidr: {}, 'action': action})
+                    event.EventManager().raise_fanout_event(vlan_name, 'dhcp:'+dhcp['name'], {network: {}, 'action': action})
         else:
             _data = {}
             for subnet in self.subnet_list_by_vlan(vlan_id):
-                _data[subnet['cidr']] = {}
+                _data[subnet['network']] = {}
+                _data[subnet['network']]['gateway'] = subnet['gateway']
                 _data['action'] = action
                 for ip in self.ip_list_by_subnet(subnet['id']):
-                    _data[subnet['cidr']][ip['ip']] = ip['interface_id']
+                    _data[subnet['network']][ip['ip']] = ip['interface_id']
 
-            if cidr == None:
+            if network == None:
                 event.EventManager().raise_fanout_event(vlan_name, '', _data)
             else:
-                event.EventManager().raise_fanout_event(vlan_name, '', {cidr: _data[cidr], 'action': action})
+                event.EventManager().raise_fanout_event(vlan_name, '', {network: _data[network], 'action': action})
 
 class Net(SimpleNet):
     pass

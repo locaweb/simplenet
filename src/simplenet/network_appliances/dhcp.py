@@ -123,9 +123,9 @@ class Net(SimpleNet):
         _data = {}
         _data['action'] = action
         for subnet in self.subnet_list_by_vlan(vlan_id):
-            _data[subnet['cidr']] = {}
+            _data[subnet['network']] = {}
             for ip in self.ip_list_by_subnet(subnet['id']):
-                _data[subnet['cidr']][ip['ip']] = ip['interface_id']
+                _data[subnet['network']][ip['ip']] = ip['interface_id']
 
         if action == 'rebuild_queues':
             for dhcp in self.dhcp_list_by_vlan(vlan_id):
