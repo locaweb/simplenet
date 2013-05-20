@@ -59,7 +59,7 @@ class Net(SimpleNet):
             (vlan_id)
         )
         vlan = session.query(models.Vlan).get(vlan_id)
-        self._enqueue_dhcp_(vlan.name, vlan.id, '', 'rebuild_queues')
+        self._enqueue_dhcp_(vlan, '', 'rebuild_queues')
 
     def dhcp_add_vlan(self, dhcp_id, vlan_id):
         logger.debug("Adding vlan to device: %s using data: %s" %
@@ -79,7 +79,7 @@ class Net(SimpleNet):
         except Exception, e:
             session.rollback()
             raise Exception(e)
-        self._enqueue_dhcp_(vlan.name, vlan.id, dhcp.name, 'new')
+        self._enqueue_dhcp_(vlan, dhcp.name, 'new')
         _data = dhcp.to_dict()
         logger.debug("Successful adding vlan to device:"
             " %s device status: %s" % (dhcp_id, _data)
@@ -101,8 +101,7 @@ class Net(SimpleNet):
             )
         except Exception, e:
             raise Exception(e)
-
-        self._enqueue_dhcp_(vlan.name, vlan.id, dhcp.name, 'remove')
+        self._enqueue_dhcp_(vlan, dhcp.name, 'remove')
         return ret
 
     def dhcp_info(self, id):
@@ -119,17 +118,21 @@ class Net(SimpleNet):
     def dhcp_delete(self, id):
         return self._generic_delete_("dhcp", models.Dhcp, {'id': id})
 
-    def _enqueue_dhcp_(self, vlan_name, vlan_id, dhcp_name, action):
+    def _enqueue_dhcp_(self, vlan, dhcp_name, action):
         _data = {}
+        subnets = vlan.subnet
         _data['action'] = action
-        for subnet in self.subnet_list_by_vlan(vlan_id):
-            _data[subnet['network']] = {}
-            for ip in self.ip_list_by_subnet(subnet['id']):
-                _data[subnet['network']][ip['ip']] = ip['interface_id']
+        for subnet in subnets:
+            network = subnet.network()
+            _data[network] = {}
+            _data[network]['entries'] = {}
+            _data[network]['gateway'] = subnet.gateway()
+            for ip in self.ip_list_by_subnet(subnet.id):
+                _data[network]['entries'].update({ip['ip']: ip['interface_id']})
 
         if action == 'rebuild_queues':
-            for dhcp in self.dhcp_list_by_vlan(vlan_id):
-                event.EventManager().raise_fanout_event(vlan_name, 'dhcp:'+dhcp['name'], _data)
+            for dhcp in self.dhcp_list_by_vlan(vlan.id):
+                event.EventManager().raise_fanout_event(vlan.name, 'dhcp:'+dhcp['name'], _data)
         else:
-            event.EventManager().raise_fanout_event(vlan_name, 'dhcp:'+dhcp_name, _data)
+            event.EventManager().raise_fanout_event(vlan.name, 'dhcp:'+dhcp_name, _data)
             event.EventManager().raise_event('dhcp:'+dhcp_name, _data)

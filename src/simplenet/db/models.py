@@ -320,7 +320,7 @@ class Subnet(Base):
     cidr = Column(String(255), unique=True)
     description = Column(String(255))
     vlan_id = Column(String(255), ForeignKey('vlans.id'))
-    vlan = relationship('Vlan', backref="vlan")
+    vlan = relationship('Vlan', backref="subnet")
 
     def __init__(self, cidr, vlan_id, description=''):
         self.id = str(uuid.uuid4())
