@@ -106,7 +106,7 @@ run_test "dhcp create dhcp01" '"message": "Dhcp:dhcp01 already exists Forbidden"
 run_test "vlan create vlan01 --zone zone01 --type private_vlan" '"name": "vlan01"'
 run_test "dhcp vlan_attach dhcp01 --vlan vlan01" '"name": "dhcp01"'
 run_test "dhcp vlan_attach dhcp02 --vlan vlan01" '"name": "dhcp02"'
-run_test "dhcp vlan_attach dhcp01 --vlan vlan01" '"message": "Exception(FlushError(.*"'
+run_test "dhcp vlan_attach dhcp01 --vlan vlan01" '"message": "dhcp_add_vlan:Entry already exist Forbidden"'
 run_test "dhcp vlan_detach dhcp01 --vlan vlan01" '"message": "Successful deletetion"'
 run_test "dhcp info dhcp01" '"name": "dhcp01"'
 run_test "dhcp info dhcp02" '"name": "dhcp02"'

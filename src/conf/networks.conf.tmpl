@@ -1,0 +1,7 @@
+shared-network DHCP {
+#for $net in $entries
+    subnet $net.network netmask $net.netmask {
+        option routers $net.router;
+    }
+#end for
+}

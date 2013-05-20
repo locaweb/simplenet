@@ -1,0 +1,8 @@
+#for $host in $entries
+host $host.name {
+    hardware ethernet $host.mac;
+    fixed-address $host.address;
+    option host-name "$host.name";
+}
+
+#end for

@@ -26,7 +26,7 @@ from simplenet.exceptions import (
 )
 from simplenet.network_appliances.base import SimpleNet
 
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy.exc import IntegrityError, FlushError
 
 logger = get_logger()
 session = db_utils.get_database_session()
@@ -76,10 +76,12 @@ class Net(SimpleNet):
             dhcp.vlans_to_dhcps.append(relationship)
             session.commit()
             session.flush()
-        except Exception, e:
+        except FlushError:
             session.rollback()
-            raise Exception(e)
-        self._enqueue_dhcp_(vlan, dhcp.name, 'new')
+            raise OperationNotPermited('dhcp_add_vlan', 'Entry already exist')
+        except:
+            raise
+        self._enqueue_dhcp_(vlan, dhcp, 'new')
         _data = dhcp.to_dict()
         logger.debug("Successful adding vlan to device:"
             " %s device status: %s" % (dhcp_id, _data)
@@ -101,7 +103,7 @@ class Net(SimpleNet):
             )
         except Exception, e:
             raise Exception(e)
-        self._enqueue_dhcp_(vlan, dhcp.name, 'remove')
+        self._enqueue_dhcp_(vlan, dhcp, 'remove')
         return ret
 
     def dhcp_info(self, id):
@@ -118,10 +120,13 @@ class Net(SimpleNet):
     def dhcp_delete(self, id):
         return self._generic_delete_("dhcp", models.Dhcp, {'id': id})
 
-    def _enqueue_dhcp_(self, vlan, dhcp_name, action):
+    def _enqueue_dhcp_(self, vlan, dhcp, action):
         _data = {}
-        subnets = vlan.subnet
         _data['action'] = action
+        ss = [x.vlan.subnet for x in session.query(models.Vlans_to_Dhcp).filter_by(**{'dhcp_id': dhcp.id}).all()]
+        subnets = []
+        if ss:
+            [subnets.extend(x) for x in ss]
         for subnet in subnets:
             network = subnet.network()
             _data[network] = {}
@@ -134,5 +139,5 @@ class Net(SimpleNet):
             for dhcp in self.dhcp_list_by_vlan(vlan.id):
                 event.EventManager().raise_fanout_event(vlan.name, 'dhcp:'+dhcp['name'], _data)
         else:
-            event.EventManager().raise_fanout_event(vlan.name, 'dhcp:'+dhcp_name, _data)
-            event.EventManager().raise_event('dhcp:'+dhcp_name, _data)
+            event.EventManager().raise_fanout_event(vlan.name, 'dhcp:'+dhcp.name, _data)
+            event.EventManager().raise_event('dhcp:'+dhcp.name, _data)
