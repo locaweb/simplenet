@@ -94,6 +94,8 @@ run_test "vlan create vlan$vlan --zone zone01 --type private_vlan" "\"name\": \"
 fwmac=`(date; cat /proc/interrupts) | md5sum | sed -r 's/^(.{12}).*$/\1/; s/([0-9a-f]{2})/\1:/g; s/:$//;'`
 run_test "firewall create firewall$firewall --zone zone01 --mac $fwmac" "\"name\": \"firewall$firewall\""
 run_test "firewall vlan_attach firewall$firewall --vlan vlan$vlan" "\"name\": \"firewall$firewall\""
+run_test "dhcp create dhcp$vlan" "\"name\": \"dhcp$vlan\""
+run_test "dhcp vlan_attach dhcp$vlan --vlan vlan$vlan" "\"name\": \"dhcp$vlan\""
 run_test "subnet create 192.168.$range.0/24 --vlan vlan$vlan" "\"cidr\": \"192.168.$range.0/24\""
 swmac=`(date; cat /proc/interrupts) | md5sum | sed -r 's/^(.{12}).*$/\1/; s/([0-9a-f]{2})/\1:/g; s/:$//;'`
 run_test "switch create sw$sw --model_type openvswitch --address tcp:127.0.0.1:8088 --mac $swmac" "\"name\": \"sw$sw\""
