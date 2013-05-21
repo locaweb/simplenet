@@ -1,8 +1,9 @@
-#for $host in $entries
-host $host.name {
-    hardware ethernet $host.mac;
-    fixed-address $host.address;
-    option host-name "$host.name";
+#for $ip in $entries
+#if $entries[$ip][0]
+host $entries[$ip][1] {
+    hardware ethernet $entries[$ip][0];
+    fixed-address $ip;
+    option host-name "$entries[$ip][1]";
 }
-
+#end if
 #end for

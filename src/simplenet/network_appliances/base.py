@@ -616,16 +616,16 @@ class SimpleNet(object):
 
     def _enqueue_dhcp_entries_(self, vlan, action):
         _data = {}
+        entries = {}
         subnets = vlan.subnet
         for subnet in subnets:
             network = subnet.network()
             _data[network] = {}
-            _data[network]['entries'] = {}
             _data[network]['gateway'] = subnet.gateway()
             for ip in self.ip_list_by_subnet(subnet.id):
-                _data[network]['entries'].update({ip['ip']: [ip['interface_id'], ip['hostname']]})
+                entries.update({ip['ip']: [ip['interface_id'], ip['hostname'] or "defaulthostname"]})
 
-        event.EventManager().raise_fanout_event(vlan.name, '', {'data': _data, 'action': action})
+        event.EventManager().raise_fanout_event(vlan.name, '', {'network': _data, 'entries': entries, 'action': action})
 
 class Net(SimpleNet):
     pass

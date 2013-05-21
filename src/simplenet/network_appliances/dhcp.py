@@ -122,6 +122,7 @@ class Net(SimpleNet):
 
     def _enqueue_dhcp_(self, vlan, dhcp, action):
         _data = {}
+        entries = {}
         _data['action'] = action
         ss = [x.vlan.subnet for x in session.query(models.Vlans_to_Dhcp).filter_by(**{'dhcp_id': dhcp.id}).all()]
         subnets = []
@@ -130,10 +131,9 @@ class Net(SimpleNet):
         for subnet in subnets:
             network = subnet.network()
             _data[network] = {}
-            _data[network]['entries'] = {}
             _data[network]['gateway'] = subnet.gateway()
             for ip in self.ip_list_by_subnet(subnet.id):
-                _data[network]['entries'].update({ip['ip']: ip['interface_id']})
+                entries.update({ip['ip']: [ip['interface_id'], ip['hostname'] or "defaulthostname"]})
 
         if action == 'rebuild_queues':
             for dhcp in self.dhcp_list_by_vlan(vlan.id):

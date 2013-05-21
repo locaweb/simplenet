@@ -47,10 +47,10 @@ class DhcpAgent(object):
     def network_handler(self, data):
         del(data['action'])
         entries = []
-        for network in data['data'].keys():
+        for network in data['network'].keys():
             entry = {"network": network.split('/')[0],
                      "netmask": network.split('/')[1],
-                     "router": data['data'][network]['gateway']}
+                     "router": data['network'][network]['gateway']}
             entries.append(entry)
         render = Template(file = "%s/networks.conf.tmpl" % (
             config.get('dhcp-agent','templates')),
@@ -80,7 +80,7 @@ class DhcpAgent(object):
         self.network_handler(data)
         render = Template(file = "%s/hosts.conf.tmpl" % (
             config.get('dhcp-agent','templates')),
-            searchList =[{'entries':entries}]
+            searchList =[{'entries':data['entries']}]
         )
         self.backup_file = None
         if os.path.isfile(self.hosts_file):
