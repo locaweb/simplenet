@@ -541,9 +541,10 @@ def switch(action=None, name=None, model_type=None, mac=None,
 @baker.command(
     params={'action': '<list all|info|create|delete|ip_attach|ip_detach>',
             'mac': 'interface mac address',
-            'ip': 'IP address'}
+            'ip': 'IP address',
+            'hostname': 'Hostname'}
 )
-def interface(action=None, mac=None, ip=None):
+def interface(action=None, mac=None, ip=None, hostname=None):
     base_url = '%s/interfaces' % (server)
     r = None
     if action == 'list':
@@ -556,7 +557,10 @@ def interface(action=None, mac=None, ip=None):
             sys.exit(1)
 
         r = __api_call("post", '%s' % (base_url),
-                data=json.dumps({'mac': mac}))
+                data=json.dumps({'mac': mac,
+                                'hostname': hostname}
+                )
+        )
     elif action == 'delete':
         if not mac:
             print 'Missing mac to delete'

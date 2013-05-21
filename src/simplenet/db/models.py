@@ -209,15 +209,18 @@ class Interface(Base):
     switch_id = Column(String(255), ForeignKey('switches.id'))
     status = Column(String(255))
     name = Column(String(255))
+    hostname = Column(String(255))
     switch = relationship('Switch')
 
-    def __init__(self, id):
+    def __init__(self, id, hostname):
         self.id = id
+        self.hostname = hostname
 
     def to_dict(self):
         return {
             'id': self.id,
             'name': self.name,
+            'hostname': self.hostname,
             'switch_id': self.switch.id if self.switch else None,
             'ips': [x.to_dict()['ip'] for x in self.ips],
         }
@@ -226,6 +229,7 @@ class Interface(Base):
         return {
             'id': self.id,
             'name': self.name,
+            'hostname': self.hostname,
             'status': self.status,
             'switch_id': self.switch.tree_dict(),
             'ips': [x.tree_dict() for x in self.ips],
@@ -386,18 +390,22 @@ class Ip(Base):
        return "<Ip('%s','%s','%s')>" % (self.id, self.ip, self.interface_id)
 
     def to_dict(self):
+        hostname = self.interface.hostname if self.interface else None
         return {
             'id': self.id,
             'ip': self.ip,
             'subnet': self.subnet.cidr,
             'subnet_id': self.subnet_id,
             'interface_id': self.interface_id,
+            'hostname': hostname,
         }
 
     def tree_dict(self):
+        hostname = self.interface.hostname if self.interface else None
         return {
             'id': self.id,
             'ip': self.ip,
+            'hostname': hostname,
             'subnet': self.subnet.tree_dict()
         }
 

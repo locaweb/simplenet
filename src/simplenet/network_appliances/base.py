@@ -548,7 +548,7 @@ class SimpleNet(object):
 
         session.begin(subtransactions=True)
         try:
-            session.add(models.Interface(id=data['mac']))
+            session.add(models.Interface(id=data['mac'], hostname=data['hostname']))
             session.commit()
         except IntegrityError:
             session.rollback()
@@ -623,7 +623,7 @@ class SimpleNet(object):
             _data[network]['entries'] = {}
             _data[network]['gateway'] = subnet.gateway()
             for ip in self.ip_list_by_subnet(subnet.id):
-                _data[network]['entries'].update({ip['ip']: ip['interface_id']})
+                _data[network]['entries'].update({ip['ip']: [ip['interface_id'], ip['hostname']]})
 
         event.EventManager().raise_fanout_event(vlan.name, '', {'data': _data, 'action': action})
 
