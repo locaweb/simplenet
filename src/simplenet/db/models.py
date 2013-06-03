@@ -78,26 +78,69 @@ class Zone(Base):
             'datacenter_id': self.datacenter_id,
         }
 
+class Dhcp(Base):
 
-class Device(Base):
+    __tablename__ = 'dhcps'
 
-    __tablename__ = 'devices'
+    id = Column(String(255), primary_key=True)
+    name = Column(String(255), unique=True)
+    vlans_to_dhcps = relationship('Vlans_to_Dhcp', cascade='all, delete-orphan')
+
+    def __init__(self, name):
+        self.id = str(uuid.uuid4())
+        self.name = name
+
+    def __repr__(self):
+       return "<Dhcp('%s','%s')>" % (self.id, self.name)
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'name': self.name,
+        }
+
+
+class Vlans_to_Dhcp(Base):
+
+    __tablename__ = 'vlans_to_dhcps'
+
+    vlan_id = Column(String(255), ForeignKey('vlans.id'), primary_key=True)
+    dhcp_id = Column(String(255), ForeignKey('dhcps.id'), primary_key=True)
+    vlan = relationship('Vlan')
+    dhcp = relationship('Dhcp')
+
+    def to_dict(self):
+        return {
+            'vlan_id': self.vlan_id,
+            'dhcp_id': self.dhcp_id,
+            'vlan': self.vlan.name,
+            'name': self.dhcp.name,
+        }
+
+
+class Firewall(Base):
+
+    __tablename__ = 'firewalls'
 
     id = Column(String(255), primary_key=True)
     name = Column(String(255), unique=True)
     description = Column(String(255))
     zone_id = Column(String(255), ForeignKey('zones.id'))
-    vlans_to_devices = relationship('Vlans_to_Device', cascade='all, delete-orphan')
-    anycasts_to_devices = relationship('Anycasts_to_Device', cascade='all, delete-orphan')
+    mac = Column(String(255))
+    address = Column(String(255))
+    vlans_to_firewalls = relationship('Vlans_to_Firewall', cascade='all, delete-orphan')
+    anycasts_to_firewalls = relationship('Anycasts_to_Firewall', cascade='all, delete-orphan')
     zone = relationship('Zone')
 
-    def __init__(self, name, zone_id, description=''):
+    def __init__(self, name, zone_id, mac, description=''):
         self.id = str(uuid.uuid4())
         self.name = name
         self.zone_id = zone_id
+        self.description = description
+        self.mac = mac
 
     def __repr__(self):
-       return "<Device('%s','%s')>" % (self.id, self.name)
+       return "<Firewall('%s','%s')>" % (self.id, self.name)
 
     def to_dict(self):
         return {
@@ -105,6 +148,91 @@ class Device(Base):
             'name': self.name,
             'zone': self.zone.name,
             'zone_id': self.zone_id,
+            'mac': self.mac,
+            'address': self.address,
+        }
+
+    def tree_dict(self):
+        return {
+            'id': self.id,
+            'name': self.name,
+            'zone': self.zone.name,
+            'zone_id': self.zone_id,
+            'mac': self.mac,
+            'address': self.address,
+        }
+
+class Switch(Base):
+
+    __tablename__ = 'switches'
+
+    id = Column(String(255), primary_key=True)
+    name = Column(String(255), unique=True)
+    model_type = Column(String(255))
+    mac = Column(String(255))
+    address = Column(String(255))
+    ports = relationship('Interface', cascade='all, delete-orphan')
+
+    def __init__(self, name, mac='', address='', model_type=''):
+        self.id = str(uuid.uuid4())
+        self.name = name
+        self.mac = mac
+        self.address = address
+        self.model_type = model_type
+
+    def __repr__(self):
+       return "<Switch('%s','%s','%s','%s', '%s')>" % (self.id, self.name, self.model_type, self.mac, self.address)
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'name': self.name,
+            'model_type': self.model_type,
+            'mac': self.mac,
+            'address': self.address,
+        }
+
+    def tree_dict(self):
+        return {
+            'id': self.id,
+            'name': self.name,
+            'model_type': self.model_type,
+            'mac': self.mac,
+            'address': self.address,
+        }
+
+class Interface(Base):
+
+    __tablename__ = 'interfaces'
+
+    id = Column(String(255), primary_key=True, unique=True)
+    switch_id = Column(String(255), ForeignKey('switches.id'))
+    status = Column(String(255))
+    name = Column(String(255))
+    hostname = Column(String(255))
+    switch = relationship('Switch')
+
+    def __init__(self, id, hostname):
+        self.id = id
+        self.hostname = hostname
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'name': self.name,
+            'hostname': self.hostname,
+            'switch_id': self.switch.id if self.switch else None,
+            'ips': [x.to_dict()['ip'] for x in self.ips],
+        }
+
+    def tree_dict(self):
+        return {
+            'id': self.id,
+            'name': self.name,
+            'hostname': self.hostname,
+            'status': self.status,
+            'switch_id': self.switch.tree_dict(),
+            'ips': [x.tree_dict() for x in self.ips],
         }
 
 
@@ -114,14 +242,17 @@ class Vlan(Base):
 
     id = Column(String(255), primary_key=True)
     name = Column(String(255), unique=True)
+    type = Column(String(255))
     description = Column(String(255))
     zone_id = Column(String(255), ForeignKey('zones.id'))
     zone = relationship('Zone')
+    firewall_to_vlan = relationship('Vlans_to_Firewall', cascade='all, delete-orphan')
 
-    def __init__(self, name, zone_id, description=''):
+    def __init__(self, name, zone_id, type, description=''):
         self.id = str(uuid.uuid4())
         self.name = name
         self.zone_id = zone_id
+        self.type = type
 
     def __repr__(self):
        return "<Vlan('%s','%s')>" % (self.id, self.name)
@@ -130,51 +261,59 @@ class Vlan(Base):
         return {
             'id': self.id,
             'name': self.name,
+            'type': self.type,
             'zone': self.zone.name,
             'zone_id': self.zone_id,
         }
 
-
-class Vlans_to_Device(Base):
-
-    __tablename__ = 'vlans_to_devices'
-
-    vlan_id = Column(String(255), ForeignKey('vlans.id'), primary_key=True)
-    device_id = Column(String(255), ForeignKey('devices.id'), primary_key=True)
-    description = Column(String(255))
-    vlan = relationship('Vlan')
-    device = relationship('Device')
-
-    def to_dict(self):
+    def tree_dict(self):
         return {
-            'id': self.device.id,
-            'vlan_id': self.vlan_id,
-            'device_id': self.device_id,
-            'vlan': self.vlan.name,
-            'name': self.device.name,
-            'zone_id': self.device.zone_id,
-            'zone': self.device.zone.name,
+            'id': self.id,
+            'type': self.type,
+            'firewall': [x.tree_dict()['firewall'] for x in self.firewall_to_vlan],
+            'name': self.name,
         }
 
-class Anycasts_to_Device(Base):
+class Vlans_to_Firewall(Base):
 
-    __tablename__ = 'anycasts_to_devices'
+    __tablename__ = 'vlans_to_firewalls'
 
-    anycast_id = Column(String(255), ForeignKey('anycasts.id'), primary_key=True)
-    device_id = Column(String(255), ForeignKey('devices.id'), primary_key=True)
+    vlan_id = Column(String(255), ForeignKey('vlans.id'), primary_key=True)
+    firewall_id = Column(String(255), ForeignKey('firewalls.id'), primary_key=True)
     description = Column(String(255))
-    anycast = relationship('Anycast')
-    device = relationship('Device')
+    vlan = relationship('Vlan')
+    firewall = relationship('Firewall')
 
     def to_dict(self):
         return {
-            'id': self.device.id,
+            'id': self.firewall.id,
+            'vlan_id': self.vlan_id,
+            'device_id': self.firewall_id,
+            'vlan': self.vlan.name,
+            'name': self.firewall.name,
+            'zone_id': self.firewall.zone_id,
+            'zone': self.firewall.zone.name,
+        }
+
+    def tree_dict(self):
+        return {
+            'firewall': self.firewall.tree_dict()
+        }
+
+class Anycasts_to_Firewall(Base):
+
+    __tablename__ = 'anycasts_to_firewalls'
+
+    anycast_id = Column(String(255), ForeignKey('anycasts.id'), primary_key=True)
+    firewall_id = Column(String(255), ForeignKey('firewalls.id'), primary_key=True)
+    description = Column(String(255))
+    anycast = relationship('Anycast')
+    firewall = relationship('Firewall')
+
+    def to_dict(self):
+        return {
             'anycast_id': self.anycast_id,
             'anycast_cidr': self.anycast.cidr,
-            'device_id': self.device_id,
-            'name': self.device.name,
-            'zone_id': self.device.zone_id,
-            'zone': self.device.zone.name,
         }
 
 class Subnet(Base):
@@ -185,12 +324,18 @@ class Subnet(Base):
     cidr = Column(String(255), unique=True)
     description = Column(String(255))
     vlan_id = Column(String(255), ForeignKey('vlans.id'))
-    vlan = relationship('Vlan')
+    vlan = relationship('Vlan', backref="subnet")
 
     def __init__(self, cidr, vlan_id, description=''):
         self.id = str(uuid.uuid4())
         self.cidr = cidr
         self.vlan_id = vlan_id
+
+    def gateway(self):
+        return str(IPNetwork(self.cidr).ip+1)
+
+    def network(self):
+        return IPNetwork(self.cidr).with_netmask
 
     def to_ip(self):
         if IPNetwork(self.cidr).version == 4:
@@ -213,8 +358,16 @@ class Subnet(Base):
             'cidr': self.cidr,
             'vlan': self.vlan.name,
             'vlan_id': self.vlan_id,
+            'gateway': self.gateway(),
+            'network': self.network(),
         }
 
+    def tree_dict(self):
+        return {
+            'id': self.id,
+            'cidr': self.cidr,
+            'vlan': self.vlan.tree_dict()
+        }
 
 class Ip(Base):
 
@@ -225,6 +378,8 @@ class Ip(Base):
     description = Column(String(255))
     subnet_id = Column(String(255), ForeignKey('subnets.id'))
     subnet = relationship('Subnet')
+    interface_id = Column(String(255), ForeignKey('interfaces.id'))
+    interface = relationship("Interface", collection_class=set, backref=backref("ips", collection_class=set))
 
     def __init__(self, ip, subnet_id, description=''):
         self.id = str(uuid.uuid4())
@@ -232,16 +387,27 @@ class Ip(Base):
         self.subnet_id = subnet_id
 
     def __repr__(self):
-       return "<Ip('%s','%s')>" % (self.id, self.ip)
+       return "<Ip('%s','%s','%s')>" % (self.id, self.ip, self.interface_id)
 
     def to_dict(self):
+        hostname = self.interface.hostname if self.interface else None
         return {
             'id': self.id,
             'ip': self.ip,
             'subnet': self.subnet.cidr,
             'subnet_id': self.subnet_id,
+            'interface_id': self.interface_id,
+            'hostname': hostname,
         }
 
+    def tree_dict(self):
+        hostname = self.interface.hostname if self.interface else None
+        return {
+            'id': self.id,
+            'ip': self.ip,
+            'hostname': hostname,
+            'subnet': self.subnet.tree_dict()
+        }
 
 class Anycast(Base):
 

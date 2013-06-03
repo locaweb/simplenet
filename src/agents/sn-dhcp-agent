@@ -1,0 +1,301 @@
+#!/usr/bin/python
+#
+# Copyright 2012 Locaweb.
+# All Rights Reserved.
+#
+#    Licensed under the Apache License, Version 2.0 (the "License");
+#    you may not use this file except in compliance with the License.
+#    You may obtain a copy of the License at
+#
+#        http://www.apache.org/licenses/LICENSE-2.0
+#
+#    Unless required by applicable law or agreed to in writing, software
+#    distributed under the License is distributed on an "AS IS" BASIS,
+#    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#    See the License for the specific language governing permissions and
+#    limitations under the License.
+#
+# @author: Thiago Morello, Locaweb.
+# @author: Juliano Martinez, Locaweb.
+
+import os
+import sys
+import json
+import errno
+import base64
+import socket
+import shutil
+import getopt
+import syslog
+import urllib
+import httplib
+import datetime
+import traceback
+import subprocess
+import ConfigParser
+from time import sleep
+from supay import Daemon
+from urlparse import urlparse
+from Cheetah.Template import Template
+
+syslog.openlog(sys.argv[0].split('/')[-1], syslog.LOG_PID, syslog.LOG_DAEMON)
+config = ConfigParser.ConfigParser()
+config.read('/etc/simplenet/agents.cfg')
+
+
+class DhcpAgent(object):
+    def network_handler(self, data):
+        del(data['action'])
+        entries = []
+        for network in data['network'].keys():
+            entry = {"network": network.split('/')[0],
+                     "netmask": network.split('/')[1],
+                     "router": data['network'][network]['gateway']}
+            entries.append(entry)
+        render = Template(file = "%s/networks.conf.tmpl" % (
+            config.get('dhcp-agent','templates')),
+            searchList =[{'entries':entries}]
+        )
+        self.net_backup_file = None
+        if os.path.isfile(self.networks_file):
+            self.net_backup_file = '/tmp/%s-%s' % (
+                self.networks_file.split('/')[-1],
+                datetime.datetime.now().isoformat()
+            )
+            syslog.syslog("Backuping %s to %s" % (
+                    self.networks_file,
+                    self.net_backup_file
+                )
+            )
+            shutil.copy(self.networks_file, self.net_backup_file)
+        syslog.syslog("Writing dhcp file %s" % self.networks_file)
+        with open('/etc/dhcp/networks.conf', 'w') as file:
+            file.write(str(render))
+
+    def generate(self, data):
+        self.retries = config.getint('dhcp-agent','retries')
+        self.hosts_file = config.get('dhcp-agent','hosts_file')
+        self.networks_file = config.get('dhcp-agent','networks_file')
+        self.dhcp_init = config.get('dhcp-agent','dhcp_init')
+        self.network_handler(data)
+        render = Template(file = "%s/hosts.conf.tmpl" % (
+            config.get('dhcp-agent','templates')),
+            searchList =[{'entries':data['entries']}]
+        )
+        self.backup_file = None
+        if os.path.isfile(self.hosts_file):
+            self.backup_file = '/tmp/%s-%s' % (
+                self.hosts_file.split('/')[-1],
+                datetime.datetime.now().isoformat()
+            )
+            syslog.syslog("Backuping %s to %s" % (
+                    self.hosts_file,
+                    self.backup_file
+                )
+            )
+            shutil.copy(self.hosts_file, self.backup_file)
+        syslog.syslog("Writing dhcp file %s" % self.hosts_file)
+        with open('/etc/dhcp/hosts.conf', 'w') as file:
+            file.write(str(render))
+
+
+    def restart(self):
+        try:
+            subprocess.check_call("%s restart" % self.dhcp_init, shell=True)
+        except subprocess.CalledProcessError, e:
+            syslog.syslog("Problem restarting the dhcp server")
+            if self.backup_file:
+                syslog.syslog("Rollbacking to %s" % self.backup_file)
+                shutil.copy(self.backup_file, self.hosts_file)
+                subprocess.check_call(
+                    "%s restart" % self.dhcp_init,
+                    shell=True
+                )
+                raise RuntimeError("Problem applying the new configuration")
+
+    def commit(self, url, method):
+        retry = 0
+        url = urlparse(url)
+        while True:
+            try:
+                if retry > 0:
+                    syslog.syslog(
+                        "Opening connection with %s, try number: %s" % (
+                            url.netloc,
+                            retry + 1
+                        )
+                    )
+                else:
+                    syslog.syslog("Opening connection with %s" % url.netloc)
+                conn = httplib.HTTPConnection(url.netloc)
+                payload = json.dumps(
+                    {'dhcp': {'status': 'UPDATED'}}
+                ) if method == 'PUT' else ''
+                headers = {'Content-Type': 'application/json'}
+                syslog.syslog("Sending payload to %s" % url.netloc)
+                conn.request(method, url.path, payload, headers)
+                resp = conn.getresponse()
+                if resp.status == 200:
+                    syslog.syslog("Work done with %s" % url.netloc)
+                    break
+                else:
+                    syslog.syslog("Wrong status code %s on %s" % (
+                        resp.status, url.netloc)
+                    )
+                syslog.syslog("Retrying on %s" % url.netloc)
+            except socket.error as e:
+                if e.errno == errno.ECONNREFUSED:
+                    syslog.syslog("Connection refused on %s" % url.netloc)
+                else:
+                    syslog.syslog("Unexpected socket error on %s" % url.netloc)
+            finally:
+                retry = retry + 1
+                sleep(15)
+
+            if retry >= self.retries:
+                raise RuntimeError("Maximum retries exceeded on %s" %
+                    url.netloc
+                )
+
+
+class HTTPWorker(object):
+    def __init__(self):
+        self.exchange = "simplenet"
+        if config.has_option("dhcp-agent", "hostname"):
+            self.queue = "dhcp:%s" % config.get("dhcp-agent", "hostname")
+        else:
+            self.queue = "dhcp:%s" % os.uname()[1]
+        self.host = config.get("dhcp-agent", "broker_host")
+        self.port = config.get("dhcp-agent", "broker_port")
+        self.user = config.get("dhcp-agent", "broker_user")
+        self.password = config.get("dhcp-agent", "broker_password")
+        self.retries = 0
+
+    def request(self, method, path, body):
+        try:
+            basic_auth = base64.b64encode("%s:%s" % (self.user, self.password))
+            headers = {"Content-Type": "application/json",
+                       "Authorization": "Basic %s" % (basic_auth)}
+            conn = httplib.HTTPConnection(self.host, self.port)
+            conn.request(method, path, body, headers)
+            return json.loads(conn.getresponse().read() or "{}")
+        finally:
+            conn.close()
+
+    def register(self):
+        exchange = urllib.pathname2url(self.exchange)
+        queue = urllib.pathname2url(self.queue)
+        path = "/api/queues/%s/%s" % ('%2F', queue)
+        body = json.dumps({"auto_delete": False,
+                           "durable": True, "arguments": []})
+        self.request("PUT", path, body)
+
+        path = "/api/bindings/%s/e/%s/q/%s/%s" % ('%2F', exchange,
+                                                  queue, queue)
+        body = json.dumps({"routing_key": self.queue, "arguments": []})
+        self.request("PUT", path, body)
+
+    def get_message(self):
+        queue = urllib.pathname2url(self.queue)
+        path = "/api/queues/%s/%s/get" % ('%2F', queue)
+        body = json.dumps({"count": 1, "requeue": False, "encoding": "auto"})
+        messages = self.request("POST", path, body)
+        if messages:
+            return messages[-1]
+        else:
+            return None
+
+    def enqueue(self, message):
+        exchange = urllib.pathname2url(self.exchange)
+        path = "/api/exchanges/%s/%s/publish" % ('%2F', exchange)
+        body = json.dumps({
+            "properties": {"priority": 0, "delivery_mode":2, "headers": {},
+                           "content_encoding": "utf-8",
+                           "content_type": "application/json"},
+            "routing_key": self.queue,
+            "payload": message["payload"],
+            "payload_encoding": "string"})
+        self.request("POST", path, body)
+
+    def process_task(self, body, message):
+        body = json.loads(body)
+        syslog.syslog("Started DHCP agent work ")
+        dhcp = DhcpAgent()
+        try:
+            dhcp.generate(body)
+            #dhcp.commit(body['callback_url'], 'PUT')
+            dhcp.restart()
+        except RuntimeError, e:
+            syslog.syslog(str(e))
+        except Exception, e:
+            exc_type, exc_value, exc_traceback = sys.exc_info()
+            syslog.syslog("Unexpected error: %s" % " ".join(
+                traceback.format_exception(
+                        exc_type,
+                        exc_value,
+                        exc_traceback
+                )
+            ))
+
+    def retry_timeout(self):
+        default_timeout = 10
+        max_timeout = 60
+        timeout = default_timeout * self.retries
+        if timeout > max_timeout:
+            timeout = max_timeout
+        self.retries = self.retries + 1
+        return timeout
+
+    def reset_retry_timeout(self):
+        self.retries = 0
+
+    def run(self):
+        self.register()
+        while True:
+            try:
+                message = self.get_message()
+                if not message:
+                    sleep(5)
+                    continue
+                self.process_task(message["payload"], message)
+                self.reset_retry_timeout()
+            except Exception, e:
+                exc_type, exc_value, exc_traceback = sys.exc_info()
+                syslog.syslog("Unexpected error: %s" % " ".join(
+                    traceback.format_exception(
+                            exc_type,
+                            exc_value,
+                            exc_traceback
+                    )
+                ))
+                if message:
+                    self.enqueue(message)
+                    sleep(1)
+                else:
+                    sleep(self.retry_timeout())
+
+
+def main():
+    HTTPWorker().run()
+
+if __name__ == '__main__':
+    try:
+        opts, args = getopt.getopt(sys.argv[1:], "a:", ["action="])
+    except getopt.GetoptError, err:
+        print str(err)
+
+    action = 'start'
+    for o, a in opts:
+        if o in ('-a', '--action'):
+            action = a
+
+    daemon = Daemon(name='dhcp-agent', catch_all_log="/var/log/dhcp-agent.log")
+    if action == 'start':
+        daemon.start()
+        main()
+    elif action == 'status':
+        daemon.status()
+    elif action == 'stop':
+        daemon.stop()
+    elif action == 'foreground':
+        main()

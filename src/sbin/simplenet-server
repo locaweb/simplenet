@@ -31,7 +31,7 @@ from bottle import delete, put, get, post, error, run, debug
 from bottle import abort, request, ServerAdapter, response
 
 from simplenet.common.config import config, get_logger, StdOutAndErrWapper
-from simplenet.routes import base, policy, errors
+from simplenet.routes import base, policy, errors, switch
 
 app = bottle.app()
 logger = get_logger()

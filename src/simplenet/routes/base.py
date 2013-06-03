@@ -33,6 +33,16 @@ from simplenet.exceptions import (
 
 logger = get_logger()
 
+def generic_router(resource):
+    if resource == 'firewalls':
+        return 'firewall'
+    elif resource == 'switchs':
+        return 'switch'
+    elif resource == 'dhcps':
+        return 'dhcp'
+    else:
+        return 'base'
+
 @get('/prober')
 @handle_auth
 @reply_json
@@ -63,7 +73,7 @@ def generic_resources_list(resource):
 
     Retrieves all entries from resource
     """
-    manager = create_manager('base')
+    manager = create_manager(generic_router(resource))
     try:
         _list = getattr(manager, '%s_list' % resource[:-1])
         return _list()
@@ -83,7 +93,7 @@ def generic_resource_info(resource, resource_id):
 
     Retrieves resource information
     """
-    manager = create_manager('base')
+    manager = create_manager(generic_router(resource))
     try:
         _info = getattr(manager, '%s_info' % resource[:-1])
         return _info(resource_id)
@@ -103,13 +113,12 @@ def generic_resource_info_by_field(resource, resource_type, resource_value):
 
     Retrieves resource information by type
     """
-    manager = create_manager('base')
+    manager = create_manager(generic_router(resource))
     try:
         _info = getattr(manager, '%s_info_by_%s' % (resource[:-1], resource_type))
         return _info(resource_value)
     except AttributeError:
         raise FeatureNotAvailable()
-
 
 # Generic list by parent
 @get('/<resource>/list-by-<relationship_type>/<relationship_value>')
@@ -123,13 +132,12 @@ def generic_resource_list_by_relationship(resource, relationship_type, relations
 
     List devices
     """
-    manager = create_manager('base')
+    manager = create_manager(generic_router(resource))
     try:
         _list = getattr(manager, '%s_list_by_%s' % (resource[:-1], relationship_type))
         return _list(relationship_value)
     except AttributeError:
         raise FeatureNotAvailable()
-
 
 ## Generic Resource Deletion
 @delete('/<resource>/<resource_id>/delete')
@@ -143,13 +151,12 @@ def generic_resource_delete(resource, resource_id):
 
     Deletes resource
     """
-    manager = create_manager('base')
+    manager = create_manager(generic_router(resource))
     try:
         _delete = getattr(manager, '%s_delete' % (resource[:-1]))
         return _delete(resource_id)
     except AttributeError:
         raise FeatureNotAvailable()
-
 
 @post('/datacenters')
 @handle_auth
@@ -197,27 +204,89 @@ def datacenter_zone_create(datacenter_id):
     return zone
 
 
-@post('/zones/<zone_id>/devices')
+@post('/dhcps')
 @handle_auth
 @validate_input(name=str)
 @reply_json
-def zone_device_create(zone_id):
+def dhcp_create():
     """
     ::
 
-      POST /zones/<zone_id>/devices
+      POST /dhcps
 
-    Create a new device in zone
+    Create a new DHCP device
     """
-    manager = create_manager('base')
+    manager = create_manager('dhcp')
     data = request.body.readline()
     if not data:
         abort(400, 'No data received')
     data = json.loads(data)
-    device = manager.device_create(zone_id, data)
-    location = "devices/%s" % (device['id'])
+    dhcp = manager.dhcp_create(data=data)
+    location = "dhcps/%s" % (dhcp['id'])
     response.set_header("Location", location)
-    return device
+    return dhcp
+
+
+@post('/dhcps/<dhcp_id>/vlans')
+@handle_auth
+@validate_input(vlan_id=str)
+@reply_json
+def dhcp_add_vlan(dhcp_id):
+    """
+    ::
+
+      POST /dhcps/<dhcp_id>/vlans
+
+    Attach vlan to DHCP device
+    """
+    manager = create_manager('dhcp')
+    data = request.body.readline()
+    if not data:
+        abort(400, 'No data received')
+    data = json.loads(data)
+    dhcp = manager.dhcp_add_vlan(dhcp_id, data['vlan_id'])
+    location = "dhcps/relationship/%s" % (dhcp['id'])
+    response.set_header("Location", location)
+    return dhcp
+
+
+@delete('/dhcps/<dhcp_id>/vlans/<vlan_id>')
+@handle_auth
+@reply_json
+def dhcp_remove_vlan(dhcp_id, vlan_id):
+    """
+    ::
+
+      POST /dhcps/<dhcp_id>/vlans/<vlan_id>
+
+    Attach vlan to DHCP device
+    """
+    manager = create_manager('dhcp')
+    dhcp = manager.dhcp_remove_vlan(dhcp_id, vlan_id)
+    return dhcp
+
+
+@post('/firewalls')
+@handle_auth
+@validate_input(name=str)
+@reply_json
+def firewall_create():
+    """
+    ::
+
+      POST /firewalls
+
+    Create a new firewall device
+    """
+    manager = create_manager('firewall')
+    data = request.body.readline()
+    if not data:
+        abort(400, 'No data received')
+    data = json.loads(data)
+    firewall = manager.firewall_create(data=data)
+    location = "firewalls/%s" % (firewall['id'])
+    response.set_header("Location", location)
+    return firewall
 
 
 @post('/zones/<zone_id>/vlans')
@@ -243,82 +312,82 @@ def zone_vlan_create(zone_id):
     return vlan
 
 
-@post('/devices/<device_id>/vlans')
+@post('/firewalls/<firewall_id>/vlans')
 @handle_auth
 @validate_input(vlan_id=str)
 @reply_json
-def device_add_vlan(device_id):
+def firewall_add_vlan(firewall_id):
     """
     ::
 
-      POST /devices/<device_id>/vlans
+      POST /firewalls/<firewall_id>/vlans
 
-    Attach vlan to device
+    Attach vlan to firewall device
     """
-    manager = create_manager('base')
+    manager = create_manager('firewall')
     data = request.body.readline()
     if not data:
         abort(400, 'No data received')
     data = json.loads(data)
-    device = manager.device_add_vlan(device_id, data)
-    location = "devices/relationship/%s" % (device['id'])
+    firewall = manager.firewall_add_vlan(firewall_id, data)
+    location = "firewalls/relationship/%s" % (firewall['id'])
     response.set_header("Location", location)
-    return device
+    return firewall
 
 
-@post('/devices/<device_id>/anycasts')
+@post('/firewalls/<firewall_id>/anycasts')
 @handle_auth
 @validate_input(anycast_id=str)
 @reply_json
-def device_add_anycast(device_id):
+def firewall_add_anycast(firewall_id):
     """
     ::
 
-      POST /devices/<device_id>/anycasts
+      POST /firewalls/<firewall_id>/anycasts
 
-    Attach vlan to device
+    Attach vlan to firewall device
     """
-    manager = create_manager('base')
+    manager = create_manager('firewall')
     data = request.body.readline()
     if not data:
         abort(400, 'No data received')
     data = json.loads(data)
-    device = manager.device_add_anycast(device_id, data)
-    location = "devices/relationship/%s" % (device['id'])
+    firewall = manager.firewall_add_anycast(firewall_id, data)
+    location = "firewall/relationship/%s" % (firewall['id'])
     response.set_header("Location", location)
-    return device
+    return firewall
 
 
-@delete('/devices/<device_id>/vlans/<vlan_id>')
+@delete('/firewalls/<firewall_id>/vlans/<vlan_id>')
 @handle_auth
 @reply_json
-def device_remove_vlan(device_id, vlan_id):
+def firewall_remove_vlan(firewall_id, vlan_id):
     """
     ::
 
-      POST /devices/<device_id>/vlans/<vlan_id>
+      POST /firewalls/<firewall_id>/vlans/<vlan_id>
 
-    Attach vlan to device
+    Attach vlan to firewall device
     """
-    manager = create_manager('base')
-    device = manager.device_remove_vlan(device_id, vlan_id)
-    return device
+    manager = create_manager('firewall')
+    firewall = manager.firewall_remove_vlan(firewall_id, vlan_id)
+    return firewall
 
 
-@delete('/devices/<device_id>/anycasts/<anycast_id>')
+@delete('/firewalls/<firewall_id>/anycasts/<anycast_id>')
 @handle_auth
 @reply_json
-def device_remove_anycast(device_id, anycast_id):
+def firewall_remove_anycast(firewall_id, anycast_id):
     """
     ::
 
-      POST /devices/<device_id>/anycasts/<anycast_id>
+      POST /firewalls/<firewall_id>/anycasts/<anycast_id>
 
-    Attach anycasts to device
+    Attach anycasts to firewall device
     """
-    manager = create_manager('base')
-    device = manager.device_remove_anycast(device_id, anycast_id)
-    return device
+    manager = create_manager('firewall')
+    firewall = manager.firewall_remove_anycast(firewall_id, anycast_id)
+    return firewall
 
 
 @post('/anycasts')
@@ -411,3 +480,60 @@ def subnet_ip_create(subnet_id):
     location = "ips/%s" % (ip['id'])
     response.set_header("Location", location)
     return ip
+
+
+@post('/interfaces')
+@handle_auth
+@reply_json
+def interface_create():
+    """
+    ::
+
+      POST /interfaces
+
+    Create a new interface
+    """
+    manager = create_manager('base')
+    data = request.body.readline()
+    if not data:
+        abort(400, 'No data received')
+    data = json.loads(data)
+    interface = manager.interface_create(data)
+    location = "interfaces/%s" % (interface['id'])
+    response.set_header("Location", location)
+    return interface
+
+
+@post('/interfaces/<interface_id>/ips')
+@handle_auth
+@reply_json
+def interface_add_ip(interface_id):
+    """
+    ::
+
+      POST /interfaces/<interface_id>/ips
+
+    Attach IP to interface
+    """
+    manager = create_manager('base')
+    data = request.body.readline()
+    if not data:
+        abort(400, 'No data received')
+    data = json.loads(data)
+    interface = manager.interface_add_ip(interface_id, data)
+    return interface
+
+@delete('/interfaces/<interface_id>/ips/<ip_id>')
+@handle_auth
+@reply_json
+def interface_remove_ip(interface_id, ip_id):
+    """
+    ::
+
+      DELETE /interfaces/<interface_id>/ips/<ip_id>
+
+    Detach ip from interface
+    """
+    manager = create_manager('base')
+    interface = manager.interface_remove_ip(interface_id, ip_id)
+    return interface
