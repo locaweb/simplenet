@@ -1,3 +1,13 @@
+simplenet-server (0.0.9-3) stable; urgency=low
+
+  * commit a6bdbb845051245b10a3e530d3ef442302f65417
+  * Merge: 7354306 1d07d10
+  * Author: Juliano Martinez <juliano.martinez@locaweb.com.br>
+  * Date:   Mon Jun 3 14:41:23 2013 -0300
+  *     Merge branch 'die_quantum' of code.locaweb.com.br:iaas/simplenet
+
+ -- Juliano Martinez <juliano.martinez@locaweb.com.br>  Wed, 07 Aug 2013 16:34:16 +0000
+
 simplenet-server (0.0.9) stable; urgency=low
 
   * Fix

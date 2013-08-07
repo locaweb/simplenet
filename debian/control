@@ -15,7 +15,7 @@ Description: Network automation framework
 
 Package: simplenet-firewall-agent
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}, python (>= 2.6), python-kombu, iptables-persistenti, python-ipaddr, python-lockfile
+Depends: ${shlibs:Depends}, ${misc:Depends}, python (>= 2.6), python-kombu, iptables-persistent, python-ipaddr, python-lockfile
 Description: Network automation firewall agent
  Network automation firewall agent
 
