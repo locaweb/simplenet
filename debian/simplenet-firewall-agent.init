@@ -15,7 +15,7 @@ NAME=sn-fw-agent
 
 DAEMON=sn-fw-agent
 DAEMON_BIN=/usr/sbin/sn-fw-agent
-DAEMON_PIDFILE=/var/run/snfwagent.pid
+DAEMON_PIDFILE=/var/run/sn-fw-agent.pid
 SCRIPTNAME=/etc/init.d/$NAME
 
 # Exit if the package is not installed
@@ -51,7 +51,7 @@ case "$1" in
   start)
     log_daemon_msg "Starting $DESC" "$DAEMON"
     create_xconsole
-    $DAEMON start
+    $DAEMON -a start
     case "$?" in
         0) sendsigs_omit
            log_end_msg 0 ;;
@@ -63,7 +63,7 @@ case "$1" in
     ;;
   stop)
     log_daemon_msg "Stopping $DESC" "$DAEMON"
-    $DAEMON stop
+    $DAEMON -a stop
     case "$?" in
         0) log_end_msg 0 ;;
         1) log_progress_msg "already stopped"
@@ -73,8 +73,8 @@ case "$1" in
 
     ;;
   restart)
-    $DAEMON stop
-    $DAEMON start
+    $DAEMON -a stop
+    $DAEMON -a start
     ;;
   status)
     status_of_proc -p $DAEMON_PIDFILE $DAEMON_BIN $DAEMON && exit 0 || exit $?
