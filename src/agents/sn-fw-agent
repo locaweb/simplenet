@@ -27,21 +27,18 @@ from datetime import datetime
 
 import hashlib
 import os
-import sys
 import json
-import fcntl
 import ConfigParser
 
-from ipaddr import IPv4Network, IPv4Address, IPv6Network, IPv6Address, IPNetwork, IPAddress
+from ipaddr import IPNetwork
 
-from lockfile import FileLock, LockTimeout
+from lockfile import FileLock
 
 from kombu import Exchange, Queue
 from kombu import BrokerConnection
 
 from kombu.mixins import ConsumerMixin
 
-from kombu.utils import kwdict, reprcall
 from kombu.utils.debug import setup_logging
 
 import difflib
@@ -344,7 +341,7 @@ if __name__ == '__main__':
         else:
             help()
 
-    daemon = Daemon(name='simplenet', catch_all_log='/var/log/simplenet.log')
+    daemon = Daemon(name='sn-fw-agent', catch_all_log='/var/log/simplenet.log')
     if action == 'start':
         daemon.start()
         main(user, config)
