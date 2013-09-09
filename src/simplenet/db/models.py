@@ -664,7 +664,7 @@ class SubnetPolicy(Base):
 
 class AnycastipPolicy(Base):
 
-    __tablename__ = 'Anycastip_policies'
+    __tablename__ = 'anycastip_policies'
     id = Column(String(255), primary_key=True)
     proto = Column(String(255), nullable=True)
     src = Column(String(255), nullable=True)

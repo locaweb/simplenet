@@ -1,3 +1,9 @@
+simplenet-server (0.1.2-2~squeeze) stable; urgency=low
+
+  * Added baker as dep
+
+ -- Juliano Martinez <juliano.martinez@locaweb.com.br>  Wed, 21 Aug 2013 22:02:42 +0000
+
 simplenet-server (0.1.2-1) stable; urgency=low
 
   * commit de5c9401b361426adb9ab64f455375883ba2d242
@@ -31,7 +37,7 @@ simplenet-server (0.0.8) stable; urgency=low
 
 simplenet-server (0.0.7) stable; urgency=low
 
-  * Package fix 
+  * Package fix
 
  -- root <root@ubuntu>  Mon, 03 Dec 2012 13:57:26 -0200
 
