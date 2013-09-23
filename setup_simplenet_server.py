@@ -1,11 +1,10 @@
 #!/usr/bin/python
 
 from setuptools import setup, find_packages
-from glob import glob as ls
 
 setup(
     name = 'simplenet-server',
-    version = '0.0.7',
+    version = '0.1.2',
     description = 'Network automation framework',
     long_description = 'Network automation framework',
     author = 'Juliano Martinez',
