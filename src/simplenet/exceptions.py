@@ -15,10 +15,9 @@
 #
 # @author: Thiago Morello (morellon), Locaweb.
 # @author: Willian Molinari (PotHix), Locaweb.
+# @author: Juliano Martinez (ncode), Locaweb.
 
-import json
-from bottle import HTTPError, HTTPResponse
-
+from bottle import HTTPError
 
 class SimpleNetError(HTTPError):
     def __init__(self, code, message):
