@@ -20,7 +20,7 @@ from simplenet.common import event
 from simplenet.common.config import config, get_logger
 from simplenet.db import models, db_utils
 from simplenet.exceptions import (
-    FeatureNotImplemented, EntityNotFound,
+    FeatureNotAvailable, EntityNotFound,
     OperationNotPermited, FeatureNotAvailable
 )
 from sqlalchemy.exc import IntegrityError
@@ -231,7 +231,7 @@ class SimpleNet(object):
         return self.datacenter_info_by_name(data['name'])
 
     def datacenter_update(self, *args, **kawrgs):
-        raise FeatureNotImplemented()
+        raise FeatureNotAvailable()
 
     def datacenter_info(self, id):
         return self._generic_info_("datacenter", models.Datacenter, {'id': id})
@@ -270,7 +270,7 @@ class SimpleNet(object):
         return self.zone_info_by_name(data['name'])
 
     def zone_update(self, *args, **kawrgs):
-        raise FeatureNotImplemented()
+        raise FeatureNotAvailable()
 
     def zone_info(self, id):
         return self._generic_info_("zone", models.Zone, {'id': id})
@@ -333,7 +333,7 @@ class SimpleNet(object):
         )
 
     def vlan_update(self, *args, **kawrgs):
-        raise FeatureNotImplemented()
+        raise FeatureNotAvailable()
 
     def vlan_delete(self, id):
         return self._generic_delete_("vlan", models.Vlan, {'id': id})
@@ -405,7 +405,7 @@ class SimpleNet(object):
         )
 
     def subnet_update(self, *args, **kwargs):
-        raise FeatureNotImplemented()
+        raise FeatureNotAvailable()
 
     def subnet_delete(self, id):
         subnet = session.query(models.Subnet).get(id)
@@ -517,7 +517,7 @@ class SimpleNet(object):
         )
 
     def ip_update(self, *args, **kawrgs):
-        raise FeatureNotImplemented()
+        raise FeatureNotAvailable()
 
     def ip_delete(self, id):
         return self._generic_delete_("ip", models.Ip, {'id': id})
@@ -526,19 +526,19 @@ class SimpleNet(object):
         return self._generic_delete_("ip anycast", models.Anycastip, {'id': id})
 
     def policy_list(self, *args, **kawrgs):
-        raise FeatureNotImplemented()
+        raise FeatureNotAvailable()
 
     def policy_create(self, *args, **kawrgs):
-        raise FeatureNotImplemented()
+        raise FeatureNotAvailable()
 
     def policy_info(self, *args, **kawrgs):
-        raise FeatureNotImplemented()
+        raise FeatureNotAvailable()
 
     def policy_update(self, *args, **kawrgs):
-        raise FeatureNotImplemented()
+        raise FeatureNotAvailable()
 
     def policy_delete(self, *args, **kawrgs):
-        raise FeatureNotImplemented()
+        raise FeatureNotAvailable()
 
     def interface_list(self):
         return self._generic_list_("interfaces", models.Interface)

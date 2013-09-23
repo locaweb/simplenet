@@ -20,7 +20,7 @@ from simplenet.common import event
 from simplenet.common.config import get_logger
 from simplenet.db import models, db_utils
 from simplenet.exceptions import (
-    FeatureNotImplemented, OperationNotPermited
+    FeatureNotAvailable, OperationNotPermited
 )
 from simplenet.network_appliances.base import SimpleNet
 
@@ -113,7 +113,7 @@ class Net(SimpleNet):
         )
 
     def dhcp_update(self, *args, **kawrgs):
-        raise FeatureNotImplemented()
+        raise FeatureNotAvailable()
 
     def dhcp_delete(self, id):
         return self._generic_delete_("dhcp", models.Dhcp, {'id': id})

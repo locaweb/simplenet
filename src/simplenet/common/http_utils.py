@@ -25,7 +25,7 @@ from bottle import response, request, abort
 
 from simplenet.common.config import config, get_logger
 from simplenet.exceptions import (
-    FeatureNotImplemented, EntityNotFound,
+    FeatureNotAvailable, EntityNotFound,
     OperationNotPermited, FeatureNotAvailable
 )
 

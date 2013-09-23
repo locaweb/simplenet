@@ -38,14 +38,6 @@ class FeatureNotAvailable(SimpleNetError):
         )
 
 
-class FeatureNotImplemented(SimpleNetError):
-    def __init__(self):
-        simplenet_error = super(FeatureNotImplemented, self)
-        simplenet_error.__init__(
-            501, "Feature not implemented for the selected network_appliance yet"
-        )
-
-
 class EntityNotFound(SimpleNetError):
     def __init__(self, entity_type, entity_id):
         simplenet_error = super(EntityNotFound, self)

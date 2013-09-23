@@ -21,7 +21,7 @@ from simplenet.common import event
 from simplenet.common.config import get_logger
 from simplenet.db import models, db_utils
 from simplenet.exceptions import (
-    FeatureNotImplemented, EntityNotFound,
+    FeatureNotAvailable, EntityNotFound,
     OperationNotPermited
 )
 from simplenet.network_appliances.base import SimpleNet
@@ -143,7 +143,7 @@ class Net(SimpleNet):
         )
 
     def firewall_update(self, *args, **kawrgs):
-        raise FeatureNotImplemented()
+        raise FeatureNotAvailable()
 
     def firewall_delete(self, id):
         return self._generic_delete_("firewall", models.Firewall, {'id': id})
@@ -228,7 +228,7 @@ class Net(SimpleNet):
         return self._generic_info_("%sPolicy" % owner_type.capitalize(), _model, {'id': id})
 
     def policy_update(self, *args, **kwargs):
-        raise FeatureNotImplemented()
+        raise FeatureNotAvailable()
 
     def policy_delete(self, owner_type, id):
         logger.debug("Deleting policy %s" % id)
