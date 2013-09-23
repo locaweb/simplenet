@@ -42,6 +42,7 @@ def generic_router(resource):
     else:
         return 'base'
 
+
 @get('/prober')
 @handle_auth
 @reply_json
@@ -59,6 +60,7 @@ def generic_prober():
         return _list()
     except AttributeError:
         raise FeatureNotAvailable()
+
 
 ## Generic Resource List
 @get('/<resource>/list')
@@ -119,6 +121,7 @@ def generic_resource_info_by_field(resource, resource_type, resource_value):
     except AttributeError:
         raise FeatureNotAvailable()
 
+
 # Generic list by parent
 @get('/<resource>/list-by-<relationship_type>/<relationship_value>')
 @handle_auth
@@ -138,6 +141,7 @@ def generic_resource_list_by_relationship(resource, relationship_type, relations
     except AttributeError:
         raise FeatureNotAvailable()
 
+
 ## Generic Resource Deletion
 @delete('/<resource>/<resource_id>/delete')
 @handle_auth
@@ -156,6 +160,7 @@ def generic_resource_delete(resource, resource_id):
         return _delete(resource_id)
     except AttributeError:
         raise FeatureNotAvailable()
+
 
 @post('/datacenters')
 @handle_auth
@@ -521,6 +526,7 @@ def interface_add_ip(interface_id):
     data = json.loads(data)
     interface = manager.interface_add_ip(interface_id, data)
     return interface
+
 
 @delete('/interfaces/<interface_id>/ips/<ip_id>')
 @handle_auth
