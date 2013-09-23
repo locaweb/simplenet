@@ -18,17 +18,16 @@
 
 import json
 
-from bottle import delete, put, get, post
+from bottle import abort, delete, get, post
 from bottle import request, response
 
 from simplenet.common.auth import handle_auth
-from simplenet.common.config import config, get_logger
+from simplenet.common.config import get_logger
 from simplenet.common.http_utils import (
     reply_json, create_manager, validate_input
 )
 from simplenet.exceptions import (
-    FeatureNotImplemented, EntityNotFound,
-    OperationNotPermited, FeatureNotAvailable
+    FeatureNotAvailable
 )
 
 logger = get_logger()
@@ -46,7 +45,7 @@ def generic_router(resource):
 @get('/prober')
 @handle_auth
 @reply_json
-def generic_resources_list():
+def generic_prober():
     """
     ::
 
