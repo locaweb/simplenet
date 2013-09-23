@@ -16,13 +16,11 @@
 # @author: Juliano Martinez (ncode), Locaweb.
 # @author: Luiz Ozaki, Locaweb.
 
-import json
 from simplenet.common import event
-from simplenet.common.config import config, get_logger
+from simplenet.common.config import get_logger
 from simplenet.db import models, db_utils
 from simplenet.exceptions import (
-    FeatureNotImplemented, EntityNotFound,
-    OperationNotPermited, FeatureNotAvailable
+    FeatureNotImplemented, OperationNotPermited
 )
 from simplenet.network_appliances.base import SimpleNet
 
