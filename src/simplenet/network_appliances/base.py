@@ -17,11 +17,11 @@
 # @author: Luiz Ozaki, Locaweb.
 
 from simplenet.common import event
-from simplenet.common.config import config, get_logger
+from simplenet.common.config import get_logger
 from simplenet.db import models, db_utils
 from simplenet.exceptions import (
     FeatureNotAvailable, EntityNotFound,
-    OperationNotPermited, FeatureNotAvailable
+    OperationNotPermited
 )
 from sqlalchemy.exc import IntegrityError
 
