@@ -595,7 +595,7 @@ class SimpleNet(object):
         ip = session.query(models.Ip).get(ip_id)
 
         if not ip:
-            raise EntityNotFound('Ip', data)
+            raise EntityNotFound('Ip', ip_id)
         elif not interface:
             raise EntityNotFound('Interface', interface_id)
 
