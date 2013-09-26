@@ -410,10 +410,7 @@ class SimpleNet(object):
     def subnet_delete(self, id):
         subnet = session.query(models.Subnet).get(id)
         vlan = subnet.vlan
-        try:
-            ret = self._generic_delete_("subnet", models.Subnet, {'id': id})
-        except Exception, e:
-            raise Exception(e)
+        ret = self._generic_delete_("subnet", models.Subnet, {'id': id})
         self._enqueue_dhcp_entries_(vlan, 'update')
         return ret
 
