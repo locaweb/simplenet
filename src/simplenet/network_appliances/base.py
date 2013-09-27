@@ -16,7 +16,6 @@
 # @author: Juliano Martinez (ncode), Locaweb.
 # @author: Luiz Ozaki, Locaweb.
 
-from simplenet.common import event
 from simplenet.common.config import get_logger
 from simplenet.db import models, db_utils
 from simplenet.exceptions import (
@@ -31,21 +30,6 @@ session = db_utils.get_database_session()
 
 class SimpleNet(object):
 
-    def _get_data_firewall_(self, id):
-        logger.debug("Getting device data %s" % id)
-        firewall = self.firewall_info(id)
-        zone = self.zone_info(firewall['zone_id'])
-        datacenter = self.datacenter_info(zone['datacenter_id'])
-        logger.debug("Received device: %s zone: %s "
-            "datacenter: %s from [%s]" %
-            (firewall, zone, datacenter, id)
-        )
-        return {
-            'zone': zone['name'],
-            'zone_id': zone['id'],
-            'datacenter': datacenter['name'],
-            'datacenter_id': datacenter['id'],
-        }
 
     def _generic_list_(self, name, model):
         logger.debug("Listing %s" % name)

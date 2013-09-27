@@ -152,3 +152,4 @@ class Net(SimpleNet):
                 entries.update({ip['ip']: [ip['interface_id'], ip['hostname'] or "defaulthostname"]})
 
         event.EventManager().raise_fanout_event(vlan.name, '', {'network': _data, 'entries': entries, 'action': action})
+        
