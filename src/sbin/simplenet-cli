@@ -144,7 +144,7 @@ def zone(action=None, name=None, datacenter=None):
     params={'action': '<list all|create|delete|firewall_list|dhcp_list>',
             'name': 'vlan name',
             'type': 'vlan type',
-            'zone': 'zone_id to create a new vlan'}
+            'zone': 'zone name to bind the vlan'}
 )
 def vlan(action=None, name=None, zone=None, type=None):
     base_url = '%s/vlans' % (server)
@@ -183,7 +183,7 @@ def vlan(action=None, name=None, zone=None, type=None):
 @baker.command(
     params={'action': '<list all|create|delete|rename>',
             'cidr': 'subnet cidr',
-            'vlan': 'vlan to create a new subnet'}
+            'vlan': 'vlan to bind the subnet'}
 )
 def subnet(action=None, cidr=None, vlan=None):
     base_url = '%s/subnets' % (server)
@@ -499,8 +499,8 @@ def switch(action=None, name=None, model_type=None, mac=None,
 @baker.command(
     params={'action': '<list all|info|create|delete|ip_attach|ip_detach>',
             'mac': 'interface mac address',
-            'ip': 'IP address',
-            'hostname': 'Hostname'}
+            'ip': 'ip address',
+            'hostname': 'hostname'}
 )
 def interface(action=None, mac=None, ip=None, hostname=None):
     base_url = '%s/interfaces' % (server)
@@ -550,6 +550,8 @@ def interface(action=None, mac=None, ip=None, hostname=None):
     params={'action': '<list all|attach|create|delete|rename>',
             'name': 'type of owner <zone|vlan|subnet|ip|anycast|anycastip>',
             'owner': 'policy owner name',
+            'in_iface': 'inbound interface name',
+            'out_iface': 'outbound interface name',
             'src': 'source ip or subnet',
             'src_port': 'source port',
             'dst': 'destination ip or subnet',
@@ -558,9 +560,9 @@ def interface(action=None, mac=None, ip=None, hostname=None):
             'table': 'table to apply the policy <INPUT|FORWARD|OUTPUT>',
             'policy': 'policy to use <ACCEPT|REJECT|DROP>'}
 )
-def firewallrule(action=None, name=None, owner=None, dst=None,
-                src=None, dst_port=None, src_port=None, proto=None,
-                table=None, policy=None):
+def firewallrule(action=None, name=None, owner=None, in_iface=None,
+                out_iface=None, dst=None, src=None, dst_port=None, 
+                src_port=None, proto=None, table=None, policy=None):
     base_url = '%s/firewall/policy' % server
     r = None
     if action == 'list':
