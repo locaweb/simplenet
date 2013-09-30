@@ -9,13 +9,13 @@ XS-Python-Version: 2.6
 
 Package: simplenet-server
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}, python (>= 2.6), python-baker, python-kombu, python-bottle, python-sqlalchemy, python-sqlalchemy-ext, python-mysqldb, python-gevent, python-supay, python-ipaddr
+Depends: ${shlibs:Depends}, ${misc:Depends}, python (>= 2.6), python-baker, python-kombu, python-bottle, python-sqlalchemy, python-sqlalchemy-ext, python-mysqldb, python-gevent, python-supay, python-ipaddr, python-redis
 Description: Network automation framework
  Network automation framework
 
 Package: simplenet-firewall-agent
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}, python (>= 2.6), python-kombu, iptables-persistent, python-ipaddr, python-lockfile, python-supay, python-redis
+Depends: ${shlibs:Depends}, ${misc:Depends}, python (>= 2.6), python-kombu, iptables-persistent, python-ipaddr, python-lockfile, python-supay
 Description: Network automation firewall agent
  Network automation firewall agent
 
