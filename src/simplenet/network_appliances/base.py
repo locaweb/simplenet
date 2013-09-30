@@ -30,7 +30,6 @@ session = db_utils.get_database_session()
 
 class SimpleNet(object):
 
-
     def _generic_list_(self, name, model):
         logger.debug("Listing %s" % name)
         ss = session.query(model).all()
