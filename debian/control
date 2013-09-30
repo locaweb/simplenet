@@ -21,6 +21,6 @@ Description: Network automation firewall agent
 
 Package: simplenet-cli
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}, python (>= 2.6), python-baker
+Depends: ${shlibs:Depends}, ${misc:Depends}, python (>= 2.6), python-baker, python-requests
 Description: Network automation firewall CLI
  Network automation firewall CLI
