@@ -77,8 +77,6 @@ class Net(SimpleNet):
         except FlushError:
             session.rollback()
             raise OperationNotPermited('dhcp_add_vlan', 'Entry already exist')
-        except:
-            raise
         self._enqueue_dhcp_(vlan, dhcp, 'new')
         _data = dhcp.to_dict()
         logger.debug("Successful adding vlan to device:"
@@ -94,13 +92,10 @@ class Net(SimpleNet):
     def dhcp_remove_vlan(self, dhcp_id, vlan_id):
         dhcp = session.query(models.Dhcp).get(dhcp_id)
         vlan = session.query(models.Vlan).get(vlan_id)
-        try:
-            ret = self._generic_delete_(
-                "vlan from dhcps", models.Vlans_to_Dhcp,
-                {'vlan_id': vlan_id, 'dhcp_id': dhcp_id}
-            )
-        except Exception, e:
-            raise Exception(e)
+        ret = self._generic_delete_(
+            "vlan from dhcps", models.Vlans_to_Dhcp,
+            {'vlan_id': vlan_id, 'dhcp_id': dhcp_id}
+        )
         self._enqueue_dhcp_(vlan, dhcp, 'remove')
         return ret
 
@@ -152,4 +147,3 @@ class Net(SimpleNet):
                 entries.update({ip['ip']: [ip['interface_id'], ip['hostname'] or "defaulthostname"]})
 
         event.EventManager().raise_fanout_event(vlan.name, '', {'network': _data, 'entries': entries, 'action': action})
-        
