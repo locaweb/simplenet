@@ -564,7 +564,7 @@ class SimpleNet(object):
         except Exception, e:
             session.rollback()
             raise Exception(e)
-        self._enqueue_dhcp_entries_(ip.subnet.vlan, 'update')
+        #self._enqueue_dhcp_entries_(ip.subnet.vlan, 'update')
         _data = interface.to_dict()
         logger.debug("Successful adding IP to interface status: %s" % _data)
 
@@ -591,7 +591,7 @@ class SimpleNet(object):
             logger.debug("Successful removing IP to interface status: %s" % _data)
         else:
             _data = interface.to_dict()
-        self._enqueue_dhcp_entries_(ip.subnet.vlan, 'update')
+        #self._enqueue_dhcp_entries_(ip.subnet.vlan, 'update')
         return _data
 
 class Net(SimpleNet):
