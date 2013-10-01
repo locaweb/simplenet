@@ -352,7 +352,7 @@ class SimpleNet(object):
             session.rollback()
             raise Exception(e)
         vlan = session.query(models.Vlan).get(vlan_id)
-        self._enqueue_dhcp_entries_(vlan, 'update')
+        #self._enqueue_dhcp_entries_(vlan, 'update')
         return self.subnet_info_by_cidr(data['cidr'])
 
     def anycast_create(self, data):
@@ -394,7 +394,7 @@ class SimpleNet(object):
         subnet = session.query(models.Subnet).get(id)
         vlan = subnet.vlan
         ret = self._generic_delete_("subnet", models.Subnet, {'id': id})
-        self._enqueue_dhcp_entries_(vlan, 'update')
+        #self._enqueue_dhcp_entries_(vlan, 'update')
         return ret
 
     def anycast_delete(self, id):
