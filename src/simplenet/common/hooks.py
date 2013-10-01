@@ -31,10 +31,7 @@ def post_run(f):
     @wraps(f)
     def post(*args, **kwargs):
         if os.path.isfile("/etc/simplenet/hooks/post_%s.py" % f.__name__):
-            try:
-                result = f(*args, **kwargs)
-            except Exception, e:
-                raise Exception(e) 
+            result = f(*args, **kwargs)
             ## run the hook 
             return result
         return f(*args, **kwargs)
