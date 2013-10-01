@@ -18,28 +18,24 @@
 import os
 from functools import wraps
 
-def pre_run():
-    def proxy(f):
-        @wraps(f)
-        def pre(*args, **kwargs):
-            if os.path.isfile("/etc/simplenet/hooks/pre_%s.py" % f.__name__):
-                ## run the hook
-                return f(*args, **kwargs)
+def pre_run(f):
+    @wraps(f)
+    def pre(*args, **kwargs):
+        if os.path.isfile("/etc/simplenet/hooks/pre_%s.py" % f.__name__):
+            ## run the hook
             return f(*args, **kwargs)
-        return pre
-    return proxy
+        return f(*args, **kwargs)
+    return pre
 
-def post_run():
-    def proxy(f):
-        @wraps(f)
-        def post(*args, **kwargs):
-            if os.path.isfile("/etc/simplenet/hooks/post_%s.py" % f.__name__):
-                try:
-                    result = f(*args, **kwargs)
-                except Exception, e:
-                    raise Exception(e) 
-                ## run the hook 
-                return result
-            return f(*args, **kwargs)
-        return post
-    return proxy
+def post_run(f):
+    @wraps(f)
+    def post(*args, **kwargs):
+        if os.path.isfile("/etc/simplenet/hooks/post_%s.py" % f.__name__):
+            try:
+                result = f(*args, **kwargs)
+            except Exception, e:
+                raise Exception(e) 
+            ## run the hook 
+            return result
+        return f(*args, **kwargs)
+    return post
