@@ -32,8 +32,8 @@ def pre_run():
 def post_run():
     def proxy(f):
         @wraps(f)
-        def pre(*args, **kwargs):
-            if os.path.isfile("/etc/simplenet/hooks/pre_%s.py" % f.__name__):
+        def post(*args, **kwargs):
+            if os.path.isfile("/etc/simplenet/hooks/post_%s.py" % f.__name__):
                 try:
                     result = f(*args, **kwargs)
                 except Exception, e:
@@ -41,5 +41,5 @@ def post_run():
                 ## run the hook 
                 return result
             return f(*args, **kwargs)
-        return pre
+        return post
     return proxy
