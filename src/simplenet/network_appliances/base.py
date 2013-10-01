@@ -22,6 +22,7 @@ from simplenet.exceptions import (
     FeatureNotAvailable, EntityNotFound,
     OperationNotPermited
 )
+from simplenet.hooks import post_run
 from sqlalchemy.exc import IntegrityError
 
 logger = get_logger()
@@ -339,6 +340,7 @@ class SimpleNet(object):
             {'vlan_id': vlan_id}
         )
 
+    @post_run
     def subnet_create(self, vlan_id, data):
         session.begin(subtransactions=True)
         try:
@@ -390,6 +392,7 @@ class SimpleNet(object):
     def subnet_update(self, *args, **kwargs):
         raise FeatureNotAvailable()
 
+    @post_run
     def subnet_delete(self, id):
         subnet = session.query(models.Subnet).get(id)
         vlan = subnet.vlan
@@ -546,6 +549,7 @@ class SimpleNet(object):
     def interface_info_by_mac(self, mac):
         return self._generic_info_("interface", models.Interface, {'id': mac})
 
+    @post_run
     def interface_add_ip(self, interface_id, data):
         logger.debug("Adding IP to interface using data: %s" % data)
 
@@ -570,6 +574,7 @@ class SimpleNet(object):
 
         return _data
 
+    @post_run
     def interface_remove_ip(self, interface_id, ip_id):
         interface = session.query(models.Interface).get(interface_id)
         ip = session.query(models.Ip).get(ip_id)
