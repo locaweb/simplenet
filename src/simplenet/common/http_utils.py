@@ -17,18 +17,12 @@
 # @author: Juliano Martinez (ncode), Locaweb.
 # @author: Luiz Ozaki, Locaweb.
 
-import os
 import redis
 
 from functools import wraps
 from bottle import response, request, abort
 
-from simplenet.common.config import config, get_logger
-from simplenet.exceptions import (
-    FeatureNotAvailable, EntityNotFound,
-    OperationNotPermited, FeatureNotAvailable
-)
-
+from simplenet.common.config import get_logger
 
 try:
     from simplejson import dumps, loads
