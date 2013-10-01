@@ -17,12 +17,12 @@
 # @author: Luiz Ozaki, Locaweb.
 
 from simplenet.common.config import get_logger
+from simplenet.common.hooks import post_run
 from simplenet.db import models, db_utils
 from simplenet.exceptions import (
     FeatureNotAvailable, EntityNotFound,
     OperationNotPermited
 )
-from simplenet.hooks import post_run
 from sqlalchemy.exc import IntegrityError
 
 logger = get_logger()
