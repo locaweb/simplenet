@@ -91,6 +91,10 @@ def pretty_output(r):
             'name': 'datacenter name'}
 )
 def datacenter(action=None, name=None):
+    """Manage the datacenter entity
+    
+    simplenet-cli datacenter create --name dc01
+    """
     base_url = '%s/datacenters' % (server)
     r = None
     if action == 'list':
@@ -114,6 +118,10 @@ def datacenter(action=None, name=None):
             'name': 'zone name'}
 )
 def zone(action=None, name=None, datacenter=None):
+    """Manage a zone related to a datacenter
+    
+    simplenet-cli zone create --name zone01 --datacenter dc01
+    """
     base_url = '%s/zones' % (server)
     r = None
     if action == 'list':
@@ -147,6 +155,10 @@ def zone(action=None, name=None, datacenter=None):
             'zone': 'zone name to bind the vlan'}
 )
 def vlan(action=None, name=None, zone=None, type=None):
+    """Manage a vlan related to a zone
+    
+    simplenet-cli vlan create --name zone01 --datacenter dc01
+    """
     base_url = '%s/vlans' % (server)
     r = None
     if action == 'list':
