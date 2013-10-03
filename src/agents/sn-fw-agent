@@ -82,6 +82,7 @@ class Worker(ConsumerMixin):
             lock.acquire()
             self._gen_iptables_save_(body)
             self.iptables_save.append("COMMIT\n")
+            old = None
             if os.path.isfile(self.iptables_file):
                 old = open(self.iptables_file, "r").readlines()
             open(self.iptables_file, "w").write("\n".join(self.iptables_save))
