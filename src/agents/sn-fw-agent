@@ -79,7 +79,7 @@ class Worker(ConsumerMixin):
 
     def process_task(self, body, message):
         logging.debug("TASK")
-        a = datetime.now()
+        start_time = datetime.now()
         self.iptables_save = []
         #self.info("Received payload %s" % json.dumps(body, sort_keys=True, indent=4))
 
@@ -100,9 +100,9 @@ class Worker(ConsumerMixin):
             lock.release()
         message.ack()
 
-        b = datetime.now()
-        c = b - a
-        logging.debug(c)
+        stop_time = datetime.now()
+        duration = stop_time - start_time
+        logging.debug(duration)
 
     def _add_rule_(self, rule):
         if not len(self.iptables_save):
