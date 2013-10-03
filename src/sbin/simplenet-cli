@@ -236,7 +236,7 @@ def subnet(action=None, cidr=None, vlan=None):
 def anycast(action=None, cidr=None):
     """Manage a anycast subnet
     
-    simplenet-cli anycast create --cidr 192.168.0.0/24
+    simplenet-cli anycast create --cidr 192.168.1.0/24
     """
     base_url = '%s/anycasts' % (server)
     r = None
@@ -266,6 +266,10 @@ def anycast(action=None, cidr=None):
             'subnet': 'subnet cidr'}
 )
 def ip(action=None, ip=None, subnet=None):
+    """Manage a ip contained in a subnet
+    
+    simplenet-cli ip create --ip 192.168.0.1 --subnet 192.168.0.0/24
+    """
     base_url = '%s/ips' % (server)
     r = None
     if action == 'list':
@@ -299,6 +303,10 @@ def ip(action=None, ip=None, subnet=None):
             'anycast': 'anycast cidr'}
 )
 def anycastip(action=None, ip=None, anycast=None):
+    """Manage a ip contained in a anycast subnet
+    
+    simplenet-cli anycastip create --ip 192.168.1.1 --anycast 192.168.1.0/24
+    """
     base_url = '%s/anycastips' % (server)
     r = None
     if action == 'list':
