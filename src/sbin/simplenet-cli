@@ -422,7 +422,6 @@ def firewall(action=None, name=None, zone=None,
             'vlan': 'vlan to attach vlans to devices'}
 )
 def dhcp(action=None, name=None, vlan=None):
-
     base_url = '%s/dhcps' % (server)
     r = None
     if action == 'list':
