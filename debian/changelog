@@ -1,3 +1,9 @@
+simplenet-server (0.1.5-2~wheezz) stable; urgency=low
+
+  * Fixing typos
+
+ -- Juliano Martinez <juliano.martinez@locaweb.com.br>  Thu, 03 Oct 2013 20:28:42 +0000
+
 simplenet-server (0.1.5-1~wheezy) stable; urgency=low
 
   * Improving cli help
