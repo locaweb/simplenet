@@ -1,5 +1,3 @@
-simplenet 
-
 ## What is simplenet?
 Simplenet is a framework for network automation 
 
