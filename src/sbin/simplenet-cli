@@ -343,7 +343,10 @@ def anycastip(action=None, ip=None, anycast=None):
 )
 def firewall(action=None, name=None, zone=None,
              vlan=None, anycast=None, mac=None):
-
+    """Manage a firewall device related to a zone
+    
+    simplenet-cli firewall create --name firewall01 --zone zone01
+    """
     base_url = '%s/firewalls' % (server)
     r = None
     if action == 'list':
@@ -422,6 +425,10 @@ def firewall(action=None, name=None, zone=None,
             'vlan': 'vlan to attach vlans to devices'}
 )
 def dhcp(action=None, name=None, vlan=None):
+    """Manage a dhcp server related to a vlan
+    
+    simplenet-cli dhcp create --name firewall01 --vlan vlan01
+    """
     base_url = '%s/dhcps' % (server)
     r = None
     if action == 'list':
