@@ -19,30 +19,24 @@
 # @author: Luiz Ozaki, Locaweb.
 # @author: Eduardo S. Scarpellini, Locaweb.
 
-import re
-import getopt, sys
-
-from supay import Daemon
-from datetime import datetime
-
-import hashlib
-import os
-import json
 import ConfigParser
+import difflib
+import getopt
+import json
+import logging
+import os
+import re
+import sys
 
+from datetime import datetime
 from ipaddr import IPNetwork
-
 from lockfile import FileLock
+from supay import Daemon
 
 from kombu import Exchange, Queue
 from kombu import BrokerConnection
-
 from kombu.mixins import ConsumerMixin
-
 from kombu.utils.debug import setup_logging
-
-import difflib
-import logging
 
 
 setup_logging(loglevel="INFO")
@@ -88,7 +82,8 @@ class Worker(ConsumerMixin):
             lock.acquire()
             self._gen_iptables_save_(body)
             self.iptables_save.append("COMMIT\n")
-            old = open(self.iptables_file, "r").readlines()
+            if os.path.isfile(iptables_file):
+                old = open(self.iptables_file, "r").readlines()
             open(self.iptables_file, "w").write("\n".join(self.iptables_save))
             new = open(self.iptables_file, "r").readlines()
 
