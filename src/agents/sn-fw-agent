@@ -75,7 +75,7 @@ class Worker(ConsumerMixin):
         logging.debug("TASK")
         start_time = datetime.now()
         self.iptables_save = []
-        #self.info("Received payload %s" % json.dumps(body, sort_keys=True, indent=4))
+        logging.debug("Received payload %s" % json.dumps(body, sort_keys=True, indent=4))
 
         try:
             lock = FileLock(self.lockfile.replace(".lock",""))
