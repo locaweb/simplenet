@@ -157,7 +157,7 @@ def zone(action=None, name=None, datacenter=None):
 def vlan(action=None, name=None, zone=None, type=None):
     """Manage a vlan related to a zone
     
-    simplenet-cli vlan create --name zone01 --datacenter dc01
+    simplenet-cli vlan create --name vlan01 --zone zone01
     """
     base_url = '%s/vlans' % (server)
     r = None
@@ -198,6 +198,10 @@ def vlan(action=None, name=None, zone=None, type=None):
             'vlan': 'vlan to bind the subnet'}
 )
 def subnet(action=None, cidr=None, vlan=None):
+    """Manage a subnet related to a vlan
+    
+    simplenet-cli subnet create --cidr 192.168.0.0/24 --vlan vlan01
+    """
     base_url = '%s/subnets' % (server)
     r = None
     if action == 'list':
@@ -230,6 +234,10 @@ def subnet(action=None, cidr=None, vlan=None):
             'cidr': 'subnet cidr'}
 )
 def anycast(action=None, cidr=None):
+    """Manage a anycast subnet
+    
+    simplenet-cli anycast create --cidr 192.168.0.0/24
+    """
     base_url = '%s/anycasts' % (server)
     r = None
     if action == 'list':
