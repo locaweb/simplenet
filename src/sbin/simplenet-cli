@@ -597,6 +597,10 @@ def interface(action=None, mac=None, ip=None, hostname=None):
 def firewallrule(action=None, name=None, owner=None, in_iface=None,
                 out_iface=None, dst=None, src=None, dst_port=None, 
                 src_port=None, proto=None, table=None, policy=None):
+    """Manage firewall rules
+
+    simplenet-cli firewallrule create --subnet 192.168.0.0/24 --dst 192.168.0.2 --proto tcp --table INPUT --policy DROP
+    """
     base_url = '%s/firewall/policy' % server
     r = None
     if action == 'list':
