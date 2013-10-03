@@ -1,4 +1,16 @@
-simplenet-server (0.1.2-2~squeeze) stable; urgency=low
+simplenet-server (0.1.2-3~precise) stable; urgency=low
+
+  * Precise build
+
+ -- Juliano Martinez <juliano.martinez@locaweb.com.br>  Thu, 03 Oct 2013 16:17:48 +0000
+
+simplenet-server (0.1.2-3~wheezy) stable; urgency=low
+
+  * Wheezy build 
+
+ -- root <juliano.martinez@locaweb.com.br>  Thu, 03 Oct 2013 14:44:59 +0000
+
+simplenet-server (0.1.2-2~wheezy) stable; urgency=low
 
   * Added baker as dep
 
