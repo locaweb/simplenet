@@ -50,7 +50,12 @@ Simplenet is a framework for network automation. Using simplenet you can easily 
 ### Firewall
 
 	$ dpkg -i simplenet-firewall-agent_x.x.x-x_amd64.deb
-	$ /etc/init.d/simplenet-firewall start
+	$ /etc/init.d/simplenet-firewall-agent start
+
+### Server
+
+	$ dpkg -i simplenet-server_x.x.x-x_amd64.deb
+	$ /etc/init.d/simplenet-server start
 
 ## Depends:
 
