@@ -32,6 +32,6 @@ Simplenet is a framework for network automation. Using simplenet you can easily 
 
 	[firewall]
 	lockfile = /var/run/firewall-agent.lock    # firewall agent lockfile
-	uri = amqp://guest:guest@localhost:5672//  # amqp broker connection
+	broker = amqp://guest:guest@localhost//    # amqp broker connection
 	iptables_file = /etc/iptables/rules        # iptables files
 	logging = debug                            # log level
