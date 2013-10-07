@@ -42,6 +42,10 @@ Simplenet is a framework for network automation. Using simplenet you can easily 
     $ git clone https://github.com/locaweb/simplenet.git
     $ cd simplenet
     $ dpkg-buildpackage -us -uc -rfakeroot
+    $ ls ../simplenet*.deb
+    $ simplenet-cli_x.x.x-x_amd64.deb
+    $ simplenet-firewall-agent_x.x.x-x_amd64.deb
+    $ simplenet-server_x.x.x-x_amd64.deb
 
 ## Depends:
 
