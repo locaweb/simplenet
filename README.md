@@ -47,6 +47,11 @@ Simplenet is a framework for network automation. Using simplenet you can easily 
     $ simplenet-firewall-agent_x.x.x-x_amd64.deb
     $ simplenet-server_x.x.x-x_amd64.deb
 
+### Firewall
+
+	$ dpkg -i simplenet-firewall-agent_x.x.x-x_amd64.deb
+	$ /etc/init.d/simplenet-firewall start
+
 ## Depends:
 
 kombu      - https://pypi.python.org/pypi/kombu
