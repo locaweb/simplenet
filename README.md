@@ -38,6 +38,8 @@ Simplenet is a framework for network automation. Using simplenet you can easily 
 
 ## Depends:
 
-kombu    - https://pypi.python.org/pypi/kombu
-baker    - https://pypi.python.org/pypi/Baker
-requests - https://github.com/kennethreitz/requests
+kombu      - https://pypi.python.org/pypi/kombu
+baker      - https://pypi.python.org/pypi/Baker
+ipaddr     - https://pypi.python.org/pypi/ipaddr
+requests   - https://github.com/kennethreitz/requests
+sqlalchemy - https://bitbucket.org/zzzeek/sqlalchemy
