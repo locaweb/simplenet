@@ -35,3 +35,9 @@ Simplenet is a framework for network automation. Using simplenet you can easily 
 	broker = amqp://guest:guest@localhost//    # amqp broker connection
 	iptables_file = /etc/iptables/rules        # iptables files
 	logging = debug                            # log level
+
+## Depends:
+
+kombu    - https://pypi.python.org/pypi/kombu
+baker    - https://pypi.python.org/pypi/Baker
+requests - https://github.com/kennethreitz/requests
