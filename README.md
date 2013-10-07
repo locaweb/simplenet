@@ -36,6 +36,13 @@ Simplenet is a framework for network automation. Using simplenet you can easily 
 	iptables_file = /etc/iptables/rules        # iptables files
 	logging = debug                            # log level
 
+## Instalation:
+### Packaging on Debian and Ubuntu
+
+    $ git clone https://github.com/locaweb/simplenet.git
+    $ cd simplenet
+    $ dpkg-buildpackage -us -uc -rfakeroot
+
 ## Depends:
 
 kombu      - https://pypi.python.org/pypi/kombu
