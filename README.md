@@ -57,6 +57,25 @@ Simplenet is a framework for network automation. Using simplenet you can easily 
 	$ dpkg -i simplenet-server_x.x.x-x_amd64.deb
 	$ /etc/init.d/simplenet-server start
 
+### Cli
+
+	$ dpkg -i simplenet-cli_x.x.x-x_amd64.deb
+	$ /usr/sbin/simplenet-cli 
+	Usage: /usr/sbin/simplenet-cli COMMAND <options>
+
+	Available commands:
+	 anycast       Manage an anycast subnet
+	 anycastip     Manage an ip contained in a anycast subnet
+	 datacenter    Manage the datacenter entity
+	 firewall      Manage a firewall device related to a zone
+	 firewallrule  Manage firewall rules
+	 ip            Manage an ip contained in a subnet
+	 subnet        Manage a subnet related to a vlan
+	 vlan          Manage a vlan related to a zone
+	 zone          Manage a zone related to a datacenter
+
+	Use '/usr/sbin/simplenet-cli <command> --help' for individual command help.
+
 ## Depends:
 
 * kombu      - https://pypi.python.org/pypi/kombu
