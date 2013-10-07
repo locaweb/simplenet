@@ -314,7 +314,7 @@ def main(user, config_file):
 
     logging.basicConfig(level=LOGGING_LEVELS.get(config.get('firewall','logging')), filename='/var/log/simplenet.log')
 
-    with BrokerConnection(config.get('firewall','uri')) as conn:
+    with BrokerConnection(config.get('firewall','broker')) as conn:
         Worker(conn, config.get('firewall','lockfile'), config.get('firewall','iptables_file')).run()
 
 
