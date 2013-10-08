@@ -183,6 +183,8 @@ class Worker(ConsumerMixin):
             dst_port = rule.get("dst_port") or "any"
             owner = rule.get("owner")
             policy = rule.get("policy") or "DROP"
+            in_iface = rule.get("in_iface")
+            out_iface = rule.get("out_iface")
 
             if not dst:
                 if re.search("^(\d{1,3}\.){3}\d{1,3}$", rule.get("owner", "")):
