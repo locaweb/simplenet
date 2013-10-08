@@ -481,6 +481,8 @@ class DatacenterPolicy(Base):
     dst_port = Column(String(255), nullable=True)
     table = Column(String(255), nullable=False)
     policy = Column(String(255), nullable=False)
+    in_iface = Column(String(255), nullable=True)
+    out_iface = Column(String(255), nullable=True)
     owner_id = Column(String(255), ForeignKey('datacenters.id'))
     datacenter = relationship('Datacenter')
 
@@ -519,6 +521,8 @@ class ZonePolicy(Base):
     dst_port = Column(String(255), nullable=True)
     table = Column(String(255), nullable=False)
     policy = Column(String(255), nullable=False)
+    in_iface = Column(String(255), nullable=True)
+    out_iface = Column(String(255), nullable=True)
     owner_id = Column(String(255), ForeignKey('zones.id'))
     zone = relationship('Zone')
 
@@ -558,6 +562,8 @@ class VlanPolicy(Base):
     dst_port = Column(String(255), nullable=True)
     table = Column(String(255), nullable=False)
     policy = Column(String(255), nullable=False)
+    in_iface = Column(String(255), nullable=True)
+    out_iface = Column(String(255), nullable=True)
     owner_id = Column(String(255), ForeignKey('vlans.id'))
     vlan = relationship('Vlan')
 
@@ -597,6 +603,8 @@ class AnycastPolicy(Base):
     dst_port = Column(String(255), nullable=True)
     table = Column(String(255), nullable=False)
     policy = Column(String(255), nullable=False)
+    in_iface = Column(String(255), nullable=True)
+    out_iface = Column(String(255), nullable=True)
     owner_id = Column(String(255), ForeignKey('anycasts.id'))
     anycast = relationship('Anycast')
 
@@ -635,6 +643,8 @@ class SubnetPolicy(Base):
     dst_port = Column(String(255), nullable=True)
     table = Column(String(255), nullable=False)
     policy = Column(String(255), nullable=False)
+    in_iface = Column(String(255), nullable=True)
+    out_iface = Column(String(255), nullable=True)
     owner_id = Column(String(255), ForeignKey('subnets.id'))
     subnet = relationship('Subnet')
 
@@ -673,6 +683,8 @@ class AnycastipPolicy(Base):
     dst_port = Column(String(255), nullable=True)
     table = Column(String(255), nullable=False)
     policy = Column(String(255), nullable=False)
+    in_iface = Column(String(255), nullable=True)
+    out_iface = Column(String(255), nullable=True)
     owner_id = Column(String(255), ForeignKey('anycastips.id'))
     ip = relationship('Anycastip')
 
@@ -711,6 +723,8 @@ class IpPolicy(Base):
     dst_port = Column(String(255), nullable=True)
     table = Column(String(255), nullable=False)
     policy = Column(String(255), nullable=False)
+    in_iface = Column(String(255), nullable=True)
+    out_iface = Column(String(255), nullable=True)
     owner_id = Column(String(255), ForeignKey('ips.id'))
     ip = relationship('Ip')
 
