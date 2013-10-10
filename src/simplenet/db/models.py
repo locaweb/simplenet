@@ -20,7 +20,7 @@ import uuid
 
 from ipaddr import IPv4Network, IPv4Address, IPv6Network, IPv6Address, IPNetwork, IPAddress
 
-from sqlalchemy import event, Column, String, create_engine, ForeignKey, Integer, Enum
+from sqlalchemy import event, Column, String, create_engine, ForeignKey
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, backref
 
