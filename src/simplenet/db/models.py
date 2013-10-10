@@ -767,10 +767,12 @@ else:
     database_pass = config.get('server', 'database_pass')
     database_host = config.get('server', 'database_host')
     engine = create_engine("%s://%s:%s@%s/%s" % (database_type,
-                                database_user,
-                                database_pass,
-                                database_host,
-                                database_name
-                           ))
+                            database_user,
+                            database_pass,
+                            database_host,
+                            database_name),
+                            pool_size=10, 
+                            max_overflow=4,
+                            pool_recycle=120)
 
 Base.metadata.create_all(engine)
