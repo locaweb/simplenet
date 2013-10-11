@@ -22,6 +22,7 @@
 import ConfigParser
 import difflib
 import getopt
+import hashlib
 import json
 import logging
 import os
