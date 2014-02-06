@@ -90,7 +90,7 @@ class Worker(ConsumerMixin):
             open(self.iptables_file, "w").write("\n".join(self.iptables_save))
             new = open(self.iptables_file, "r").readlines()
 
-            for line in difflib.unified_diff(old,new):
+            for line in difflib.unified_diff(old, new):
                 self.logger.debug(line.rstrip())
 
             self.logger.info("Worke done")
@@ -181,7 +181,7 @@ class Worker(ConsumerMixin):
             src = rule.get("src") or "0.0.0.0/0"
             src_port = rule.get("src_port") or "any"
             src_full = "%s:%s" % (src, src_port)
-            dst = rule.get("dst") # or "0.0.0.0/0"
+            dst = rule.get("dst") #or "0.0.0.0/0"
             dst_port = rule.get("dst_port") or "any"
             owner = rule.get("owner")
             policy = rule.get("policy") or "DROP"
@@ -194,19 +194,19 @@ class Worker(ConsumerMixin):
                 else:
                     dst = "0.0.0.0/0"
 
-            if not st_rules.has_key(get_chain(table, owner)):
+            if get_chain(table, owner) not in st_rules:
                 st_rules[get_chain(table, owner)] = {}
             st_rules_table = st_rules[get_chain(table, owner)]
-            if not st_rules_table.has_key(proto):
+            if proto not in st_rules_table:
                 st_rules_table[proto] = {}
             st_rules_proto = st_rules_table[proto]
-            if not st_rules_proto.has_key(src_full):
+            if src_full not in st_rules_proto:
                 st_rules_proto[src_full] = {}
             st_rules_src = st_rules_proto[src_full]
-            if not st_rules_src.has_key(dst):
+            if dst not in st_rules_src:
                 st_rules_src[dst] = {}
             st_rules_dst = st_rules_src[dst]
-            if not st_rules_dst.has_key(policy):
+            if policy not in st_rules_dst:
                 st_rules_dst[policy] = []
             st_rules_pol = st_rules_dst[policy]
             if dst_port == "any":
@@ -305,7 +305,7 @@ class Worker(ConsumerMixin):
                 rule_dzvs_block(infos)
                 [self._gen_jumps_(rule['table'], data['subnet'], ip['ip'], ip['ip']) for ip in data['ips']]
 
-            if ('anycast' in data) and ('ipsanycast' in data) :
+            if ('anycast' in data) and ('ipsanycast' in data):
                 logging.debug('Anycast chain')
                 infos = {'table': rule['table'],
                          'datacenter': data['datacenter'],
@@ -354,28 +354,29 @@ def main(user, config_file):
     config = ConfigParser.ConfigParser()
     config.read(config_file)
 
-    if config.has_option('firewall','hostname'):
+    if config.has_option('firewall', 'hostname'):
         global myname
-        myname = config.get('firewall','hostname')
+        myname = config.get('firewall', 'hostname')
 
     logger = create_logger(config)
 
-    with BrokerConnection(config.get('firewall','broker')) as conn:
-        Worker(conn, config.get('firewall','lockfile'), config.get('firewall','iptables_file'), logger).run()
+    with BrokerConnection(config.get('firewall', 'broker')) as conn:
+        Worker(conn, config.get('firewall', 'lockfile'), config.get('firewall', 'iptables_file'), logger).run()
+
 
 def create_logger(config):
     # create logger
     logger = logging.getLogger('sn-fw-agent')
-    logger.setLevel(LOGGING_LEVELS.get(config.get('firewall','logging')))
+    logger.setLevel(LOGGING_LEVELS.get(config.get('firewall', 'logging')))
 
     formatter = logging.Formatter('%(asctime)s [%(name)s/%(levelname)s] %(message)s')
 
     ch = logging.StreamHandler()
-    ch.setLevel(LOGGING_LEVELS.get(config.get('firewall','logging')))
+    ch.setLevel(LOGGING_LEVELS.get(config.get('firewall', 'logging')))
     ch.setFormatter(formatter)
 
     fileHandler = logging.FileHandler('/var/log/simplenet.log')
-    fileHandler.setLevel(LOGGING_LEVELS.get(config.get('firewall','logging')))
+    fileHandler.setLevel(LOGGING_LEVELS.get(config.get('firewall', 'logging')))
     fileHandler.setFormatter(formatter)
 
     logger.addHandler(ch)
@@ -412,4 +413,3 @@ if __name__ == '__main__':
         daemon.stop()
     elif action == 'foreground':
         main(user, config)
-
