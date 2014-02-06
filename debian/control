@@ -1,26 +1,25 @@
 Source: simplenet-server
 Section: net
 Priority: extra
-Maintainer: Juliano Martinez <juliano.martinez@locaweb.com.br>
+Maintainer: Juliano Martinez <juliano@martinez.io>
 Build-Depends: debhelper (>= 7.0.50~)
-Standards-Version: 3.8.4
+Standards-Version: 3.9.4
 Homepage: https://github.com/locaweb/simplenet
-XS-Python-Version: 2.6
 
 Package: simplenet-server
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}, python (>= 2.6), python-baker, python-kombu, python-bottle (>= 0.10), python-sqlalchemy (>= 0.7.2), python-sqlalchemy-ext, python-mysqldb, python-gevent, python-supay, python-ipaddr, python-redis
-Description: Network automation framework
- Network automation framework
+Description: Network automation system server
+ Simplenet network automation framework server.
 
 Package: simplenet-firewall-agent
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}, python (>= 2.6), python-kombu, iptables-persistent, python-ipaddr, python-lockfile, python-supay
-Description: Network automation firewall agent
- Network automation firewall agent
+Description: Network automation system agent
+ Simplenet network automation firewall controller agent.
 
 Package: simplenet-cli
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}, python (>= 2.6), python-baker (>= 1.3), python-requests
-Description: Network automation firewall CLI
- Network automation firewall CLI
+Description: Network automation system cli
+ Simplenet network automation command line interface.

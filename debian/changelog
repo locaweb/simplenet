@@ -1,38 +1,45 @@
+simplenet-server (0.1.5-3~wheezy) stable; urgency=low
+
+  * Cleaning package files
+  * Fixed init scripts service dependency
+
+ -- Luiz Viana <luiz.viana@locaweb.com.br>  Thu, 06 Feb 2013 18:45:00 -0200
+
 simplenet-server (0.1.5-2~wheezy) stable; urgency=low
 
   * Fixing typos
 
- -- Juliano Martinez <juliano.martinez@locaweb.com.br>  Thu, 03 Oct 2013 20:28:42 +0000
+ -- Juliano Martinez <juliano@martinez.io>  Thu, 03 Oct 2013 20:28:42 +0000
 
 simplenet-server (0.1.5-1~wheezy) stable; urgency=low
 
   * Improving cli help
 
- -- Juliano Martinez <juliano.martinez@locaweb.com.br>  Thu, 03 Oct 2013 16:17:48 +0000
+ -- Juliano Martinez <juliano@martinez.io>  Thu, 03 Oct 2013 16:17:48 +0000
 
 simplenet-server (0.1.4-1~precise) stable; urgency=low
 
   * Precise build
 
- -- Juliano Martinez <juliano.martinez@locaweb.com.br>  Thu, 03 Oct 2013 16:17:48 +0000
+ -- Juliano Martinez <juliano@martinez.io>  Thu, 03 Oct 2013 16:17:48 +0000
 
 simplenet-server (0.1.2-3~precise) stable; urgency=low
 
   * Precise build
 
- -- Juliano Martinez <juliano.martinez@locaweb.com.br>  Thu, 03 Oct 2013 16:17:48 +0000
+ -- Juliano Martinez <juliano@martinez.io>  Thu, 03 Oct 2013 16:17:48 +0000
 
 simplenet-server (0.1.2-3~wheezy) stable; urgency=low
 
   * Wheezy build 
 
- -- root <juliano.martinez@locaweb.com.br>  Thu, 03 Oct 2013 14:44:59 +0000
+ -- root <juliano@martinez.io>  Thu, 03 Oct 2013 14:44:59 +0000
 
 simplenet-server (0.1.2-2~wheezy) stable; urgency=low
 
   * Added baker as dep
 
- -- Juliano Martinez <juliano.martinez@locaweb.com.br>  Wed, 21 Aug 2013 22:02:42 +0000
+ -- Juliano Martinez <juliano@martinez.io>  Wed, 21 Aug 2013 22:02:42 +0000
 
 simplenet-server (0.1.2-1) stable; urgency=low
 
@@ -41,56 +48,56 @@ simplenet-server (0.1.2-1) stable; urgency=low
   * Date:   Wed Aug 7 14:08:53 2013 -0300
   *     fixed control
 
- -- Juliano Martinez <juliano.martinez@locaweb.com.br>  Wed, 07 Aug 2013 17:10:21 +0000
+ -- Juliano Martinez <juliano@martinez.io>  Wed, 07 Aug 2013 17:10:21 +0000
 
 simplenet-server (0.0.9-3) stable; urgency=low
 
   * commit a6bdbb845051245b10a3e530d3ef442302f65417
   * Merge: 7354306 1d07d10
-  * Author: Juliano Martinez <juliano.martinez@locaweb.com.br>
+  * Author: Juliano Martinez <juliano@martinez.io>
   * Date:   Mon Jun 3 14:41:23 2013 -0300
   *     Merge branch 'die_quantum' of code.locaweb.com.br:iaas/simplenet
 
- -- Juliano Martinez <juliano.martinez@locaweb.com.br>  Wed, 07 Aug 2013 16:34:16 +0000
+ -- Juliano Martinez <juliano@martinez.io>  Wed, 07 Aug 2013 16:34:16 +0000
 
 simplenet-server (0.0.9) stable; urgency=low
 
   * Fix
 
- -- root <root@ubuntu>  Wed, 05 Dec 2012 19:44:53 -0200
+ -- Juliano Martinez <juliano@martinez.io>  Wed, 05 Dec 2012 19:44:53 -0200
 
 simplenet-server (0.0.8) stable; urgency=low
 
   * Daemonize
 
- -- root <root@ubuntu>  Wed, 05 Dec 2012 19:35:13 -0200
+ -- Juliano Martinez <juliano@martinez.io>  Wed, 05 Dec 2012 19:35:13 -0200
 
 simplenet-server (0.0.7) stable; urgency=low
 
   * Package fix
 
- -- root <root@ubuntu>  Mon, 03 Dec 2012 13:57:26 -0200
+ -- Juliano Martinez <juliano@martinez.io>  Mon, 03 Dec 2012 13:57:26 -0200
 
 simplenet-server (0.0.6) stable; urgency=low
 
   * Mysql fix
 
- -- root <root@ubuntu>  Mon, 03 Dec 2012 13:40:41 -0200
+ -- Juliano Martinez <juliano@martinez.io>  Mon, 03 Dec 2012 13:40:41 -0200
 
 simplenet-server (0.0.5) unstable; urgency=low
 
   * Release
 
- -- root <root@ubuntu>  Fri, 19 Oct 2012 13:32:28 -0300
+ -- Juliano Martinez <juliano@martinez.io>  Fri, 19 Oct 2012 13:32:28 -0300
 
 simplenet-server (0.0.4) unstable; urgency=low
 
   * Release
 
- -- root <root@ubuntu>  Thu, 18 Oct 2012 13:57:12 -0300
+ -- Juliano Martinez <juliano@martinez.io>  Thu, 18 Oct 2012 13:57:12 -0300
 
 simplenet-server (0.0.3) unstable; urgency=low
 
   * Initial Release.
 
- -- Juliano Martinez <juliano.martinez@locaweb.com.br>  Fri, 28 Sep 2012 14:05:54 -0300
+ -- Juliano Martinez <juliano@martinez.io>  Fri, 28 Sep 2012 14:05:54 -0300

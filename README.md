@@ -1,9 +1,9 @@
 ## What is simplenet?
-Simplenet is a framework for network automation. Using simplenet you can easily manage boxes from diferente verdors using an uniq api and cli. The idea behind simplenet is create an abstraction layer turning simple to administer and adpot of new products.
+Simplenet is a framework for network automation. Using simplenet you can easily manage boxes from diferent verdors using an unique api and cli. The idea behind simplenet is to create an abstraction layer simplifying management and adoption of new network products.
 
 <img src="https://raw.github.com/locaweb/simplenet/master/simplenet.png">
 
-## Config:
+## Configuration
 ### simplenet.cfg
 
 	[server]
@@ -36,8 +36,8 @@ Simplenet is a framework for network automation. Using simplenet you can easily 
 	iptables_file = /etc/iptables/rules        # iptables files
 	logging = debug                            # log level
 
-## Instalation:
-### Packaging on Debian and Ubuntu
+## Instalation
+### Debian / Ubuntu packaging
 
     $ git clone https://github.com/locaweb/simplenet.git
     $ cd simplenet
@@ -57,26 +57,26 @@ Simplenet is a framework for network automation. Using simplenet you can easily 
 	$ dpkg -i simplenet-server_x.x.x-x_amd64.deb
 	$ /etc/init.d/simplenet-server start
 
-### Cli
+### Command line interface
 
 	$ dpkg -i simplenet-cli_x.x.x-x_amd64.deb
 	$ /usr/sbin/simplenet-cli 
 	Usage: /usr/sbin/simplenet-cli COMMAND <options>
 
 	Available commands:
-	 anycast       Manage an anycast subnet
-	 anycastip     Manage an ip contained in a anycast subnet
-	 datacenter    Manage the datacenter entity
-	 firewall      Manage a firewall device related to a zone
+	 anycast       Manage anycast subnet
+	 anycastip     Manage ip contained in a anycast subnet
+	 datacenter    Manage datacenter entity
+	 firewall      Manage firewall device related to a zone
 	 firewallrule  Manage firewall rules
-	 ip            Manage an ip contained in a subnet
-	 subnet        Manage a subnet related to a vlan
-	 vlan          Manage a vlan related to a zone
-	 zone          Manage a zone related to a datacenter
+	 ip            Manage ip contained in a subnet
+	 subnet        Manage subnet related to a vlan
+	 vlan          Manage vlan related to a zone
+	 zone          Manage zone related to a datacenter
 
 	Use '/usr/sbin/simplenet-cli <command> --help' for individual command help.
 
-## Depends:
+## Dependencies
 
 * baker      - https://pypi.python.org/pypi/Baker
 * kombu      - https://pypi.python.org/pypi/kombu

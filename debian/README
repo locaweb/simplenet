@@ -1,6 +1,6 @@
 The Debian Package simplenet
 ----------------------------
 
-Comments regarding the Package
+Complete packages to deploy simplenet server and agents on Debian based systems.
 
- -- Juliano Martinez <juliano.martinez@locaweb.com.br>  Fri, 28 Sep 2012 13:22:43 -0300
+ -- Luiz Viana <luiz.viana@locaweb.com.br>  Thu, 6 Feb 2014 16:53:00 -0200

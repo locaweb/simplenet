@@ -4,17 +4,17 @@ This work was packaged for Debian by:
 
 It was downloaded from:
 
-    <url://example.com>
+    <https://github.com/locaweb/simplenet>
 
 Upstream Author(s):
 
-    <put author's name and email here>
-    <likewise for another author>
+    Juliano Martinez    <juliano@martinez.io>
+    Luiz Ozaki          <luiz.ozaki@locaweb.com.br>
+    Luiz Viana          <luiz.viana@locaweb.com.br>
 
 Copyright:
 
-    <Copyright (C) YYYY Firstname Lastname>
-    <likewise for another author>
+    <Copyright (C) 2014 Locaweb>
 
 License:
 
@@ -36,15 +36,7 @@ Public License version 3 can be found in "/usr/share/common-licenses/GPL-3".
 
 The Debian packaging is:
 
-    Copyright (C) 2012 Juliano Martinez <juliano.martinez@locaweb.com.br>
-
-# Please chose a license for your packaging work. If the program you package
-# uses a mainstream license, using the same license is the safest choice.
-# Please avoid to pick license terms that are more restrictive than the
-# packaged work, as it may make Debian's contributions unacceptable upstream.
-# If you just want it to be GPL version 3, leave the following line in.
+    Copyright (C) 2014 Juliano Martinez <juliano@martinez.io>
 
 and is licensed under the GPL version 3, see above.
 
-# Please also look if there are files or directories which have a
-# different copyright/license attached and list them here.
