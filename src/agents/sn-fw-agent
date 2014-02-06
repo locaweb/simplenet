@@ -63,6 +63,7 @@ class Worker(ConsumerMixin):
         self.connection = connection
         self.lockfile = lockfile
         self.iptables_file = iptables_file
+        self.logger = logger
         if os.path.isfile(self.lockfile):
             os.unlink(self.lockfile)
 
@@ -73,10 +74,10 @@ class Worker(ConsumerMixin):
         callbacks=[self.process_task])]
 
     def process_task(self, body, message):
-        logging.debug("TASK")
+        self.logger.debug("TASK")
         start_time = datetime.now()
         self.iptables_save = []
-        logging.debug("Received payload %s" % json.dumps(body, sort_keys=True, indent=4))
+        self.logger.debug("Received payload %s" % json.dumps(body, sort_keys=True, indent=4))
 
         try:
             lock = FileLock(self.lockfile.replace(".lock",""))
@@ -90,23 +91,23 @@ class Worker(ConsumerMixin):
             new = open(self.iptables_file, "r").readlines()
 
             for line in difflib.unified_diff(old,new):
-                logging.debug(line.rstrip())
+                self.logger.debug(line.rstrip())
 
-            logging.info("Worke done")
+            self.logger.info("Worke done")
         finally:
             lock.release()
         message.ack()
 
         stop_time = datetime.now()
         duration = stop_time - start_time
-        logging.debug(duration)
+        self.logger.debug(duration)
 
     def _add_rule_(self, rule):
         if not len(self.iptables_save):
             self.iptables_save.append('*filter')
 
         if rule not in self.iptables_save:
-            logging.debug(rule)
+            self.logger.debug(rule)
             self.iptables_save.append(rule)
 
     @staticmethod
@@ -261,7 +262,7 @@ class Worker(ConsumerMixin):
 
         for rule in [ rule for rule in data.get('policy') if 'table' in rule ]:
             if ('datacenter' in data) and ('zones' in data):
-                logging.debug('DC chain')
+                self.logger.debug('DC chain')
                 for zone in data['zones']:
                     for vlan in zone['vlans']:
                         for subnet in vlan['subnets']:
@@ -274,7 +275,7 @@ class Worker(ConsumerMixin):
                             rule_dzvs_block(infos)
 
             if ('zone' in data) and ('vlans' in data):
-                logging.debug('Zone chain')
+                self.logger.debug('Zone chain')
                 for vlan in data['vlans']:
                     for subnet in vlan['subnets']:
                         infos = {'table': rule['table'],
@@ -285,7 +286,7 @@ class Worker(ConsumerMixin):
                         rule_dzvs_block(infos)
 
             if ('vlan' in data) and ('subnets' in data):
-                logging.debug('VLAN chain')
+                self.logger.debug('VLAN chain')
                 for subnet in data['subnets']:
                     infos = {'table': rule['table'],
                              'datacenter': data['datacenter'],
@@ -295,7 +296,7 @@ class Worker(ConsumerMixin):
                     rule_dzvs_block(infos)
 
     def _gen_iptables_save_(self, data):
-        logging.debug(json.dumps(data, sort_keys=True, indent=4))
+        self.logger.debug(json.dumps(data, sort_keys=True, indent=4))
         self._gen_iptables_chains_(data)
         self._add_firewall_mport_rules_(data)
 
@@ -315,11 +316,30 @@ def main(user, config_file):
         global myname
         myname = config.get('firewall','hostname')
 
-    logging.basicConfig(level=LOGGING_LEVELS.get(config.get('firewall','logging')), filename='/var/log/simplenet.log')
+    logger = create_logger(config)
 
     with BrokerConnection(config.get('firewall','broker')) as conn:
-        Worker(conn, config.get('firewall','lockfile'), config.get('firewall','iptables_file')).run()
+        Worker(conn, config.get('firewall','lockfile'), config.get('firewall','iptables_file'), logger).run()
 
+def create_logger(config):
+    # create logger
+    logger = logging.getLogger('sn-fw-agent')
+    logger.setLevel(LOGGING_LEVELS.get(config.get('firewall','logging')))
+
+    formatter = logging.Formatter('%(asctime)s [%(name)s/%(levelname)s] %(message)s')
+
+    ch = logging.StreamHandler()
+    ch.setLevel(LOGGING_LEVELS.get(config.get('firewall','logging')))
+    ch.setFormatter(formatter)
+
+    fileHandler = logging.FileHandler('/var/log/simplenet.log')
+    fileHandler.setLevel(LOGGING_LEVELS.get(config.get('firewall','logging')))
+    fileHandler.setFormatter(formatter)
+
+    logger.addHandler(ch)
+    logger.addHandler(fileHandler)
+
+    return logger
 
 if __name__ == '__main__':
     try:
@@ -340,7 +360,7 @@ if __name__ == '__main__':
         else:
             help()
 
-    daemon = Daemon(name='sn-fw-agent', catch_all_log='/var/log/simplenet.log')
+    daemon = Daemon(name='sn-fw-agent')
     if action == 'start':
         daemon.start()
         main(user, config)
