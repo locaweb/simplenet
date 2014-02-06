@@ -295,6 +295,48 @@ class Worker(ConsumerMixin):
                              'vlan': data['vlan']}
                     rule_dzvs_block(infos)
 
+            if ('subnet' in data) and ('ips' in data):
+                logging.debug('Subnet chain')
+                infos = {'table': rule['table'],
+                         'datacenter': data['datacenter'],
+                         'cidr': data['subnet'],
+                         'zone': data['zone'],
+                         'vlan': data['vlan']}
+                rule_dzvs_block(infos)
+                [self._gen_jumps_(rule['table'], data['subnet'], ip['ip'], ip['ip']) for ip in data['ips']]
+
+            if ('anycast' in data) and ('ipsanycast' in data) :
+                logging.debug('Anycast chain')
+                infos = {'table': rule['table'],
+                         'datacenter': data['datacenter'],
+                         'cidr': data['anycast'],
+                         'zone': data['zone'],
+                         'vlan': 'anycast'}
+                rule_dzvs_block(infos)
+                [self._gen_jumps_(rule['table'], data['anycast'], ip['ip'], ip['ip']) for ip in data['ipsanycast']]
+
+            if 'ip' in data:
+                logging.debug('IP Chain')
+                #print json.dumps(data, sort_keys=True, indent=4)
+                infos = {'table': rule['table'],
+                         'datacenter': data['datacenter'],
+                         'cidr': data['subnet'],
+                         'zone': data['zone'],
+                         'vlan': data['vlan']}
+                rule_dzvs_block(infos)
+                self._gen_jumps_(rule['table'], data['subnet'], data['ip'], data['ip'])
+
+            if 'ipanycast' in data:
+                logging.debug('IP Chain')
+                #print json.dumps(data, sort_keys=True, indent=4)
+                infos = {'table': rule['table'],
+                         'datacenter': data['datacenter'],
+                         'cidr': data['anycast'],
+                         'zone': data['zone'],
+                         'vlan': 'anycast'}
+                rule_dzvs_block(infos)
+                self._gen_jumps_(rule['table'], data['anycast'], data['ipanycast'], data['anycast'])
+
     def _gen_iptables_save_(self, data):
         self.logger.debug(json.dumps(data, sort_keys=True, indent=4))
         self._gen_iptables_chains_(data)
