@@ -59,7 +59,7 @@ def _natural_sort_(l):
 
 
 class Worker(ConsumerMixin):
-    def __init__(self, connection, lockfile, iptables_file):
+    def __init__(self, connection, lockfile, iptables_file, logger):
         self.connection = connection
         self.lockfile = lockfile
         self.iptables_file = iptables_file
