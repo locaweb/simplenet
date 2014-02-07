@@ -3,7 +3,7 @@ simplenet-server (0.1.5-3~wheezy) stable; urgency=low
   * Cleaning package files
   * Fixed init scripts service dependency
 
- -- Luiz Viana <luiz.viana@locaweb.com.br>  Thu, 06 Feb 2013 18:45:00 -0200
+ -- Luiz Viana <luiz.viana@locaweb.com.br>  Thu, 06 Feb 2014 18:45:00 -0200
 
 simplenet-server (0.1.5-2~wheezy) stable; urgency=low
 

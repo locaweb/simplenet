@@ -1,8 +1,8 @@
 Source: simplenet-server
 Section: net
 Priority: extra
-Maintainer: Juliano Martinez <juliano@martinez.io>
-Build-Depends: debhelper (>= 7.0.50~)
+Maintainer: Luiz Viana <luiz.viana@locaweb.com.br>
+Build-Depends: debhelper (>= 7.0.50~), python (>= 2.6)
 Standards-Version: 3.9.4
 Homepage: https://github.com/locaweb/simplenet
 

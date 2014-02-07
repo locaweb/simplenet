@@ -4,7 +4,7 @@ This work was packaged for Debian by:
 
 It was downloaded from:
 
-    <https://github.com/locaweb/simplenet>
+    https://github.com/locaweb/simplenet
 
 Upstream Author(s):
 
@@ -14,7 +14,7 @@ Upstream Author(s):
 
 Copyright:
 
-    <Copyright (C) 2014 Locaweb>
+    Copyright (C) 2014 Locaweb
 
 License:
 
@@ -36,7 +36,6 @@ Public License version 3 can be found in "/usr/share/common-licenses/GPL-3".
 
 The Debian packaging is:
 
-    Copyright (C) 2014 Juliano Martinez <juliano@martinez.io>
+    Copyright (C) 2012 Juliano Martinez <juliano@martinez.io>
 
 and is licensed under the GPL version 3, see above.
-
