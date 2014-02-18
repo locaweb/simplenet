@@ -176,6 +176,11 @@ class Net(SimpleNet):
         elif ('anycast_id' in _data):
             logger.debug("Getting devices by anycast: %s" % _data['anycast_id'])
             devices = self.firewall_list_by_anycast(_data['anycast_id'])
+        elif (owner_type == 'datacenter'):
+            logger.debug("Getting devices by datacenter: %s" % _data['datacenter'])
+            devices = []
+            for x in _data['zones']:
+                [devices.append(y) for y in self.firewall_list_by_zone(x['id'])]
         else:
             logger.debug("Getting devices by zone: %s" % _data['zone_id'])
             devices = self.firewall_list_by_zone(_data['zone_id'])
@@ -183,7 +188,7 @@ class Net(SimpleNet):
         for device in devices:
             logger.debug("Getting data from device: %s" % device['id'])
             zone_id = device['zone_id']
-            dev_id = device['device_id'] if (owner_type != 'zone') else device['id']
+            dev_id = device.get('device_id') or device.get('id')
 
             policy_list = policy_list + self.policy_list_by_owner('zone', zone_id)
             _data.update({'policy': self.policy_list_by_owner('zone', zone_id)})
