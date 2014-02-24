@@ -115,12 +115,12 @@ def datacenter(action=None, name=None):
 
 @baker.command(
     params={'action': '<list all|info|create|delete>',
-            'name': 'zone name'}
+            'name': 'POD name'}
 )
-def zone(action=None, name=None, datacenter=None):
-    """Manage a zone related to a datacenter
+def pod(action=None, name=None, datacenter=None):
+    """Manage a POD (zone) related to a datacenter
     
-    simplenet-cli zone create --name zone01 --datacenter dc01
+    simplenet-cli pod create --name pod01 --datacenter dc01
     """
     base_url = '%s/zones' % (server)
     r = None
@@ -152,12 +152,12 @@ def zone(action=None, name=None, datacenter=None):
     params={'action': '<list all|create|delete|firewall_list|dhcp_list>',
             'name': 'vlan name',
             'type': 'vlan type',
-            'zone': 'zone name to bind the vlan'}
+            'pod': 'POD (zone) name to bind the vlan'}
 )
-def vlan(action=None, name=None, zone=None, type=None):
-    """Manage a vlan related to a zone
+def vlan(action=None, name=None, pod=None, type=None):
+    """Manage a vlan related to a POD (zone)
     
-    simplenet-cli vlan create --name vlan01 --zone zone01
+    simplenet-cli vlan create --name vlan01 --pod pod01
     """
     base_url = '%s/vlans' % (server)
     r = None
@@ -165,10 +165,10 @@ def vlan(action=None, name=None, zone=None, type=None):
         r = call('get', '%s/list' % base_url)
     elif action == 'create':
         if not zone:
-            print 'Missing zone to create'
+            print 'Missing POD to create'
             sys.exit(1)
 
-        zone_id = fetch_id('zones', zone)
+        zone_id = fetch_id('zones', pod)
         r = call('post', '%s/zones/%s/vlans' % (server, zone_id),
             data=json.dumps({'name': name, 'type': type})
         )

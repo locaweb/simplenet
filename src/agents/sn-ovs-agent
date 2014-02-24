@@ -228,6 +228,7 @@ class Worker(ConsumerMixin):
         self.connection = connection
         self.lockfile = lockfile
         self.ovsdb = ovsdb
+
         if os.path.isfile(self.lockfile):
             os.unlink(self.lockfile)
 
@@ -290,6 +291,11 @@ def main(user, config_file):
         myname = config.get('ovs','hostname')
 
     logging.basicConfig(level=LOGGING_LEVELS.get(config.get('ovs','logging')), filename='/var/log/simplenet.log')
+
+    lockdir = os.path.split(config.get('ovs','lockfile'))[0]
+    if not os.path.isdir(lockdir):
+        os.makedirs(lockdir)
+
 
     with BrokerConnection(config.get('ovs','uri')) as conn:
         Worker(conn, config.get('ovs','lockfile'), config.get('ovs','ovsdb-port')).run()

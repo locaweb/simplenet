@@ -16,6 +16,7 @@
 #    limitations under the License.
 #
 # @author: Juliano Martinez (ncode), Locaweb.
+
 set -o pipefail
 
 function run_test(){

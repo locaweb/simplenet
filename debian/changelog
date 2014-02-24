@@ -1,47 +1,18 @@
-simplenet-server (0.1.5-3~wheezy) stable; urgency=low
+simplenet-server (0.1.5) stable; urgency=low
 
   * Cleaning package files
   * Fixed init scripts service dependency
 
  -- Luiz Viana <luiz.viana@locaweb.com.br>  Thu, 06 Feb 2014 18:45:00 -0200
 
-simplenet-server (0.1.5-2~wheezy) stable; urgency=low
+simplenet-server (0.1.4) stable; urgency=low
 
   * Fixing typos
+  * Improving cli help
 
  -- Juliano Martinez <juliano@martinez.io>  Thu, 03 Oct 2013 20:28:42 +0000
 
-simplenet-server (0.1.5-1~wheezy) stable; urgency=low
-
-  * Improving cli help
-
- -- Juliano Martinez <juliano@martinez.io>  Thu, 03 Oct 2013 16:17:48 +0000
-
-simplenet-server (0.1.4-1~precise) stable; urgency=low
-
-  * Precise build
-
- -- Juliano Martinez <juliano@martinez.io>  Thu, 03 Oct 2013 16:17:48 +0000
-
-simplenet-server (0.1.2-3~precise) stable; urgency=low
-
-  * Precise build
-
- -- Juliano Martinez <juliano@martinez.io>  Thu, 03 Oct 2013 16:17:48 +0000
-
-simplenet-server (0.1.2-3~wheezy) stable; urgency=low
-
-  * Wheezy build 
-
- -- root <juliano@martinez.io>  Thu, 03 Oct 2013 14:44:59 +0000
-
-simplenet-server (0.1.2-2~wheezy) stable; urgency=low
-
-  * Added baker as dep
-
- -- Juliano Martinez <juliano@martinez.io>  Wed, 21 Aug 2013 22:02:42 +0000
-
-simplenet-server (0.1.2-1) stable; urgency=low
+simplenet-server (0.1.2) stable; urgency=low
 
   * commit de5c9401b361426adb9ab64f455375883ba2d242
   * Author: Juliano Martinez <juliano@martinez.io>
@@ -50,7 +21,7 @@ simplenet-server (0.1.2-1) stable; urgency=low
 
  -- Juliano Martinez <juliano@martinez.io>  Wed, 07 Aug 2013 17:10:21 +0000
 
-simplenet-server (0.0.9-3) stable; urgency=low
+simplenet-server (0.0.9) stable; urgency=low
 
   * commit a6bdbb845051245b10a3e530d3ef442302f65417
   * Merge: 7354306 1d07d10
@@ -59,12 +30,6 @@ simplenet-server (0.0.9-3) stable; urgency=low
   *     Merge branch 'die_quantum' of code.locaweb.com.br:iaas/simplenet
 
  -- Juliano Martinez <juliano@martinez.io>  Wed, 07 Aug 2013 16:34:16 +0000
-
-simplenet-server (0.0.9) stable; urgency=low
-
-  * Fix
-
- -- Juliano Martinez <juliano@martinez.io>  Wed, 05 Dec 2012 19:44:53 -0200
 
 simplenet-server (0.0.8) stable; urgency=low
 

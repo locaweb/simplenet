@@ -6,7 +6,7 @@ It was downloaded from:
 
     https://github.com/locaweb/simplenet
 
-Upstream Author(s):
+Upstream Authors:
 
     Juliano Martinez    <juliano@martinez.io>
     Luiz Ozaki          <luiz.ozaki@locaweb.com.br>
@@ -31,8 +31,8 @@ License:
     You should have received a copy of the GNU General Public License
     along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-On Debian systems, the complete text of the GNU General
-Public License version 3 can be found in "/usr/share/common-licenses/GPL-3".
+    On Debian systems, the complete text of the GNU General
+    Public License version 3 can be found in "/usr/share/common-licenses/GPL-3".
 
 The Debian packaging is:
 

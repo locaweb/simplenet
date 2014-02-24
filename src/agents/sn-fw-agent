@@ -360,6 +360,10 @@ def main(user, config_file):
 
     logger = create_logger(config)
 
+    lockdir = os.path.split(config.get('firewall','lockfile'))[0]
+    if not os.path.isdir(lockdir):
+        os.makedirs(lockdir)
+
     with BrokerConnection(config.get('firewall', 'broker')) as conn:
         Worker(conn, config.get('firewall', 'lockfile'), config.get('firewall', 'iptables_file'), logger).run()
 
