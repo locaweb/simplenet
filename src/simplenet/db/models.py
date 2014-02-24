@@ -28,10 +28,13 @@ from simplenet.common.config import config
 
 Base = declarative_base()
 
+
 class Prober(Base):
+
     __tablename__ = 'prober'
     id = Column(String(255), primary_key=True)
     foo = Column(String(1))
+
 
 class Datacenter(Base):
 
@@ -470,9 +473,10 @@ class Anycastip(Base):
         }
 
 
-class DatacenterPolicy(Base):
+class Policy(Base):
 
-    __tablename__ = 'datacenter_policies'
+    __tablename__ = 'policies'
+
     id = Column(String(255), primary_key=True)
     proto = Column(String(255), nullable=True)
     src = Column(String(255), nullable=True)
@@ -483,8 +487,17 @@ class DatacenterPolicy(Base):
     policy = Column(String(255), nullable=False)
     in_iface = Column(String(255), nullable=True)
     out_iface = Column(String(255), nullable=True)
-    owner_id = Column(String(255), ForeignKey('datacenters.id'))
-    datacenter = relationship('Datacenter')
+    owner_type = Column(String(50))
+    owner_id = Column(String(46))
+
+    __mapper_args__ = {'polymorphic_on': owner_type}
+
+
+class DatacenterPolicy(Policy):
+
+    __mapper_args__ = {'polymorphic_identity': 'datacenter'}
+
+    datacenter = relationship('Datacenter', foreign_keys=Policy.owner_id, primaryjoin=Policy.owner_id == Datacenter.id)
 
     def __init__(self, owner_id, proto, src, src_port, dst, dst_port, table, policy):
         self.id = str(uuid.uuid4())
@@ -510,21 +523,11 @@ class DatacenterPolicy(Base):
                  'owner': self.datacenter.name }
 
 
-class ZonePolicy(Base):
+class ZonePolicy(Policy):
 
-    __tablename__ = 'zone_policies'
-    id = Column(String(255), primary_key=True)
-    proto = Column(String(255), nullable=True)
-    src = Column(String(255), nullable=True)
-    src_port = Column(String(255), nullable=True)
-    dst = Column(String(255), nullable=True)
-    dst_port = Column(String(255), nullable=True)
-    table = Column(String(255), nullable=False)
-    policy = Column(String(255), nullable=False)
-    in_iface = Column(String(255), nullable=True)
-    out_iface = Column(String(255), nullable=True)
-    owner_id = Column(String(255), ForeignKey('zones.id'))
-    zone = relationship('Zone')
+    __mapper_args__ = {'polymorphic_identity': 'zone'}
+
+    zone = relationship('Zone', foreign_keys=Policy.owner_id, primaryjoin=Policy.owner_id == Zone.id)
 
     def __init__(self, owner_id, proto, src, src_port, dst, dst_port, table, policy):
         self.id = str(uuid.uuid4())
@@ -550,22 +553,11 @@ class ZonePolicy(Base):
                  'owner': self.zone.name }
 
 
-class VlanPolicy(Base):
+class VlanPolicy(Policy):
 
-    __tablename__ = 'vlan_policies'
+    __mapper_args__ = {'polymorphic_identity': 'vlan'}
 
-    id = Column(String(255), primary_key=True)
-    proto = Column(String(255), nullable=True)
-    src = Column(String(255), nullable=True)
-    src_port = Column(String(255), nullable=True)
-    dst = Column(String(255), nullable=True)
-    dst_port = Column(String(255), nullable=True)
-    table = Column(String(255), nullable=False)
-    policy = Column(String(255), nullable=False)
-    in_iface = Column(String(255), nullable=True)
-    out_iface = Column(String(255), nullable=True)
-    owner_id = Column(String(255), ForeignKey('vlans.id'))
-    vlan = relationship('Vlan')
+    vlan = relationship('Vlan', foreign_keys=Policy.owner_id, primaryjoin=Policy.owner_id == Vlan.id)
 
     def __init__(self, owner_id, proto, src, src_port, dst, dst_port, table, policy):
         self.id = str(uuid.uuid4())
@@ -591,22 +583,11 @@ class VlanPolicy(Base):
                  'owner': self.vlan.name }
 
 
-class AnycastPolicy(Base):
+class AnycastPolicy(Policy):
 
-    __tablename__ = 'anycast_policies'
+    __mapper_args__ = {'polymorphic_identity': 'anycast'}
 
-    id = Column(String(255), primary_key=True)
-    proto = Column(String(255), nullable=True)
-    src = Column(String(255), nullable=True)
-    src_port = Column(String(255), nullable=True)
-    dst = Column(String(255), nullable=True)
-    dst_port = Column(String(255), nullable=True)
-    table = Column(String(255), nullable=False)
-    policy = Column(String(255), nullable=False)
-    in_iface = Column(String(255), nullable=True)
-    out_iface = Column(String(255), nullable=True)
-    owner_id = Column(String(255), ForeignKey('anycasts.id'))
-    anycast = relationship('Anycast')
+    anycast = relationship('Anycast', foreign_keys=Policy.owner_id, primaryjoin=Policy.owner_id == Anycast.id)
 
     def __init__(self, owner_id, proto, src, src_port, dst, dst_port, table, policy):
         self.id = str(uuid.uuid4())
@@ -632,21 +613,11 @@ class AnycastPolicy(Base):
                  'owner': self.anycast.cidr }
 
 
-class SubnetPolicy(Base):
+class SubnetPolicy(Policy):
 
-    __tablename__ = 'subnet_policies'
-    id = Column(String(255), primary_key=True)
-    proto = Column(String(255), nullable=True)
-    src = Column(String(255), nullable=True)
-    src_port = Column(String(255), nullable=True)
-    dst = Column(String(255), nullable=True)
-    dst_port = Column(String(255), nullable=True)
-    table = Column(String(255), nullable=False)
-    policy = Column(String(255), nullable=False)
-    in_iface = Column(String(255), nullable=True)
-    out_iface = Column(String(255), nullable=True)
-    owner_id = Column(String(255), ForeignKey('subnets.id'))
-    subnet = relationship('Subnet')
+    __mapper_args__ = {'polymorphic_identity': 'subnet'}
+
+    subnet = relationship('Subnet', foreign_keys=Policy.owner_id, primaryjoin=Policy.owner_id == Subnet.id)
 
     def __init__(self, owner_id, proto, src, src_port, dst, dst_port, table, policy):
         self.id = str(uuid.uuid4())
@@ -672,21 +643,11 @@ class SubnetPolicy(Base):
                  'owner': self.subnet.cidr }
 
 
-class AnycastipPolicy(Base):
+class AnycastipPolicy(Policy):
 
-    __tablename__ = 'anycastip_policies'
-    id = Column(String(255), primary_key=True)
-    proto = Column(String(255), nullable=True)
-    src = Column(String(255), nullable=True)
-    src_port = Column(String(255), nullable=True)
-    dst = Column(String(255), nullable=True)
-    dst_port = Column(String(255), nullable=True)
-    table = Column(String(255), nullable=False)
-    policy = Column(String(255), nullable=False)
-    in_iface = Column(String(255), nullable=True)
-    out_iface = Column(String(255), nullable=True)
-    owner_id = Column(String(255), ForeignKey('anycastips.id'))
-    ip = relationship('Anycastip')
+    __mapper_args__ = {'polymorphic_identity': 'anycastip'}
+
+    ip = relationship('Anycastip', foreign_keys=Policy.owner_id, primaryjoin=Policy.owner_id == Anycastip.id)
 
     def __init__(self, owner_id, proto, src, src_port, dst, dst_port, table, policy):
         self.id = str(uuid.uuid4())
@@ -712,21 +673,11 @@ class AnycastipPolicy(Base):
                  'owner': self.ip.ip }
 
 
-class IpPolicy(Base):
+class IpPolicy(Policy):
 
-    __tablename__ = 'ip_policies'
-    id = Column(String(255), primary_key=True)
-    proto = Column(String(255), nullable=True)
-    src = Column(String(255), nullable=True)
-    src_port = Column(String(255), nullable=True)
-    dst = Column(String(255), nullable=True)
-    dst_port = Column(String(255), nullable=True)
-    table = Column(String(255), nullable=False)
-    policy = Column(String(255), nullable=False)
-    in_iface = Column(String(255), nullable=True)
-    out_iface = Column(String(255), nullable=True)
-    owner_id = Column(String(255), ForeignKey('ips.id'))
-    ip = relationship('Ip')
+    __mapper_args__ = {'polymorphic_identity': 'ip'}
+
+    ip = relationship('Ip', foreign_keys=Policy.owner_id, primaryjoin=Policy.owner_id == Ip.id)
 
     def __init__(self, owner_id, proto, src, src_port, dst, dst_port, table, policy):
         self.id = str(uuid.uuid4())
@@ -771,7 +722,7 @@ else:
                             database_pass,
                             database_host,
                             database_name),
-                            pool_size=10, 
+                            pool_size=10,
                             max_overflow=4,
                             pool_recycle=120)
 

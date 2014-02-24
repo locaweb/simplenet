@@ -63,6 +63,7 @@ function run_firewall_test(){
 echo "::::: Starting Datacenter Tests "
 run_test "datacenter create datacenter01" '"name": "datacenter01"'
 run_test "datacenter create datacenter01" '"message": "Datacenter:datacenter01 already exists Forbidden"'
+run_firewall_test "firewallrule create" "datacenter" "datacenter01 --src 192.168.0.1 --proto tcp --table INPUT --policy ACCEPT"
 run_test "datacenter info datacenter01" '"name": "datacenter01"'
 run_test "datacenter delete datacenter01" '"message": "Successful deletetion"'
 

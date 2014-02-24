@@ -231,6 +231,12 @@ class SimpleNet(object):
     def zone_list(self):
         return self._generic_list_("zones", models.Zone)
 
+    def zone_list_by_datacenter(self, datacenter_id):
+        return self._generic_list_by_something_(
+            "zones by datacenter", models.Zone,
+            {'datacenter_id': datacenter_id}
+        )
+
     def zone_create(self, datacenter_id, data):
         logger.debug("Creating zone on datacenter: %s using data: %s" %
             (datacenter_id, data)
