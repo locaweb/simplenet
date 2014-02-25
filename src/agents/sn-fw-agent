@@ -177,7 +177,7 @@ class Worker(ConsumerMixin):
 
         for rule in data.get("policy", []):
             table = rule.get("table")
-            proto = rule.get("proto", "").lower()
+            proto = rule.get("proto", "").lower() if rule.get("proto") is not None else ""
             src = rule.get("src") or "0.0.0.0/0"
             src_port = rule.get("src_port") or "any"
             src_full = "%s:%s" % (src, src_port)
@@ -226,7 +226,7 @@ class Worker(ConsumerMixin):
                     for dst_addr in rule_attrs[proto][src].iterkeys():
                         for policy in rule_attrs[proto][src][dst_addr].iterkeys():
                             dst_ports = rule_attrs[proto][src][dst_addr][policy]
-                            ipt_rule = "-A %s" % table
+                            ipt_rule = "-I %s" % table
                             if proto:
                                 ipt_rule += " -p %s" % proto
                             if src_addr and src_addr != "0.0.0.0/0":

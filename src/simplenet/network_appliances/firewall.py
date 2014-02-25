@@ -178,38 +178,53 @@ class Net(SimpleNet):
             devices = self.firewall_list_by_anycast(_data['anycast_id'])
         elif (owner_type == 'datacenter'):
             logger.debug("Getting devices by datacenter: %s" % _data['datacenter'])
-            devices = []
             for x in _data['zones']:
-                [devices.append(y) for y in self.firewall_list_by_zone(x['id'])]
+                [self._enqueue_device_rules_(_data, y, owner_type) for y in self.firewall_list_by_zone(x['id'])]
+            return
         else:
             logger.debug("Getting devices by zone: %s" % _data['zone_id'])
             devices = self.firewall_list_by_zone(_data['zone_id'])
 
+        self._enqueue_device_rules_(_data, devices, owner_type)
+
+    def _enqueue_device_rules_(self, _data, devices, owner_type):
+        policy_list = []
+        try:
+            devices = devices.split()
+        except AttributeError:
+            pass
+
         for device in devices:
             logger.debug("Getting data from device: %s" % device['id'])
             zone_id = device['zone_id']
+            _data.update(self._get_data_zone_(zone_id))
             dev_id = device.get('device_id') or device.get('id')
 
             policy_list = policy_list + self.policy_list_by_owner('zone', zone_id)
             _data.update({'policy': self.policy_list_by_owner('zone', zone_id)})
             for vlan in self.vlan_list_by_firewall(dev_id): # Cascade thru the vlans of the device
                 logger.debug("Getting policy data from vlan: %s" % vlan)
+                _data.update(self._get_data_vlan_(vlan['vlan_id']))
                 policy_list = policy_list + self.policy_list_by_owner('vlan', vlan['vlan_id'])
                 for subnet in self.subnet_list_by_vlan(vlan['vlan_id']): # Cascade thru the subnets of the vlan
                     logger.debug("Getting policy data from subnet: %s" % subnet)
+                    _data.update(self._get_data_subnet_(subnet['id']))
                     policy_list = policy_list + self.policy_list_by_owner('subnet', subnet['id'])
                     logger.debug("maldito %s" % json.dumps(subnet['id']))
                     logger.debug("maldito %s" % json.dumps(self.ip_list_by_subnet(subnet['id'])))
                     for ip in self.ip_list_by_subnet(subnet['id']): # Cascade thru the IPs of the subnet
                         logger.debug("maldito %s" % json.dumps(ip.keys()))
                         logger.debug("Getting policy data from ip: %s" % ip)
+                        _data.update(self._get_data_ip_(ip['id']))
                         policy_list = policy_list + self.policy_list_by_owner('ip', ip['id'])
 
             for anycast in self.anycast_list_by_firewall(dev_id): # Cascade thru the anycasts of the device
                 logger.debug("Getting policy data from anycast %s" % anycast)
+                _data.update(self._get_data_anycast_(anycast['anycast_id']))
                 policy_list = policy_list + self.policy_list_by_owner('anycast', anycast['anycast_id'])
                 for anycastip in self.anycastip_list_by_anycast(anycast['anycast_id']): # Cascade thru the IPs of the anycast subnet
                     logger.debug("Getting policy data from anycasip %s" % anycastip)
+                    _data.update(self._get_data_anycastip_(ip['id']))
                     policy_list = policy_list + self.policy_list_by_owner('anycastip', anycastip['id'])
 
             _data.update({'policy': policy_list})
