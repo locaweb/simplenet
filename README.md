@@ -84,4 +84,3 @@ Simplenet is a framework for network automation. Using simplenet you can easily 
 * ipaddr     - https://pypi.python.org/pypi/ipaddr
 * requests   - https://github.com/kennethreitz/requests
 * sqlalchemy - https://bitbucket.org/zzzeek/sqlalchemy
-
