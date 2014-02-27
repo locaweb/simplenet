@@ -164,7 +164,7 @@ def vlan(action=None, name=None, pod=None, type=None):
     if action == 'list':
         r = call('get', '%s/list' % base_url)
     elif action == 'create':
-        if not zone:
+        if not pod:
             print 'Missing POD to create'
             sys.exit(1)
 
