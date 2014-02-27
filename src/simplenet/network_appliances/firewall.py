@@ -196,36 +196,40 @@ class Net(SimpleNet):
 
         for device in devices:
             logger.debug("Getting data from device: %s" % device['id'])
+            vlans = []
+            subnets = []
+            ips = []
+            anycasts = []
+            anycastips = []
             zone_id = device['zone_id']
             _data.update(self._get_data_zone_(zone_id))
             dev_id = device.get('device_id') or device.get('id')
 
-            policy_list = policy_list + self.policy_list_by_owner('zone', zone_id)
-            _data.update({'policy': self.policy_list_by_owner('zone', zone_id)})
+            logger.debug("Getting policy data from zone %s" % zone_id)
+            policy_list += self.policy_list_by_owner('zone', zone_id)
             for vlan in self.vlan_list_by_firewall(dev_id): # Cascade thru the vlans of the device
-                logger.debug("Getting policy data from vlan: %s" % vlan)
-                _data.update(self._get_data_vlan_(vlan['vlan_id']))
-                policy_list = policy_list + self.policy_list_by_owner('vlan', vlan['vlan_id'])
+                vlans.append(vlan['vlan_id'])
                 for subnet in self.subnet_list_by_vlan(vlan['vlan_id']): # Cascade thru the subnets of the vlan
-                    logger.debug("Getting policy data from subnet: %s" % subnet)
-                    _data.update(self._get_data_subnet_(subnet['id']))
-                    policy_list = policy_list + self.policy_list_by_owner('subnet', subnet['id'])
-                    logger.debug("maldito %s" % json.dumps(subnet['id']))
-                    logger.debug("maldito %s" % json.dumps(self.ip_list_by_subnet(subnet['id'])))
+                    subnets.append(subnet['id'])
                     for ip in self.ip_list_by_subnet(subnet['id']): # Cascade thru the IPs of the subnet
-                        logger.debug("maldito %s" % json.dumps(ip.keys()))
-                        logger.debug("Getting policy data from ip: %s" % ip)
-                        _data.update(self._get_data_ip_(ip['id']))
-                        policy_list = policy_list + self.policy_list_by_owner('ip', ip['id'])
+                        ips.append(ip['id'])
 
             for anycast in self.anycast_list_by_firewall(dev_id): # Cascade thru the anycasts of the device
-                logger.debug("Getting policy data from anycast %s" % anycast)
-                _data.update(self._get_data_anycast_(anycast['anycast_id']))
-                policy_list = policy_list + self.policy_list_by_owner('anycast', anycast['anycast_id'])
+                anycasts.append(anycast['anycast_id'])
                 for anycastip in self.anycastip_list_by_anycast(anycast['anycast_id']): # Cascade thru the IPs of the anycast subnet
-                    logger.debug("Getting policy data from anycasip %s" % anycastip)
-                    _data.update(self._get_data_anycastip_(ip['id']))
-                    policy_list = policy_list + self.policy_list_by_owner('anycastip', anycastip['id'])
+                    anycastips.append(ip['id'])
+
+            logger.debug("Getting policy data from vlans: %s" % vlans)
+            policy_list += self.policy_list_by_owners('vlan', vlans)
+            logger.debug("Getting policy data from subnets: %s" % subnets)
+            policy_list += self.policy_list_by_owners('subnet', subnets)
+            logger.debug("Getting policy data from ips: %s" % ips)
+            policy_list += self.policy_list_by_owners('ip', ips)
+
+            logger.debug("Getting policy data from anycasts %s" % anycasts)
+            policy_list = policy_list + self.policy_list_by_owners('anycast', anycasts)
+            logger.debug("Getting policy data from anycasips %s" % anycastips)
+            policy_list = policy_list + self.policy_list_by_owners('anycastip', anycastips)
 
             _data.update({'policy': policy_list})
             logger.debug("Received rules: %s from %s with id %s and device %s" % (
@@ -290,3 +294,16 @@ class Net(SimpleNet):
         return self._generic_list_by_something_(
             "%sPolicy" % owner_type.capitalize(), _model, {'owner_id': id}
         )
+
+    def policy_list_by_owners(self, owner_type, ids):
+        _type = "%sPolicy" % owner_type.capitalize()
+        model = getattr(models, _type)
+        logger.debug("Getting %s by %s" % (_type, ids))
+        ss = session.query(model).filter(model.owner_id.in_(ids)).all()
+        _values = []
+        for _value in ss:
+            _values.append(
+                _value.to_dict()
+            )
+        logger.debug("Received %s: %s from [%s]" % (_type, _values, ids))
+        return _values
