@@ -20,6 +20,6 @@ Description: Network automation system agent
 
 Package: simplenet-cli
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}, python (>= 2.6), python-baker (>= 1.3), python-requests
+Depends: ${shlibs:Depends}, ${misc:Depends}, python (>= 2.6), python-baker (>= 1.3), python-requests, python-ipaddr
 Description: Network automation system cli
  Simplenet network automation command line interface.

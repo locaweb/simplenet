@@ -18,6 +18,7 @@
 # @author: Juliano Martinez (ncode), Locaweb.
 # @author: Luiz Ozaki, Locaweb.
 
+from ipaddr import IPv4Network, IPv4Address, IPv6Network, IPv6Address, IPNetwork, IPAddress
 import sys
 import json
 import baker
@@ -271,6 +272,7 @@ def ip(action=None, ip=None, subnet=None):
     simplenet-cli ip create --ip 192.168.0.1 --subnet 192.168.0.0/24
     """
     base_url = '%s/ips' % (server)
+    base_url_net = '%s/subnets' % (server)
     r = None
     if action == 'list':
         r = call('get', '%s/list' % base_url)
@@ -278,6 +280,16 @@ def ip(action=None, ip=None, subnet=None):
         if not subnet:
             print 'Missing subnet to create'
             sys.exit(1)
+
+        if subnet == 'auto':
+            r = call('get', '%s/list' % base_url_net)
+
+            for net in json.loads(r.text):
+                if IPNetwork(net['cidr']).Contains(IPAddress(ip)):
+                    subnet = net['cidr']
+            if subnet == 'auto':
+                print 'Could not find a suitable subnet'
+                sys.exit(1)
 
         r = call('post', '%s/subnets/%s/ips' %
             (server, fetch_id('subnets', subnet)),
