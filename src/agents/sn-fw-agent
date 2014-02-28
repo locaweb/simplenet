@@ -375,15 +375,10 @@ def create_logger(config):
 
     formatter = logging.Formatter('%(asctime)s [%(name)s/%(levelname)s] %(message)s')
 
-    ch = logging.StreamHandler()
-    ch.setLevel(LOGGING_LEVELS.get(config.get('firewall', 'logging')))
-    ch.setFormatter(formatter)
-
     fileHandler = logging.FileHandler('/var/log/simplenet.log')
     fileHandler.setLevel(LOGGING_LEVELS.get(config.get('firewall', 'logging')))
     fileHandler.setFormatter(formatter)
 
-    logger.addHandler(ch)
     logger.addHandler(fileHandler)
 
     return logger
