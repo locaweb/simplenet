@@ -164,11 +164,12 @@ class Net(SimpleNet):
     def firewall_delete(self, id):
         return self._generic_delete_("firewall", models.Firewall, {'id': id})
 
-    def _enqueue_rules_(self, owner_type, owner_id):
+    def _enqueue_rules_(self, owner_type, owner_id, mod):
         logger.debug("Getting rules from %s with id %s" % (owner_type, owner_id))
         policy_list = []
         _get_data = getattr(self, "_get_data_%s_" % owner_type)
         _data = _get_data(owner_id)
+        _data['modified'] = mod
 
         if (owner_type != 'zone') and ('vlan_id' in _data):
             logger.debug("Getting devices by vlan: %s" % _data['vlan_id'])
@@ -264,8 +265,9 @@ class Net(SimpleNet):
         logger.debug("Created rule %s on %s: %s using data: %s" %
             (policy.id, owner_type, owner_id, data)
         )
-        self._enqueue_rules_(owner_type, owner_id)
-        return self.policy_info(owner_type, policy.id)
+        pol = self.policy_info(owner_type, policy.id)
+        self._enqueue_rules_(owner_type, owner_id, pol)
+        return pol
 
     def policy_info(self, owner_type, id):
         _model = getattr(models, "%sPolicy" % owner_type.capitalize())
@@ -290,7 +292,7 @@ class Net(SimpleNet):
             raise Exception(e)
 
         logger.debug("Successful deletion of policy %s" % id)
-        self._enqueue_rules_(owner_type, owner_id)
+        self._enqueue_rules_(owner_type, owner_id, ss)
         return True
 
     def policy_list_by_owner(self, owner_type, id):

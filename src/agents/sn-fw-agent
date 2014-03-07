@@ -77,6 +77,7 @@ class Worker(ConsumerMixin):
         self.logger.debug("TASK")
         start_time = datetime.now()
         self.iptables_save = []
+        self.iptables_save.append('*filter')
         self.logger.debug("Received payload %s" % json.dumps(body, sort_keys=True, indent=4))
 
         try:
@@ -89,6 +90,9 @@ class Worker(ConsumerMixin):
                 old = open(self.iptables_file, "r").readlines()
             open(self.iptables_file, "w").write("\n".join(self.iptables_save))
             new = open(self.iptables_file, "r").readlines()
+
+            if body.get("modified"):
+                self.logger.debug(body.get("modified"))
 
             for line in difflib.unified_diff(old, new):
                 self.logger.debug(line.rstrip())
@@ -103,9 +107,6 @@ class Worker(ConsumerMixin):
         self.logger.debug(duration)
 
     def _add_rule_(self, rule):
-        if not len(self.iptables_save):
-            self.iptables_save.append('*filter')
-
         if rule not in self.iptables_save:
             self.logger.debug(rule)
             self.iptables_save.append(rule)
@@ -148,7 +149,7 @@ class Worker(ConsumerMixin):
         if table and name and cidr and nextjump:
             self._add_rule_(":%s-%s - [0:0]" % (table, nextjump))
             jump = "-{action} {name} -{direction} {cidr} -j {table}-{nextjump}"
-            directions = { 'FORWARD': ['s', 'd'],
+            directions = { 'FORWARD': ['d'],
                            'INPUT': ['d'],
                            'OUTPUT': ['s'] }
 
