@@ -329,6 +329,7 @@ class Subnet(Base):
     description = Column(String(255))
     vlan_id = Column(String(255), ForeignKey('vlans.id'))
     vlan = relationship('Vlan', backref="subnet")
+    ip = relationship('Ip')
 
     def __init__(self, cidr, vlan_id, description=''):
         self.id = str(uuid.uuid4())
@@ -364,13 +365,14 @@ class Subnet(Base):
             'vlan_id': self.vlan_id,
             'gateway': self.gateway(),
             'network': self.network(),
+            'ips': [x.to_dict() for x in self.ip]
         }
 
     def tree_dict(self):
         return {
             'id': self.id,
             'cidr': self.cidr,
-            'vlan': self.vlan.tree_dict()
+            'vlan': self.vlan.tree_dict(),
         }
 
 class Ip(Base):

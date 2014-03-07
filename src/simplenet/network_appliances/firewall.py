@@ -212,7 +212,7 @@ class Net(SimpleNet):
                 for subnet in self.subnet_list_by_vlan(vlan['vlan_id']): # Cascade thru the subnets of the vlan
                     subnets.append(subnet['id'])
                     for ip in self.ip_list_by_subnet(subnet['id']): # Cascade thru the IPs of the subnet
-                        ips.append(ip['id'])
+                        ips.append(ip)
 
             for anycast in self.anycast_list_by_firewall(dev_id): # Cascade thru the anycasts of the device
                 anycasts.append(anycast['anycast_id'])
@@ -223,8 +223,8 @@ class Net(SimpleNet):
             policy_list += self.policy_list_by_owners('vlan', vlans)
             logger.debug("Getting policy data from subnets: %s" % subnets)
             policy_list += self.policy_list_by_owners('subnet', subnets)
-            logger.debug("Getting policy data from ips: %s" % ips)
-            policy_list += self.policy_list_by_owners('ip', ips)
+            logger.debug("Getting policy data from ips: %s" % [x['id'] for x in ips])
+            policy_list += self.policy_list_by_owners('ip', [x['id'] for x in ips])
 
             logger.debug("Getting policy data from anycasts %s" % anycasts)
             policy_list = policy_list + self.policy_list_by_owners('anycast', anycasts)
@@ -300,6 +300,8 @@ class Net(SimpleNet):
         )
 
     def policy_list_by_owners(self, owner_type, ids):
+        if ids == []:
+            return []
         _type = "%sPolicy" % owner_type.capitalize()
         model = getattr(models, _type)
         logger.debug("Getting %s by %s" % (_type, ids))
