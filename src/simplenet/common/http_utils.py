@@ -23,6 +23,7 @@ from functools import wraps
 from bottle import response, request, abort
 
 from simplenet.common.config import get_logger
+import hashlib
 
 try:
     from simplejson import dumps, loads
@@ -112,16 +113,16 @@ def cache(ttl=300, rd=None):
     def proxy(f):
         @wraps(f)
         def caching(*args, **kwargs):
-            _hash = "%s-%s" % (f.__name__, hashlib.md5("%s%s" % (
+            _hash = "simplenet.cache.%s-%s" % (f.__name__, hashlib.md5("%s%s" % (
                 repr(args[1:]),
                 repr(kwargs)
             )).hexdigest())
             try:
                 cache = rd.get(_hash)
                 if not cache:
-                    cache = json.dumps(f(*args, **kwargs))
+                    cache = dumps(f(*args, **kwargs))
                     rd.setex(_hash, cache, ttl)
-                return json.loads(cache)
+                return loads(cache)
             except Exception, e:
                 return f(*args, **kwargs)
         return caching

@@ -24,7 +24,7 @@ from bottle import request, response
 from simplenet.common.auth import handle_auth
 from simplenet.common.config import get_logger
 from simplenet.common.http_utils import (
-    reply_json, create_manager, validate_input
+    reply_json, create_manager, validate_input, cache
 )
 from simplenet.exceptions import (
     FeatureNotAvailable
@@ -106,6 +106,7 @@ def generic_resource_info(resource, resource_id):
 @get('/<resource>/by-<resource_type>/<resource_value>')
 @handle_auth
 @reply_json
+@cache()
 def generic_resource_info_by_field(resource, resource_type, resource_value):
     """
     ::
