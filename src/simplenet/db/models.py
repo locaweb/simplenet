@@ -22,6 +22,7 @@ from ipaddr import IPv4Network, IPv4Address, IPv6Network, IPv6Address, IPNetwork
 
 from sqlalchemy import event, Column, String, create_engine, ForeignKey
 from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.schema import UniqueConstraint
 from sqlalchemy.orm import relationship, backref
 
 from simplenet.common.config import config
@@ -478,18 +479,19 @@ class Policy(Base):
     __tablename__ = 'policies'
 
     id = Column(String(255), primary_key=True)
-    proto = Column(String(255), nullable=True)
-    src = Column(String(255), nullable=True)
-    src_port = Column(String(255), nullable=True)
-    dst = Column(String(255), nullable=True)
-    dst_port = Column(String(255), nullable=True)
-    table = Column(String(255), nullable=False)
-    policy = Column(String(255), nullable=False)
-    in_iface = Column(String(255), nullable=True)
-    out_iface = Column(String(255), nullable=True)
-    owner_type = Column(String(50))
-    owner_id = Column(String(46))
+    proto = Column(String(255), server_default="")
+    src = Column(String(255), server_default="")
+    src_port = Column(String(255), server_default="")
+    dst = Column(String(255), server_default="")
+    dst_port = Column(String(255), server_default="")
+    table = Column(String(255), server_default="")
+    policy = Column(String(255), server_default="")
+    in_iface = Column(String(255), server_default="")
+    out_iface = Column(String(255), server_default="")
+    owner_type = Column(String(50), server_default="")
+    owner_id = Column(String(46), index=True)
 
+    __table_args__  = (UniqueConstraint("proto", "src", "src_port", "dst", "dst_port", "table", "policy", "in_iface", "out_iface", "owner_type", "owner_id"),)
     __mapper_args__ = {'polymorphic_on': owner_type}
 
 

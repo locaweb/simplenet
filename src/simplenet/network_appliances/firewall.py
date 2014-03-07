@@ -253,6 +253,10 @@ class Net(SimpleNet):
         try:
             session.add(policy)
             session.commit()
+        except IntegrityError:
+            session.rollback()
+            forbidden_msg = "%s already exists" % data
+            raise OperationNotPermited('Firewall', forbidden_msg)
         except Exception, e:
             session.rollback()
             raise Exception(e)
