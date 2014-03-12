@@ -294,6 +294,50 @@ def firewall_create():
     return firewall
 
 
+@post('/firewall/enable')
+@handle_auth
+@validate_input(name=str)
+@reply_json
+def firewall_enable():
+    """
+    ::
+
+      POST /firewall/enable
+
+    Set firewall device to enabled
+    """
+    manager = create_manager('firewall')
+    data = request.body.readline()
+    if not data:
+        abort(400, 'No data received')
+    data = json.loads(data)
+    firewall = manager.firewall_enable(data=data)
+    location = "firewalls/%s" % (firewall['id'])
+    response.set_header("Location", location)
+    return firewall
+
+@post('/firewall/disable')
+@handle_auth
+@validate_input(name=str)
+@reply_json
+def firewall_enable():
+    """
+    ::
+
+      POST /firewall/disable
+
+    Set firewall device to disabled
+    """
+    manager = create_manager('firewall')
+    data = request.body.readline()
+    if not data:
+        abort(400, 'No data received')
+    data = json.loads(data)
+    firewall = manager.firewall_disable(data=data)
+    location = "firewalls/%s" % (firewall['id'])
+    response.set_header("Location", location)
+    return firewall
+
 @post('/zones/<zone_id>/vlans')
 @handle_auth
 @validate_input(name=str)

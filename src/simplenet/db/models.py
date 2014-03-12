@@ -20,7 +20,7 @@ import uuid
 
 from ipaddr import IPv4Network, IPv4Address, IPv6Network, IPv6Address, IPNetwork, IPAddress
 
-from sqlalchemy import event, Column, String, create_engine, ForeignKey
+from sqlalchemy import event, Column, String, Boolean, create_engine, ForeignKey
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.schema import UniqueConstraint
 from sqlalchemy.orm import relationship, backref
@@ -128,6 +128,7 @@ class Firewall(Base):
 
     id = Column(String(255), primary_key=True)
     name = Column(String(255), unique=True)
+    status = Column(Boolean())
     description = Column(String(255))
     zone_id = Column(String(255), ForeignKey('zones.id'))
     mac = Column(String(255))
@@ -136,15 +137,22 @@ class Firewall(Base):
     anycasts_to_firewalls = relationship('Anycasts_to_Firewall', cascade='all, delete-orphan')
     zone = relationship('Zone')
 
-    def __init__(self, name, zone_id, mac, description=''):
+    def __init__(self, name, zone_id, mac, status, description=''):
         self.id = str(uuid.uuid4())
         self.name = name
         self.zone_id = zone_id
         self.description = description
         self.mac = mac
+        self.status = status
 
     def __repr__(self):
        return "<Firewall('%s','%s')>" % (self.id, self.name)
+
+    def disable(self):
+        self.status = False
+
+    def enable(self):
+        self.status = True
 
     def to_dict(self):
         return {
@@ -154,6 +162,7 @@ class Firewall(Base):
             'zone_id': self.zone_id,
             'mac': self.mac,
             'address': self.address,
+            'status': self.status,
         }
 
     def tree_dict(self):
@@ -164,6 +173,7 @@ class Firewall(Base):
             'zone_id': self.zone_id,
             'mac': self.mac,
             'address': self.address,
+            'status': self.status,
         }
 
 class Switch(Base):
@@ -295,6 +305,7 @@ class Vlans_to_Firewall(Base):
             'device_id': self.firewall_id,
             'vlan': self.vlan.name,
             'name': self.firewall.name,
+            'device_status': self.firewall.status,
             'zone_id': self.firewall.zone_id,
             'zone': self.firewall.zone.name,
         }

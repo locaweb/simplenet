@@ -49,13 +49,37 @@ class Net(SimpleNet):
             'datacenter_id': datacenter['id'],
         }
 
+    def firewall_enable(self, data):
+        session.begin()
+        try:
+            firewall = session.query(models.Firewall).filter_by(**data).first()
+            firewall.enable()
+            session.commit()
+        except Exception, e:
+            session.rollback()
+            raise Exception(e)
+        logger.info("Firewall %s enabled" % firewall.name)
+        return firewall.to_dict()
+
+    def firewall_disable(self, data):
+        session.begin()
+        try:
+            firewall = session.query(models.Firewall).filter_by(**data).first()
+            firewall.disable()
+            session.commit()
+        except Exception, e:
+            session.rollback()
+            raise Exception(e)
+        logger.info("Firewall %s disabled" % firewall.name)
+        return firewall.to_dict()
+
     def firewall_create(self, data):
         logger.debug("Creating device using data: %s" % data)
 
         session.begin(subtransactions=True)
         try:
             session.add(models.Firewall(name=data['name'], zone_id=data['zone_id'],
-                                        mac=data['mac']))
+                                        mac=data['mac'], status=True))
             session.commit()
         except IntegrityError:
             session.rollback()
@@ -196,6 +220,9 @@ class Net(SimpleNet):
             pass
 
         for device in devices:
+            if not device.get("device_status"):
+                logger.info("Device %s ignored, status disabled" % device.get("name"))
+                continue
             logger.debug("Getting data from device: %s" % device['id'])
             vlans = []
             subnets = []
@@ -292,7 +319,7 @@ class Net(SimpleNet):
             raise Exception(e)
 
         logger.debug("Successful deletion of policy %s" % id)
-        self._enqueue_rules_(owner_type, owner_id, ss)
+        self._enqueue_rules_(owner_type, owner_id, ss.to_dict())
         return True
 
     def policy_list_by_owner(self, owner_type, id):

@@ -376,6 +376,14 @@ def firewall(action=None, name=None, zone=None,
         r = call('delete', '%s/%s/delete' % (
             base_url, fetch_id('firewalls', name))
         )
+    elif action == 'disable':
+        r = call('post', '%s/firewall/disable' % (server),
+            data=json.dumps({'name': name})
+        )
+    elif action == 'enable':
+        r = call('post', '%s/firewall/enable' % (server),
+            data=json.dumps({'name': name})
+        )
     elif action == 'info':
         r = call('get', '%s/by-name/%s' % (base_url, name))
     elif action == 'vlan_attach':
