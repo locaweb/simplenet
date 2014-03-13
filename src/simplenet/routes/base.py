@@ -24,7 +24,7 @@ from bottle import request, response
 from simplenet.common.auth import handle_auth
 from simplenet.common.config import get_logger
 from simplenet.common.http_utils import (
-    reply_json, create_manager, validate_input, cache
+    reply_json, create_manager, validate_input, clear_cache, cache
 )
 from simplenet.exceptions import (
     FeatureNotAvailable
@@ -66,6 +66,7 @@ def generic_prober():
 @get('/<resource>/list')
 @handle_auth
 @reply_json
+@cache()
 def generic_resources_list(resource):
     """
     ::
@@ -162,6 +163,7 @@ def generic_resource_delete(resource, resource_id):
     except AttributeError:
         raise FeatureNotAvailable()
 
+    clear_cache()
 
 @post('/datacenters')
 @handle_auth
@@ -183,6 +185,7 @@ def datacenter_create():
     datacenter = manager.datacenter_create(data)
     location = "datacenters/%s" % (datacenter['id'])
     response.set_header("Location", location)
+    clear_cache()
     return datacenter
 
 
@@ -206,6 +209,7 @@ def datacenter_zone_create(datacenter_id):
     zone = manager.zone_create(datacenter_id, data)
     location = "zones/%s" % (zone['id'])
     response.set_header("Location", location)
+    clear_cache()
     return zone
 
 
@@ -229,6 +233,7 @@ def dhcp_create():
     dhcp = manager.dhcp_create(data=data)
     location = "dhcps/%s" % (dhcp['id'])
     response.set_header("Location", location)
+    clear_cache()
     return dhcp
 
 
@@ -252,6 +257,7 @@ def dhcp_add_vlan(dhcp_id):
     dhcp = manager.dhcp_add_vlan(dhcp_id, data['vlan_id'])
     location = "dhcps/relationship/%s" % (dhcp['id'])
     response.set_header("Location", location)
+    clear_cache()
     return dhcp
 
 
@@ -268,6 +274,7 @@ def dhcp_remove_vlan(dhcp_id, vlan_id):
     """
     manager = create_manager('dhcp')
     dhcp = manager.dhcp_remove_vlan(dhcp_id, vlan_id)
+    clear_cache()
     return dhcp
 
 
@@ -291,6 +298,7 @@ def firewall_create():
     firewall = manager.firewall_create(data=data)
     location = "firewalls/%s" % (firewall['id'])
     response.set_header("Location", location)
+    clear_cache()
     return firewall
 
 
@@ -358,6 +366,7 @@ def zone_vlan_create(zone_id):
     vlan = manager.vlan_create(zone_id, data)
     location = "vlans/%s" % (vlan['id'])
     response.set_header("Location", location)
+    clear_cache()
     return vlan
 
 
@@ -381,6 +390,7 @@ def firewall_add_vlan(firewall_id):
     firewall = manager.firewall_add_vlan(firewall_id, data)
     location = "firewalls/relationship/%s" % (firewall['id'])
     response.set_header("Location", location)
+    clear_cache()
     return firewall
 
 
@@ -404,6 +414,7 @@ def firewall_add_anycast(firewall_id):
     firewall = manager.firewall_add_anycast(firewall_id, data)
     location = "firewall/relationship/%s" % (firewall['id'])
     response.set_header("Location", location)
+    clear_cache()
     return firewall
 
 
@@ -420,6 +431,7 @@ def firewall_remove_vlan(firewall_id, vlan_id):
     """
     manager = create_manager('firewall')
     firewall = manager.firewall_remove_vlan(firewall_id, vlan_id)
+    clear_cache()
     return firewall
 
 
@@ -436,6 +448,7 @@ def firewall_remove_anycast(firewall_id, anycast_id):
     """
     manager = create_manager('firewall')
     firewall = manager.firewall_remove_anycast(firewall_id, anycast_id)
+    clear_cache()
     return firewall
 
 
@@ -459,6 +472,7 @@ def anycast_create():
     anycast = manager.anycast_create(data)
     location = "anycasts/%s" % (anycast['id'])
     response.set_header("Location", location)
+    clear_cache()
     return anycast
 
 
@@ -482,6 +496,7 @@ def vlan_subnet_create(vlan_id):
     subnet = manager.subnet_create(vlan_id, data)
     location = "subnets/%s" % (subnet['id'])
     response.set_header("Location", location)
+    clear_cache()
     return subnet
 
 
@@ -505,6 +520,7 @@ def anycast_anycastip_create(anycast_id):
     ip = manager.anycastip_create(anycast_id, data)
     location = "anycastips/%s" % (ip['id'])
     response.set_header("Location", location)
+    clear_cache()
     return ip
 
 
@@ -528,6 +544,7 @@ def subnet_ip_create(subnet_id):
     ip = manager.ip_create(subnet_id, data)
     location = "ips/%s" % (ip['id'])
     response.set_header("Location", location)
+    clear_cache()
     return ip
 
 
@@ -550,6 +567,7 @@ def interface_create():
     interface = manager.interface_create(data)
     location = "interfaces/%s" % (interface['id'])
     response.set_header("Location", location)
+    clear_cache()
     return interface
 
 
@@ -570,6 +588,7 @@ def interface_add_ip(interface_id):
         abort(400, 'No data received')
     data = json.loads(data)
     interface = manager.interface_add_ip(interface_id, data)
+    clear_cache()
     return interface
 
 
@@ -586,4 +605,5 @@ def interface_remove_ip(interface_id, ip_id):
     """
     manager = create_manager('base')
     interface = manager.interface_remove_ip(interface_id, ip_id)
+    clear_cache()
     return interface

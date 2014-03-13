@@ -106,6 +106,14 @@ def validate_input(src="query", *vargs, **vkwargs):
         return validate
     return proxy
 
+def clear_cache(rd=None):
+    # TODO: Better cache
+    if not rd:
+        rd = redis.Redis()
+    try:
+        rd.delete(*rd.keys("simplenet.cache.*"))
+    except redis.exceptions.ResponseError:
+        pass
 
 def cache(ttl=300, rd=None):
     if not rd:
