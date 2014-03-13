@@ -215,15 +215,17 @@ class Worker(ConsumerMixin):
                     st_rules_dst[policy] = "any"
                     st_rules_pol = st_rules_dst[policy]
             else:
-                if type(st_rules_pol) is list and dst_port not in st_rules_pol:
-                    st_rules_pol.append(dst_port)
+                dst_port = dst_port.split(",")
+                for dport in dst_port:
+                    if type(st_rules_pol) is list and dport not in st_rules_pol:
+                        st_rules_pol.append(dport)
         return st_rules
 
     def _add_firewall_mport_rules_(self, data=None):
         for table, rule_attrs in self._get_structured_rules_(data).iteritems():
             for proto in rule_attrs.iterkeys():
                 for src in rule_attrs[proto].iterkeys():
-                    src_addr, src_port = src.split(":")
+                    src_addr, src_port = src.split(":", 1)
                     for dst_addr in rule_attrs[proto][src].iterkeys():
                         for policy in rule_attrs[proto][src][dst_addr].iterkeys():
                             dst_ports = rule_attrs[proto][src][dst_addr][policy]
@@ -233,7 +235,7 @@ class Worker(ConsumerMixin):
                             if src_addr and src_addr != "0.0.0.0/0":
                                 ipt_rule += " -s %s" % src_addr
                             if src_port and src_port != "any":
-                                ipt_rule += " --sport %s" % src_port
+                                ipt_rule += " -m multiport --sports %s" % src_port
                             if dst_addr and dst_addr != "0.0.0.0/0":
                                 ipt_rule += " -d %s" % dst_addr
                             if proto == "gre":
@@ -248,8 +250,6 @@ class Worker(ConsumerMixin):
                                     continue
                                 for s_dst_ports in self._multiport_slice_(dst_ports):
                                     self._add_rule_("%s -m multiport --dports %s -j %s" % (ipt_rule, ",".join(s_dst_ports), policy))
-                            else:
-                                self._add_rule_("%s -j %s" % (ipt_rule, policy))
 
     #
     # TODO: refactor this routine
