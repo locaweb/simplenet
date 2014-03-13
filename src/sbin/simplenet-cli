@@ -348,26 +348,26 @@ def anycastip(action=None, ip=None, anycast=None):
     params={'action': ('<list all|create|delete|vlan_attach'
             '|vlan_create|vlan_list|anycast_attach>'),
             'name': 'firewall device name',
-            'zone': 'zone to create a new device',
+            'pod': 'pod to create a new device',
             'vlan': 'vlan to attach vlans to devices',
             'anycast': 'attach anycast to a device',
             'mac': 'Firewall MAC address'}
 )
-def firewall(action=None, name=None, zone=None,
+def firewall(action=None, name=None, pod=None,
              vlan=None, anycast=None, mac=None):
     """Manage a firewall device related to a zone
     
-    simplenet-cli firewall create --name firewall01 --zone zone01
+    simplenet-cli firewall create --name firewall01 --pod zone01
     """
     base_url = '%s/firewalls' % (server)
     r = None
     if action == 'list':
         r = call('get', '%s/list' % base_url)
     elif action == 'create':
-        if not zone:
-            print 'Missing zone to create'
+        if not pod:
+            print 'Missing pod to create'
             sys.exit(1)
-        zone_id = fetch_id('zones', zone)
+        zone_id = fetch_id('zones', pod)
         r = call('post', '%s/firewalls' % (server),
                 data=json.dumps({'name': name, 'zone_id': zone_id,
                                 'mac': mac})
