@@ -192,23 +192,13 @@ class Net(SimpleNet):
         logger.debug("Getting rules from %s with id %s" % (owner_type, owner_id))
         policy_list = []
         _get_data = getattr(self, "_get_data_%s_" % owner_type)
-        _data = _get_data(owner_id)
+        zone_id = _get_data(owner_id).get('zone_id')
+        _data = {}
+        #_data = _get_data(owner_id)
         _data['modified'] = mod
 
-        if (owner_type != 'zone') and ('vlan_id' in _data):
-            logger.debug("Getting devices by vlan: %s" % _data['vlan_id'])
-            devices = self.firewall_list_by_vlan(_data['vlan_id'])
-        elif ('anycast_id' in _data):
-            logger.debug("Getting devices by anycast: %s" % _data['anycast_id'])
-            devices = self.firewall_list_by_anycast(_data['anycast_id'])
-        elif (owner_type == 'datacenter'):
-            logger.debug("Getting devices by datacenter: %s" % _data['datacenter'])
-            for x in _data['zones']:
-                [self._enqueue_device_rules_(_data, y, owner_type) for y in self.firewall_list_by_zone(x['id'])]
-            return
-        else:
-            logger.debug("Getting devices by zone: %s" % _data['zone_id'])
-            devices = self.firewall_list_by_zone(_data['zone_id'])
+        logger.debug("Getting devices by zone: %s" % zone_id)
+        devices = self.firewall_list_by_zone(zone_id)
 
         self._enqueue_device_rules_(_data, devices, owner_type)
 
@@ -220,7 +210,7 @@ class Net(SimpleNet):
             pass
 
         for device in devices:
-            if not device.get("device_status"):
+            if not device.get("status"):
                 logger.info("Device %s ignored, status disabled" % device.get("name"))
                 continue
             logger.debug("Getting data from device: %s" % device['id'])
@@ -293,7 +283,12 @@ class Net(SimpleNet):
             (policy.id, owner_type, owner_id, data)
         )
         pol = self.policy_info(owner_type, policy.id)
-        self._enqueue_rules_(owner_type, owner_id, pol)
+
+        try:
+            self._enqueue_rules_(owner_type, owner_id, pol)
+        except Exception, e:
+            logger.error("Policy created but firewall event failed %s" % str(e))
+
         return pol
 
     def policy_info(self, owner_type, id):

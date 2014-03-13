@@ -94,8 +94,17 @@ class Worker(ConsumerMixin):
             if body.get("modified"):
                 self.logger.debug(body.get("modified"))
 
-            for line in difflib.unified_diff(old, new):
-                self.logger.debug(line.rstrip())
+            d = difflib.Differ()
+            for line in list(d.compare(old, new)):
+                line = line.rstrip()
+                if line.startswith("+ "):
+                    cmd = line[2:]
+                    self.logger.info("Running %s" % cmd)
+                    #os.system("iptables %s" % cmd)
+                elif line.startswith("- "):
+                    cmd = line[2:].replace("-I", "-D").replace("-A", "-D")
+                    self.logger.info("Running %s" % cmd)
+                    #os.system("iptables %s" % cmd)
 
             self.logger.info("Worke done")
         finally:
@@ -261,85 +270,17 @@ class Worker(ConsumerMixin):
             self._gen_jumps_(infos['table'], infos['zone'], infos['cidr'], infos['vlan'])
             self._gen_jumps_(infos['table'], infos['vlan'], infos['cidr'], infos['cidr'])
 
-        #for rule in [ rule for rule in data.get('policy') if 'table' in rule ]:
         rule = {}
         rule['table'] = 'FORWARD'
-        if ('datacenter' in data) and ('zones' in data):
-            self.logger.debug('DC chain')
-            for zone in data['zones']:
-                for vlan in zone['vlans']:
-                    for subnet in vlan['subnets']:
-                        if IPNetwork(subnet).version == 4:
-                            infos = {'table': rule['table'],
-                                     'datacenter': data['datacenter'],
-                                     'cidr': subnet['cidr'],
-                                     'zone': zone['zone'],
-                                     'vlan': vlan['vlan']}
-                        rule_dzvs_block(infos)
-
-        if ('zone' in data) and ('vlans' in data):
-            self.logger.debug('Zone chain')
-            for vlan in data['vlans']:
-                for subnet in vlan['subnets']:
-                    infos = {'table': rule['table'],
-                             'datacenter': data['datacenter'],
-                             'cidr': subnet['cidr'],
-                             'zone': data['zone'],
-                             'vlan': vlan['vlan']}
-                    rule_dzvs_block(infos)
-                    [self._gen_jumps_(rule['table'], data['subnet'], ip['ip'], ip['ip']) for ip in subnet['ips']]
-
-        if ('vlan' in data) and ('subnets' in data):
-            self.logger.debug('VLAN chain')
-            for subnet in data['subnets']:
+        for vlan in data['vlans']:
+            for subnet in vlan['subnets']:
                 infos = {'table': rule['table'],
-                         'datacenter': data['datacenter'],
+                         'datacenter': vlan['datacenter'],
                          'cidr': subnet['cidr'],
-                         'zone': data['zone'],
-                         'vlan': data['vlan']}
+                         'zone': vlan['zone'],
+                         'vlan': vlan['vlan']}
                 rule_dzvs_block(infos)
-
-        if ('subnet' in data) and ('ips' in data):
-            logging.debug('Subnet chain')
-            infos = {'table': rule['table'],
-                     'datacenter': data['datacenter'],
-                     'cidr': data['subnet'],
-                     'zone': data['zone'],
-                     'vlan': data['vlan']}
-            rule_dzvs_block(infos)
-            [self._gen_jumps_(rule['table'], data['subnet'], ip['ip'], ip['ip']) for ip in data['ips']]
-
-        if ('anycast' in data) and ('ipsanycast' in data):
-            logging.debug('Anycast chain')
-            infos = {'table': rule['table'],
-                     'datacenter': data['datacenter'],
-                     'cidr': data['anycast'],
-                     'zone': data['zone'],
-                     'vlan': 'anycast'}
-            rule_dzvs_block(infos)
-            [self._gen_jumps_(rule['table'], data['anycast'], ip['ip'], ip['ip']) for ip in data['ipsanycast']]
-
-        if 'ip' in data:
-            logging.debug('IP Chain')
-            #print json.dumps(data, sort_keys=True, indent=4)
-            infos = {'table': rule['table'],
-                     'datacenter': data['datacenter'],
-                     'cidr': data['subnet'],
-                     'zone': data['zone'],
-                     'vlan': data['vlan']}
-            rule_dzvs_block(infos)
-            self._gen_jumps_(rule['table'], data['subnet'], data['ip'], data['ip'])
-
-        if 'ipanycast' in data:
-            logging.debug('IP Chain')
-            #print json.dumps(data, sort_keys=True, indent=4)
-            infos = {'table': rule['table'],
-                     'datacenter': data['datacenter'],
-                     'cidr': data['anycast'],
-                     'zone': data['zone'],
-                     'vlan': 'anycast'}
-            rule_dzvs_block(infos)
-            self._gen_jumps_(rule['table'], data['anycast'], data['ipanycast'], data['anycast'])
+                [self._gen_jumps_(rule['table'], subnet['cidr'], ip['ip'], ip['ip']) for ip in subnet['ips']]
 
     def _gen_iptables_save_(self, data):
         self.logger.debug(json.dumps(data, sort_keys=True, indent=4))
