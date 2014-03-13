@@ -95,6 +95,8 @@ class Worker(ConsumerMixin):
                 self.logger.debug(body.get("modified"))
 
             d = difflib.Differ()
+            old.sort()
+            new.sort()
             for line in list(d.compare(old, new)):
                 line = line.rstrip()
                 if line.startswith("+ "):
