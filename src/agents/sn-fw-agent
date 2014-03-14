@@ -261,6 +261,9 @@ class Worker(ConsumerMixin):
                                     continue
                                 for s_dst_ports in self._multiport_slice_(dst_ports):
                                     self._add_rule_("%s -m multiport --dports %s -j %s" % (ipt_rule, ",".join(s_dst_ports), policy))
+                            else:
+                                if policy in ['ACCEPT', 'DROP', 'REJECT']:
+                                    self._add_rule_("%s -j %s" % (ipt_rule, policy))
 
     #
     # TODO: refactor this routine
