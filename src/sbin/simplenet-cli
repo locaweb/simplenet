@@ -345,7 +345,7 @@ def anycastip(action=None, ip=None, anycast=None):
 
 
 @baker.command(
-    params={'action': ('<list all|create|delete'
+    params={'action': ('<list all|create|delete|sync'
             '|vlan_create|vlan_list|anycast_attach>'),
             'name': 'firewall device name',
             'pod': 'pod to create a new device',
@@ -382,6 +382,10 @@ def firewall(action=None, name=None, pod=None,
         )
     elif action == 'enable':
         r = call('post', '%s/firewall/enable' % (server),
+            data=json.dumps({'name': name})
+        )
+    elif action == 'sync':
+        r = call('post', '%s/firewall/sync' % (server),
             data=json.dumps({'name': name})
         )
     elif action == 'info':

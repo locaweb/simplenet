@@ -304,7 +304,6 @@ def firewall_create():
 
 @post('/firewall/enable')
 @handle_auth
-@validate_input(name=str)
 @reply_json
 def firewall_enable():
     """
@@ -326,9 +325,8 @@ def firewall_enable():
 
 @post('/firewall/disable')
 @handle_auth
-@validate_input(name=str)
 @reply_json
-def firewall_enable():
+def firewall_disable():
     """
     ::
 
@@ -345,6 +343,28 @@ def firewall_enable():
     location = "firewalls/%s" % (firewall['id'])
     response.set_header("Location", location)
     return firewall
+
+@post('/firewall/sync')
+@handle_auth
+@reply_json
+def firewall_sync():
+    """
+    ::
+
+      POST /firewall/sync
+
+    Reload firewall rules
+    """
+    manager = create_manager('firewall')
+    data = request.body.readline()
+    if not data:
+        abort(400, 'No data received')
+    data = json.loads(data)
+    firewall = manager.firewall_sync(data=data)
+    if firewall:
+        location = "firewalls/%s" % (firewall['id'])
+        response.set_header("Location", location)
+        return firewall
 
 @post('/zones/<zone_id>/vlans')
 @handle_auth

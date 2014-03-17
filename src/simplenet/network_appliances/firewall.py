@@ -159,6 +159,16 @@ class Net(SimpleNet):
     def firewall_delete(self, id):
         return self._generic_delete_("firewall", models.Firewall, {'id': id})
 
+    def firewall_sync(self, data):
+        _data = {}
+        _data['modified'] = None
+
+        device = self.firewall_info_by_name(data.get("name"))
+
+        self._enqueue_device_rules_(_data, [device], "FW Reload")
+
+        return device
+
     def _enqueue_rules_(self, owner_type, owner_id, mod):
         logger.debug("Getting rules from %s with id %s" % (owner_type, owner_id))
         policy_list = []
