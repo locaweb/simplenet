@@ -95,35 +95,6 @@ class Net(SimpleNet):
     def firewall_list(self):
         return self._generic_list_("firewalls", models.Firewall)
 
-    def firewall_add_vlan(self, firewall_id, data):
-        logger.debug("Adding vlan to device: %s using data: %s" %
-            (firewall_id, data)
-        )
-        firewall = session.query(models.Firewall).get(firewall_id)
-        vlan = session.query(models.Vlan).get(data['vlan_id'])
-
-        if firewall.zone_id != vlan.zone_id:
-            raise OperationNotPermited(
-                'Firewall', 'Firewall and Vlan must be from the same zone'
-            )
-
-        session.expire_all()
-        session.begin(subtransactions=True)
-        try:
-            relationship = models.Vlans_to_Firewall()
-            relationship.vlan = vlan
-            firewall.vlans_to_firewalls.append(relationship)
-            session.commit()
-            session.flush()
-        except Exception, e:
-            session.rollback()
-            raise Exception(e)
-        _data = firewall.to_dict()
-        logger.debug("Successful adding vlan to device:"
-            " %s device status: %s" % (firewall_id, _data)
-        )
-        return _data
-
     def firewall_add_anycast(self, firewall_id, data):
         logger.debug("Adding vlan to anycast: %s using data: %s" %
             (firewall_id, data)
@@ -225,9 +196,9 @@ class Net(SimpleNet):
 
             logger.debug("Getting policy data from zone %s" % zone_id)
             policy_list += self.policy_list_by_owner('zone', zone_id)
-            for vlan in self.vlan_list_by_firewall(dev_id): # Cascade thru the vlans of the device
-                vlans.append(vlan['vlan_id'])
-                for subnet in self.subnet_list_by_vlan(vlan['vlan_id']): # Cascade thru the subnets of the vlan
+            for vlan in self.vlan_list_by_zone(zone_id): # Cascade thru the vlans of the device
+                vlans.append(vlan['id'])
+                for subnet in self.subnet_list_by_vlan(vlan['id']): # Cascade thru the subnets of the vlan
                     subnets.append(subnet['id'])
                     for ip in self.ip_list_by_subnet(subnet['id']): # Cascade thru the IPs of the subnet
                         ips.append(ip)
@@ -254,6 +225,7 @@ class Net(SimpleNet):
                 _data, owner_type, id, device['name'])
             )
             if policy_list:
+                logger.info("Sending event to %s" % device['name'])
                 event.EventManager().raise_event(device['name'], _data)
 
     def policy_list(self, owner_type):

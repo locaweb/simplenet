@@ -133,7 +133,6 @@ class Firewall(Base):
     zone_id = Column(String(255), ForeignKey('zones.id'))
     mac = Column(String(255))
     address = Column(String(255))
-    vlans_to_firewalls = relationship('Vlans_to_Firewall', cascade='all, delete-orphan')
     anycasts_to_firewalls = relationship('Anycasts_to_Firewall', cascade='all, delete-orphan')
     zone = relationship('Zone')
 
@@ -260,7 +259,6 @@ class Vlan(Base):
     description = Column(String(255))
     zone_id = Column(String(255), ForeignKey('zones.id'))
     zone = relationship('Zone')
-    firewall_to_vlan = relationship('Vlans_to_Firewall', cascade='all, delete-orphan')
 
     def __init__(self, name, zone_id, type, description=''):
         self.id = str(uuid.uuid4())
@@ -284,35 +282,7 @@ class Vlan(Base):
         return {
             'id': self.id,
             'type': self.type,
-            'firewall': [x.tree_dict()['firewall'] for x in self.firewall_to_vlan],
             'name': self.name,
-        }
-
-class Vlans_to_Firewall(Base):
-
-    __tablename__ = 'vlans_to_firewalls'
-
-    vlan_id = Column(String(255), ForeignKey('vlans.id'), primary_key=True)
-    firewall_id = Column(String(255), ForeignKey('firewalls.id'), primary_key=True)
-    description = Column(String(255))
-    vlan = relationship('Vlan')
-    firewall = relationship('Firewall')
-
-    def to_dict(self):
-        return {
-            'id': self.firewall.id,
-            'vlan_id': self.vlan_id,
-            'device_id': self.firewall_id,
-            'vlan': self.vlan.name,
-            'name': self.firewall.name,
-            'device_status': self.firewall.status,
-            'zone_id': self.firewall.zone_id,
-            'zone': self.firewall.zone.name,
-        }
-
-    def tree_dict(self):
-        return {
-            'firewall': self.firewall.tree_dict()
         }
 
 class Anycasts_to_Firewall(Base):

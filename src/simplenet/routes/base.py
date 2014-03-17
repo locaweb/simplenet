@@ -370,30 +370,6 @@ def zone_vlan_create(zone_id):
     return vlan
 
 
-@post('/firewalls/<firewall_id>/vlans')
-@handle_auth
-@validate_input(vlan_id=str)
-@reply_json
-def firewall_add_vlan(firewall_id):
-    """
-    ::
-
-      POST /firewalls/<firewall_id>/vlans
-
-    Attach vlan to firewall device
-    """
-    manager = create_manager('firewall')
-    data = request.body.readline()
-    if not data:
-        abort(400, 'No data received')
-    data = json.loads(data)
-    firewall = manager.firewall_add_vlan(firewall_id, data)
-    location = "firewalls/relationship/%s" % (firewall['id'])
-    response.set_header("Location", location)
-    clear_cache()
-    return firewall
-
-
 @post('/firewalls/<firewall_id>/anycasts')
 @handle_auth
 @validate_input(anycast_id=str)
@@ -414,23 +390,6 @@ def firewall_add_anycast(firewall_id):
     firewall = manager.firewall_add_anycast(firewall_id, data)
     location = "firewall/relationship/%s" % (firewall['id'])
     response.set_header("Location", location)
-    clear_cache()
-    return firewall
-
-
-@delete('/firewalls/<firewall_id>/vlans/<vlan_id>')
-@handle_auth
-@reply_json
-def firewall_remove_vlan(firewall_id, vlan_id):
-    """
-    ::
-
-      POST /firewalls/<firewall_id>/vlans/<vlan_id>
-
-    Attach vlan to firewall device
-    """
-    manager = create_manager('firewall')
-    firewall = manager.firewall_remove_vlan(firewall_id, vlan_id)
     clear_cache()
     return firewall
 

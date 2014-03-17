@@ -345,7 +345,7 @@ def anycastip(action=None, ip=None, anycast=None):
 
 
 @baker.command(
-    params={'action': ('<list all|create|delete|vlan_attach'
+    params={'action': ('<list all|create|delete'
             '|vlan_create|vlan_list|anycast_attach>'),
             'name': 'firewall device name',
             'pod': 'pod to create a new device',
@@ -386,16 +386,6 @@ def firewall(action=None, name=None, pod=None,
         )
     elif action == 'info':
         r = call('get', '%s/by-name/%s' % (base_url, name))
-    elif action == 'vlan_attach':
-        if not vlan:
-            print 'Missing vlan to attach'
-            sys.exit(1)
-
-        vlan_id = fetch_id('vlans', vlan)
-        r = call('post', '%s/%s/vlans' %
-            (base_url, fetch_id('firewalls', name)),
-            data=json.dumps({'vlan_id': vlan_id})
-        )
     elif action == 'anycast_attach':
         if not anycast:
             print 'Missing anycast to attach'
@@ -405,14 +395,6 @@ def firewall(action=None, name=None, pod=None,
         r = call('post', '%s/%s/anycasts' %
             (base_url, fetch_id('firewalls', name)),
             data=json.dumps({'anycast_id': anycast_id})
-        )
-    elif action == 'vlan_detach':
-        if not vlan:
-            print 'Missing vlan to attach'
-            sys.exit(1)
-
-        r = call('delete', '%s/%s/vlans/%s' % (
-            base_url, fetch_id('firewalls', name), fetch_id('vlans', vlan))
         )
     elif action == 'anycast_detach':
         if not anycast:
