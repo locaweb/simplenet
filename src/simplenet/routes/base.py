@@ -156,6 +156,7 @@ def generic_resource_delete(resource, resource_id):
 
     Deletes resource
     """
+    clear_cache()
     manager = create_manager(generic_router(resource))
     try:
         _delete = getattr(manager, '%s_delete' % (resource[:-1]))
@@ -163,7 +164,6 @@ def generic_resource_delete(resource, resource_id):
     except AttributeError:
         raise FeatureNotAvailable()
 
-    clear_cache()
 
 @post('/datacenters')
 @handle_auth
