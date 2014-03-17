@@ -64,7 +64,7 @@ function run_firewall_test(){
 
 echo -e "\n::::: Starting Interface Tests "
 run_test "datacenter create datacenter01" '"name": "datacenter01"'
-run_test "zone create zone01 --datacenter datacenter01" '"name": "zone01"'
+run_test "pod create pod01 --datacenter datacenter01" '"name": "pod01"'
 
 for i in `seq 1 5`;
 do sw=$(( $RANDOM % 400 + 1 ))
@@ -77,11 +77,10 @@ range=$(( $RANDOM % 253 + 1 ))
 
 #echo -e "\n::::: Starting Ip Tests "
 #run_test "datacenter create datacenter01" '"name": "datacenter01"'
-#run_test "zone create zone01 --datacenter datacenter01" '"name": "zone01"'
-#run_test "zone create zone02 --datacenter datacenter01" '"name": "zone02"'
-#run_test "vlan create vlan$vlan --zone zone01" "\"name\": \"vlan$vlan\""
-#run_test "firewall create firewall$firewall --zone zone01" "\"name\": \"firewall$firewall\""
-#run_test "firewall vlan_attach firewall$firewall --vlan vlan$vlan" "\"name\": \"firewall$firewall\""
+#run_test "pod create pod01 --datacenter datacenter01" '"name": "pod01"'
+#run_test "pod create pod02 --datacenter datacenter01" '"name": "pod02"'
+#run_test "vlan create vlan$vlan --pod pod01" "\"name\": \"vlan$vlan\""
+#run_test "firewall create firewall$firewall --pod pod01" "\"name\": \"firewall$firewall\""
 #run_test "subnet create 192.168.$range.0/24 --vlan vlan$vlan" "\"cidr\": \"192.168.$range.0/24\""
 #run_test "ip create 192.168.$range.1 --subnet 192.168.$range.0/24" "\"ip\": \"192.168.$range.1\""
 #run_firewall_test "firewallrule create" "subnet" "192.168.$range.0/24 --dst 192.168.0.2 --proto tcp --table OUTPUT --policy DROP"
@@ -90,10 +89,9 @@ range=$(( $RANDOM % 253 + 1 ))
 #run_firewall_test "firewallrule create" "ip" "192.168.$range.1 --dst 192.168.0.2 --proto tcp --table INPUT --policy DROP"
 
 echo -e "\n::::: Starting Interface Tests "
-run_test "vlan create vlan$vlan --zone zone01 --type private_vlan" "\"name\": \"vlan$vlan\""
+run_test "vlan create vlan$vlan --pod pod01 --type private_vlan" "\"name\": \"vlan$vlan\""
 fwmac=`(date; cat /proc/interrupts) | md5sum | sed -r 's/^(.{12}).*$/\1/; s/([0-9a-f]{2})/\1:/g; s/:$//;'`
-run_test "firewall create firewall$firewall --zone zone01 --mac $fwmac" "\"name\": \"firewall$firewall\""
-run_test "firewall vlan_attach firewall$firewall --vlan vlan$vlan" "\"name\": \"firewall$firewall\""
+run_test "firewall create firewall$firewall --pod pod01 --mac $fwmac" "\"name\": \"firewall$firewall\""
 run_test "dhcp create dhcp$vlan" "\"name\": \"dhcp$vlan\""
 run_test "dhcp vlan_attach dhcp$vlan --vlan vlan$vlan" "\"name\": \"dhcp$vlan\""
 run_test "subnet create 192.168.$range.0/24 --vlan vlan$vlan" "\"cidr\": \"192.168.$range.0/24\""
@@ -115,8 +113,7 @@ for i in `seq 1 5`;
 do
     firewall=$(( $RANDOM % 400 + 1 ))
     fwmac=`(date; cat /proc/interrupts) | md5sum | sed -r 's/^(.{12}).*$/\1/; s/([0-9a-f]{2})/\1:/g; s/:$//;'`
-    run_test "firewall create firewall$firewall --zone zone01 --mac $fwmac" "\"name\": \"firewall$firewall\""
-    run_test "firewall vlan_attach firewall$firewall --vlan vlan$vlan" "\"name\": \"firewall$firewall\""
+    run_test "firewall create firewall$firewall --pod pod01 --mac $fwmac" "\"name\": \"firewall$firewall\""
 done
 done
 done
