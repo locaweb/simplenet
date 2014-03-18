@@ -624,6 +624,9 @@ def firewallrule(action=None, name=None, owner=None, in_iface=None,
         elif not policy:
             print 'Missing policy to create'
             sys.exit(1)
+        elif src_port or dst_port and not proto:
+            print 'Missing proto'
+            sys.exit(1)
 
         data = {}
         for key in ['policy', 'dst', 'src', 'dst_port',
