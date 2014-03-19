@@ -28,6 +28,8 @@ import logging
 import os
 import re
 import sys
+from subprocess import Popen, PIPE
+import shlex
 
 from datetime import datetime
 from ipaddr import IPNetwork
@@ -73,40 +75,65 @@ class Worker(ConsumerMixin):
             routing_key=myname),
         callbacks=[self.process_task])]
 
+    def _rules_diff(self):
+        new = open(self.iptables_file, "r").readlines()
+        p = Popen(shlex.split('/sbin/iptables-save -t filter'), stdout=PIPE, stderr=PIPE)
+        old, err = p.communicate()
+        old = [x.strip() for x in old.splitlines()]
+        new = [x.strip() for x in new]
+        new = [x.replace("-I", "-A").replace("/32", "") for x in new]
+        old = [x.replace("-I", "-A").replace("/32", "") for x in old]
+        old.sort()
+        new.sort()
+
+        d = difflib.Differ()
+
+        return list(d.compare(old, new))
+
     def process_task(self, body, message):
-        self.logger.debug("TASK")
+        self.logger.info("TASK")
         start_time = datetime.now()
         self.iptables_save = []
         self.iptables_save.append('*filter')
-        self.logger.debug("Received payload %s" % json.dumps(body, sort_keys=True, indent=4))
+        #self.logger.debug("Received payload %s" % json.dumps(body, sort_keys=True, indent=4))
 
         try:
             lock = FileLock(self.lockfile.replace(".lock",""))
             lock.acquire()
             self._gen_iptables_save_(body)
             self.iptables_save.append("COMMIT\n")
-            old = None
-            if os.path.isfile(self.iptables_file):
-                old = open(self.iptables_file, "r").readlines()
             open(self.iptables_file, "w").write("\n".join(self.iptables_save))
-            new = open(self.iptables_file, "r").readlines()
+            self.late_run = []
 
             if body.get("modified"):
                 self.logger.debug(body.get("modified"))
 
-            d = difflib.Differ()
-            old.sort()
-            new.sort()
-            for line in list(d.compare(old, new)):
+            for line in self._rules_diff():
                 line = line.rstrip()
                 if line.startswith("+ "):
-                    cmd = line[2:]
-                    self.logger.info("Running %s" % cmd)
-                    #os.system("iptables %s" % cmd)
+                    #self.logger.info(line)
+                    cmd = line[2:].replace("-A", "-I")
+                    if cmd.startswith(":"):
+                        cmd = cmd.split()[0][1:]
+                        self._run_rule_("iptables -N %s" % cmd)
+                    elif cmd.startswith("-I"):
+                        self._run_rule_("iptables %s" % cmd)
+                    else:
+                        self.logger.debug("Ignored %s" % cmd)
                 elif line.startswith("- "):
+                    #self.logger.info(line)
                     cmd = line[2:].replace("-I", "-D").replace("-A", "-D")
-                    self.logger.info("Running %s" % cmd)
-                    #os.system("iptables %s" % cmd)
+                    if cmd.startswith(":"):
+                        cmd = cmd.split()[0][1:]
+                        self._run_rule_("iptables -X %s" % cmd)
+                    elif cmd.startswith("-D"):
+                        self._run_rule_("iptables %s" % cmd)
+                    else:
+                        self.logger.debug("Ignored %s" % cmd)
+
+            self.logger.info("Re-running failed commands...")
+            for line in self.late_run:
+                self._run_rule_(line)
 
             self.logger.info("Worke done")
         finally:
@@ -115,11 +142,27 @@ class Worker(ConsumerMixin):
 
         stop_time = datetime.now()
         duration = stop_time - start_time
-        self.logger.debug(duration)
+        self.logger.info(duration)
+
+    def _run_rule_(self, rule):
+        ### Insanity check ###
+        if rule.lower() in ['iptables -f forward', 'iptables -f input', 'iptables -f output', \
+                            'iptables -x forward', 'iptables -x input', 'iptables -x output']:
+            self.logger.debug("Ignored '%s'" % rule)
+            return
+        ######################
+
+        self.logger.info("Running '%s'" % rule)
+        status = Popen(shlex.split(rule), shell=False, stdout=PIPE, stderr=PIPE)
+        stdout, stderr = status.communicate()
+        if status.returncode != 0:
+            if rule not in self.late_run:
+                self.late_run.append(rule)
+            self.logger.error("Exit code %s output: %s %s" % (status.returncode, stdout, stderr))
 
     def _add_rule_(self, rule):
         if rule not in self.iptables_save:
-            self.logger.debug(rule)
+            #self.logger.debug(rule)
             self.iptables_save.append(rule)
 
     @staticmethod
@@ -241,14 +284,17 @@ class Worker(ConsumerMixin):
                         for policy in rule_attrs[proto][src][dst_addr].iterkeys():
                             dst_ports = rule_attrs[proto][src][dst_addr][policy]
                             ipt_rule = "-I %s" % table
-                            if proto:
-                                ipt_rule += " -p %s" % proto
                             if src_addr and src_addr != "0.0.0.0/0":
                                 ipt_rule += " -s %s" % src_addr
-                            if src_port and src_port != "any":
-                                ipt_rule += " -m multiport --sports %s" % src_port
                             if dst_addr and dst_addr != "0.0.0.0/0":
                                 ipt_rule += " -d %s" % dst_addr
+                            if proto:
+                                if proto != "icmp":
+                                    ipt_rule += " -p %s -m %s" % (proto, proto)
+                                else:
+                                    ipt_rule += " -p %s" % proto
+                            if src_port and src_port != "any":
+                                ipt_rule += " -m multiport --sports %s" % src_port
                             if proto == "gre":
                                 self._add_rule_("%s -j %s" % (ipt_rule, policy))
                                 continue
@@ -259,6 +305,7 @@ class Worker(ConsumerMixin):
                                 if len(dst_ports) == 1:
                                     self._add_rule_("%s --dport %s -j %s" % (ipt_rule, dst_ports[0], policy))
                                     continue
+                                ipt_rule = ipt_rule.replace("-m udp","").replace("-m tcp", "").rstrip()
                                 for s_dst_ports in self._multiport_slice_(dst_ports):
                                     self._add_rule_("%s -m multiport --dports %s -j %s" % (ipt_rule, ",".join(s_dst_ports), policy))
                             else:
@@ -288,7 +335,7 @@ class Worker(ConsumerMixin):
                 [self._gen_jumps_(rule['table'], subnet['cidr'], ip['ip'], ip['ip']) for ip in subnet['ips']]
 
     def _gen_iptables_save_(self, data):
-        self.logger.debug(json.dumps(data, sort_keys=True, indent=4))
+        #self.logger.debug(json.dumps(data, sort_keys=True, indent=4))
         self._gen_iptables_chains_(data)
         self._add_firewall_mport_rules_(data)
 
