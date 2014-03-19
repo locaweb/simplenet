@@ -100,7 +100,7 @@ class SimpleNet(object):
 
     def _get_data_anycastip_(self, id):
         logger.debug("Getting ip anycast data %s" % id)
-        ip = self.Anycastip_info(id)
+        ip = self.anycastip_info(id)
         anycast = self.anycast_info(ip['anycast_id'])
         logger.debug("Received anycast: %s from [%s]" %
             (anycast, id)

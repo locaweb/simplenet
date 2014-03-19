@@ -202,6 +202,8 @@ class Net(SimpleNet):
             anycastips = []
             zone_id = device['zone_id']
             _data.update(self._get_data_zone_(zone_id))
+            _data['anycasts'] = []
+            _data['anycastips'] = []
             dev_id = device.get('device_id') or device.get('id')
 
             logger.debug("Getting policy data from zone %s" % zone_id)
@@ -215,8 +217,10 @@ class Net(SimpleNet):
 
             for anycast in self.anycast_list_by_firewall(dev_id): # Cascade thru the anycasts of the device
                 anycasts.append(anycast['anycast_id'])
+                _data['anycasts'].append(anycast)
                 for anycastip in self.anycastip_list_by_anycast(anycast['anycast_id']): # Cascade thru the IPs of the anycast subnet
-                    anycastips.append(ip['id'])
+                    _data['anycastips'].append(anycastip)
+                    anycastips.append(anycastip['id'])
 
             logger.debug("Getting policy data from vlans: %s" % vlans)
             policy_list += self.policy_list_by_owners('vlan', vlans)

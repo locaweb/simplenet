@@ -334,6 +334,23 @@ class Worker(ConsumerMixin):
                 rule_dzvs_block(infos)
                 [self._gen_jumps_(rule['table'], subnet['cidr'], ip['ip'], ip['ip']) for ip in subnet['ips']]
 
+        for anycast in data['anycasts']:
+            infos = {'table': rule['table'],
+                     'datacenter': data['datacenter'],
+                     'cidr': anycast['anycast_cidr'],
+                     'zone': data['zone'],
+                     'vlan': 'anycast'}
+            rule_dzvs_block(infos)
+
+        for anycastip in data['anycastips']:
+            infos = {'table': rule['table'],
+                     'datacenter': data['datacenter'],
+                     'cidr': anycastip['anycast'],
+                     'zone': data['zone'],
+                     'vlan': 'anycast'}
+            rule_dzvs_block(infos)
+            self._gen_jumps_(rule['table'], anycastip['anycast'], anycastip['ip'], anycastip['ip'])
+
     def _gen_iptables_save_(self, data):
         #self.logger.debug(json.dumps(data, sort_keys=True, indent=4))
         self._gen_iptables_chains_(data)
