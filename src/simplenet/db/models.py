@@ -33,7 +33,7 @@ Base = declarative_base()
 class Prober(Base):
 
     __tablename__ = 'prober'
-    id = Column(String(255), primary_key=True)
+    id = Column(String(36), primary_key=True)
     foo = Column(String(1))
 
 
@@ -41,7 +41,7 @@ class Datacenter(Base):
 
     __tablename__ = 'datacenters'
 
-    id = Column(String(255), primary_key=True)
+    id = Column(String(36), primary_key=True)
     name = Column(String(255), unique=True)
     description = Column(String(255))
 
@@ -60,10 +60,10 @@ class Zone(Base):
 
     __tablename__ = 'zones'
 
-    id = Column(String(255), primary_key=True)
+    id = Column(String(36), primary_key=True)
     name = Column(String(255), unique=True)
     description = Column(String(255))
-    datacenter_id = Column(String(255), ForeignKey('datacenters.id'))
+    datacenter_id = Column(String(36), ForeignKey('datacenters.id'))
     datacenter = relationship('Datacenter')
 
     def __init__(self, name, datacenter_id, description=''):
@@ -86,7 +86,7 @@ class Dhcp(Base):
 
     __tablename__ = 'dhcps'
 
-    id = Column(String(255), primary_key=True)
+    id = Column(String(36), primary_key=True)
     name = Column(String(255), unique=True)
     vlans_to_dhcps = relationship('Vlans_to_Dhcp', cascade='all, delete-orphan')
 
@@ -108,8 +108,8 @@ class Vlans_to_Dhcp(Base):
 
     __tablename__ = 'vlans_to_dhcps'
 
-    vlan_id = Column(String(255), ForeignKey('vlans.id'), primary_key=True)
-    dhcp_id = Column(String(255), ForeignKey('dhcps.id'), primary_key=True)
+    vlan_id = Column(String(36), ForeignKey('vlans.id'), primary_key=True)
+    dhcp_id = Column(String(36), ForeignKey('dhcps.id'), primary_key=True)
     vlan = relationship('Vlan')
     dhcp = relationship('Dhcp')
 
@@ -126,12 +126,12 @@ class Firewall(Base):
 
     __tablename__ = 'firewalls'
 
-    id = Column(String(255), primary_key=True)
+    id = Column(String(36), primary_key=True)
     name = Column(String(255), unique=True)
     status = Column(Boolean())
     description = Column(String(255))
-    zone_id = Column(String(255), ForeignKey('zones.id'))
-    mac = Column(String(255))
+    zone_id = Column(String(36), ForeignKey('zones.id'))
+    mac = Column(String(30))
     address = Column(String(255))
     anycasts_to_firewalls = relationship('Anycasts_to_Firewall', cascade='all, delete-orphan')
     zone = relationship('Zone')
@@ -179,10 +179,10 @@ class Switch(Base):
 
     __tablename__ = 'switches'
 
-    id = Column(String(255), primary_key=True)
+    id = Column(String(36), primary_key=True)
     name = Column(String(255), unique=True)
-    model_type = Column(String(255))
-    mac = Column(String(255))
+    model_type = Column(String(100))
+    mac = Column(String(30))
     address = Column(String(255))
     ports = relationship('Interface', cascade='all, delete-orphan')
 
@@ -218,9 +218,9 @@ class Interface(Base):
 
     __tablename__ = 'interfaces'
 
-    id = Column(String(255), primary_key=True, unique=True)
-    switch_id = Column(String(255), ForeignKey('switches.id'))
-    status = Column(String(255))
+    id = Column(String(36), primary_key=True, unique=True)
+    switch_id = Column(String(36), ForeignKey('switches.id'))
+    status = Column(String(100))
     name = Column(String(255))
     hostname = Column(String(255))
     switch = relationship('Switch')
@@ -253,11 +253,11 @@ class Vlan(Base):
 
     __tablename__ = 'vlans'
 
-    id = Column(String(255), primary_key=True)
+    id = Column(String(36), primary_key=True)
     name = Column(String(255), unique=True)
-    type = Column(String(255))
+    type = Column(String(100))
     description = Column(String(255))
-    zone_id = Column(String(255), ForeignKey('zones.id'))
+    zone_id = Column(String(36), ForeignKey('zones.id'))
     zone = relationship('Zone')
 
     def __init__(self, name, zone_id, type, description=''):
@@ -289,8 +289,8 @@ class Anycasts_to_Firewall(Base):
 
     __tablename__ = 'anycasts_to_firewalls'
 
-    anycast_id = Column(String(255), ForeignKey('anycasts.id'), primary_key=True)
-    firewall_id = Column(String(255), ForeignKey('firewalls.id'), primary_key=True)
+    anycast_id = Column(String(36), ForeignKey('anycasts.id'), primary_key=True)
+    firewall_id = Column(String(36), ForeignKey('firewalls.id'), primary_key=True)
     description = Column(String(255))
     anycast = relationship('Anycast')
     firewall = relationship('Firewall')
@@ -305,10 +305,10 @@ class Subnet(Base):
 
     __tablename__ = 'subnets'
 
-    id = Column(String(255), primary_key=True)
+    id = Column(String(36), primary_key=True)
     cidr = Column(String(255), unique=True)
     description = Column(String(255))
-    vlan_id = Column(String(255), ForeignKey('vlans.id'))
+    vlan_id = Column(String(36), ForeignKey('vlans.id'))
     vlan = relationship('Vlan', backref="subnet")
     ip = relationship('Ip')
 
@@ -360,12 +360,12 @@ class Ip(Base):
 
     __tablename__ = 'ips'
 
-    id = Column(String(255), primary_key=True)
+    id = Column(String(36), primary_key=True)
     ip = Column(String(255), unique=True)
     description = Column(String(255))
-    subnet_id = Column(String(255), ForeignKey('subnets.id'))
+    subnet_id = Column(String(36), ForeignKey('subnets.id'))
     subnet = relationship('Subnet')
-    interface_id = Column(String(255), ForeignKey('interfaces.id'))
+    interface_id = Column(String(36), ForeignKey('interfaces.id'))
     interface = relationship("Interface", collection_class=set, backref=backref("ips", collection_class=set))
 
     def __init__(self, ip, subnet_id, description=''):
@@ -400,7 +400,7 @@ class Anycast(Base):
 
     __tablename__ = 'anycasts'
 
-    id = Column(String(255), primary_key=True)
+    id = Column(String(36), primary_key=True)
     cidr = Column(String(255), unique=True)
     description = Column(String(255))
 
@@ -434,10 +434,10 @@ class Anycastip(Base):
 
     __tablename__ = 'anycastips'
 
-    id = Column(String(255), primary_key=True)
+    id = Column(String(36), primary_key=True)
     ip = Column(String(255), unique=True)
     description = Column(String(255))
-    anycast_id = Column(String(255), ForeignKey('anycasts.id'))
+    anycast_id = Column(String(36), ForeignKey('anycasts.id'))
     anycast = relationship('Anycast')
 
     def __init__(self, ip, anycast_id, description=''):
@@ -461,16 +461,16 @@ class Policy(Base):
 
     __tablename__ = 'policies'
 
-    id = Column(String(255), primary_key=True)
-    proto = Column(String(255), server_default="")
-    src = Column(String(255), server_default="")
-    src_port = Column(String(255), server_default="")
-    dst = Column(String(255), server_default="")
-    dst_port = Column(String(255), server_default="")
-    table = Column(String(255), server_default="")
-    policy = Column(String(255), server_default="")
-    in_iface = Column(String(255), server_default="")
-    out_iface = Column(String(255), server_default="")
+    id = Column(String(36), primary_key=True)
+    proto = Column(String(30), server_default="")
+    src = Column(String(100), server_default="")
+    src_port = Column(String(100), server_default="")
+    dst = Column(String(100), server_default="")
+    dst_port = Column(String(100), server_default="")
+    table = Column(String(50), server_default="")
+    policy = Column(String(50), server_default="")
+    in_iface = Column(String(50), server_default="")
+    out_iface = Column(String(50), server_default="")
     owner_type = Column(String(50), server_default="")
     owner_id = Column(String(46), index=True)
 
