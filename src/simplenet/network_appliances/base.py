@@ -195,6 +195,11 @@ class SimpleNet(object):
         logger.debug("Received prober: %s" % ss)
         return ss
 
+    def firewall_list_by_zone(self, zone_id):
+        return self._generic_list_by_something_(
+            "firewalls by zone", models.Firewall, {'zone_id': zone_id}
+        )
+
     def datacenter_list(self):
         return self._generic_list_("datacenters", models.Datacenter)
 

@@ -92,6 +92,15 @@ class Net(SimpleNet):
         logger.debug("Successful adding Interface to Switch status: %s" % _data)
         _data['action'] = "plug"
         _data['ofport'] = data['ofport']
+        zones = set()
+        for ip in _data['ips']:
+            zones.add(ip['subnet']['vlan']['zone_id'])
+
+        _data['firewalls'] = []
+        for zone in zones:
+            for fw in self.firewall_list_by_zone(zone):
+                _data['firewalls'].append(fw)
+
         event.EventManager().raise_event(_data['switch_id']['name'], _data)
 
         return _data

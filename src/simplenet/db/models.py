@@ -283,6 +283,7 @@ class Vlan(Base):
             'id': self.id,
             'type': self.type,
             'name': self.name,
+            'zone_id': self.zone_id,
         }
 
 class Anycasts_to_Firewall(Base):

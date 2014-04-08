@@ -128,17 +128,6 @@ class Net(SimpleNet):
             {'anycast_id': anycast_id}
         )
 
-    def firewall_list_by_zone(self, zone_id):
-        return self._generic_list_by_something_(
-            "firewalls by zone", models.Firewall, {'zone_id': zone_id}
-        )
-
-    def firewall_remove_vlan(self, firewall_id, vlan_id):
-        return self._generic_delete_(
-            "vlan from firewalls", models.Vlans_to_Firewall,
-            {'vlan_id': vlan_id, 'firewall_id': firewall_id}
-        )
-
     def firewall_remove_anycast(self, firewall_id, anycast_id):
         return self._generic_delete_(
             "anycast from firewall", models.Anycasts_to_Firewall,

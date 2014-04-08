@@ -181,7 +181,7 @@ class NetworkWorker(object):
         add_flow(data['switch_id']['address'],
                 drop % data['ofport'])
 
-        for gateway in ip['subnet']['vlan']['firewall']:
+        for gateway in data['firewalls']:
             gw_to_mac = "priority=25000 dl_src=%s dl_dst=%s "
             gw_to_mac += "actions=strip_vlan,output:%s"
             add_flow(data['switch_id']['address'],
