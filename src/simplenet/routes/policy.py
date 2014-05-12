@@ -33,14 +33,14 @@ from simplenet.common.http_utils import (
 
 logger = get_logger()
 
-@get('/<network_appliance>/policy/<owner_type>/<policy_id>/info')
+@get('/v1/<network_appliance>/policy/<owner_type>/<policy_id>/info')
 @handle_auth
 @reply_json
 def policy_info(network_appliance, owner_type, policy_id):
     """
     ::
 
-      GET /<network_appliance>/policy/<owner_type>/<policy_id>/info
+      GET /v1/<network_appliance>/policy/<owner_type>/<policy_id>/info
 
     Get policy informations
     """
@@ -48,14 +48,14 @@ def policy_info(network_appliance, owner_type, policy_id):
     return manager.policy_info(owner_type, policy_id)
 
 
-@post('/<network_appliance>/policy/<owner_type>/<owner_id>')
+@post('/v1/<network_appliance>/policy/<owner_type>/<owner_id>')
 @handle_auth
 @reply_json
 def policy_create(network_appliance, owner_type, owner_id):
     """
     ::
 
-      POST /<network_appliance>/policy/<owner_type>/<owner_id>
+      POST /v1/<network_appliance>/policy/<owner_type>/<owner_id>
 
     Create a new policy
     """
@@ -70,14 +70,14 @@ def policy_create(network_appliance, owner_type, owner_id):
     return policy
 
 
-@delete('/<network_appliance>/policy/<owner_type>/<policy_id>/delete')
+@delete('/v1/<network_appliance>/policy/<owner_type>/<policy_id>/delete')
 @handle_auth
 @reply_json
 def policy_delete(network_appliance, owner_type, policy_id):
     """
     ::
 
-      DELETE /<network_appliance>/policy/<owner_type>/<policy_id>/delete
+      DELETE /v1/<network_appliance>/policy/<owner_type>/<policy_id>/delete
 
     Deletes policy
     """
@@ -85,14 +85,14 @@ def policy_delete(network_appliance, owner_type, policy_id):
     return manager.policy_delete(owner_type, policy_id)
 
 
-@get('/<network_appliance>/policy/by-type/<owner_type>/list')
+@get('/v1/<network_appliance>/policy/by-type/<owner_type>/list')
 @handle_auth
 @reply_json
 def policy_list(network_appliance, owner_type):
     """
     ::
 
-      GET /<network_appliance>/policy/<owner_type>/list
+      GET /v1/<network_appliance>/policy/<owner_type>/list
 
     Get all policy
     """
@@ -100,14 +100,14 @@ def policy_list(network_appliance, owner_type):
     return manager.policy_list(owner_type)
 
 
-@get('/<network_appliance>/policy/by-owner/<owner_type>/<owner_id>/list')
+@get('/v1/<network_appliance>/policy/by-owner/<owner_type>/<owner_id>/list')
 @handle_auth
 @reply_json
 def policy_list_by_owner(network_appliance, owner_type, owner_id):
     """
     ::
 
-      GET /<network_appliance>/policy/by-owner/<owner_type>/<owner_id>/list
+      GET /v1/<network_appliance>/policy/by-owner/<owner_type>/<owner_id>/list
 
     Get all policy from a given owner
     """

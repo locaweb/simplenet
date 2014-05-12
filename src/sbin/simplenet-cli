@@ -31,7 +31,9 @@ config = ConfigParser.ConfigParser()
 config.read(config_file)
 
 server = config.get('server', 'api_endpoint')
+apiversion = "/v1"
 
+server = server + apiversion
 
 def call(method, url, data=None):
     if (method == 'get'):

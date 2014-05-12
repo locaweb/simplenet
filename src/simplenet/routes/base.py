@@ -43,14 +43,14 @@ def generic_router(resource):
         return 'base'
 
 
-@get('/prober')
+@get('/v1/prober')
 @handle_auth
 @reply_json
 def generic_prober():
     """
     ::
 
-      GET /prober
+      GET /v1/prober
 
     Do a SQL query for DB status
     """
@@ -63,7 +63,7 @@ def generic_prober():
 
 
 ## Generic Resource List
-@get('/<resource>/list')
+@get('/v1/<resource>/list')
 @handle_auth
 @reply_json
 @cache()
@@ -71,7 +71,7 @@ def generic_resources_list(resource):
     """
     ::
 
-      GET /<resource>/list
+      GET /v1/<resource>/list
 
     Retrieves all entries from resource
     """
@@ -84,14 +84,14 @@ def generic_resources_list(resource):
 
 
 ## Generic Resource Info
-@get('/<resource>/<resource_id>/info')
+@get('/v1/<resource>/<resource_id>/info')
 @handle_auth
 @reply_json
 def generic_resource_info(resource, resource_id):
     """
     ::
 
-      GET /<resource>/<resource_id>/info
+      GET /v1/<resource>/<resource_id>/info
 
     Retrieves resource information
     """
@@ -104,7 +104,7 @@ def generic_resource_info(resource, resource_id):
 
 
 ## Generic Resource Info by name, cidr, ip
-@get('/<resource>/by-<resource_type>/<resource_value>')
+@get('/v1/<resource>/by-<resource_type>/<resource_value>')
 @handle_auth
 @reply_json
 @cache()
@@ -112,7 +112,7 @@ def generic_resource_info_by_field(resource, resource_type, resource_value):
     """
     ::
 
-      GET /<resource>/by-<resource_type>/<resource_value>
+      GET /v1/<resource>/by-<resource_type>/<resource_value>
 
     Retrieves resource information by type
     """
@@ -125,14 +125,14 @@ def generic_resource_info_by_field(resource, resource_type, resource_value):
 
 
 # Generic list by parent
-@get('/<resource>/list-by-<relationship_type>/<relationship_value>')
+@get('/v1/<resource>/list-by-<relationship_type>/<relationship_value>')
 @handle_auth
 @reply_json
 def generic_resource_list_by_relationship(resource, relationship_type, relationship_value):
     """
     ::
 
-      GET /<resource>/list-by-<relationship_type>/<relationship_value>
+      GET /v1/<resource>/list-by-<relationship_type>/<relationship_value>
 
     List devices
     """
@@ -145,14 +145,14 @@ def generic_resource_list_by_relationship(resource, relationship_type, relations
 
 
 ## Generic Resource Deletion
-@delete('/<resource>/<resource_id>/delete')
+@delete('/v1/<resource>/<resource_id>/delete')
 @handle_auth
 @reply_json
 def generic_resource_delete(resource, resource_id):
     """
     ::
 
-      DELETE /<resource>/<resource_id>/delete
+      DELETE /v1/<resource>/<resource_id>/delete
 
     Deletes resource
     """
@@ -165,7 +165,7 @@ def generic_resource_delete(resource, resource_id):
         raise FeatureNotAvailable()
 
 
-@post('/datacenters')
+@post('/v1/datacenters')
 @handle_auth
 @validate_input(name=str)
 @reply_json
@@ -173,7 +173,7 @@ def datacenter_create():
     """
     ::
 
-      POST /datacenters
+      POST /v1/datacenters
 
     Create a new datacenter
     """
@@ -189,7 +189,7 @@ def datacenter_create():
     return datacenter
 
 
-@post('/datacenters/<datacenter_id>/zones')
+@post('/v1/datacenters/<datacenter_id>/zones')
 @handle_auth
 @validate_input(name=str)
 @reply_json
@@ -197,7 +197,7 @@ def datacenter_zone_create(datacenter_id):
     """
     ::
 
-      POST /datacenters/<datacenter_id>/zones
+      POST /v1/datacenters/<datacenter_id>/zones
 
     Create a new zone in datacenter
     """
@@ -213,7 +213,7 @@ def datacenter_zone_create(datacenter_id):
     return zone
 
 
-@post('/dhcps')
+@post('/v1/dhcps')
 @handle_auth
 @validate_input(name=str)
 @reply_json
@@ -221,7 +221,7 @@ def dhcp_create():
     """
     ::
 
-      POST /dhcps
+      POST /v1/dhcps
 
     Create a new DHCP device
     """
@@ -237,7 +237,7 @@ def dhcp_create():
     return dhcp
 
 
-@post('/dhcps/<dhcp_id>/vlans')
+@post('/v1/dhcps/<dhcp_id>/vlans')
 @handle_auth
 @validate_input(vlan_id=str)
 @reply_json
@@ -245,7 +245,7 @@ def dhcp_add_vlan(dhcp_id):
     """
     ::
 
-      POST /dhcps/<dhcp_id>/vlans
+      POST /v1/dhcps/<dhcp_id>/vlans
 
     Attach vlan to DHCP device
     """
@@ -261,14 +261,14 @@ def dhcp_add_vlan(dhcp_id):
     return dhcp
 
 
-@delete('/dhcps/<dhcp_id>/vlans/<vlan_id>')
+@delete('/v1/dhcps/<dhcp_id>/vlans/<vlan_id>')
 @handle_auth
 @reply_json
 def dhcp_remove_vlan(dhcp_id, vlan_id):
     """
     ::
 
-      POST /dhcps/<dhcp_id>/vlans/<vlan_id>
+      POST /v1/dhcps/<dhcp_id>/vlans/<vlan_id>
 
     Attach vlan to DHCP device
     """
@@ -278,7 +278,7 @@ def dhcp_remove_vlan(dhcp_id, vlan_id):
     return dhcp
 
 
-@post('/firewalls')
+@post('/v1/firewalls')
 @handle_auth
 @validate_input(name=str)
 @reply_json
@@ -286,7 +286,7 @@ def firewall_create():
     """
     ::
 
-      POST /firewalls
+      POST /v1/firewalls
 
     Create a new firewall device
     """
@@ -302,14 +302,14 @@ def firewall_create():
     return firewall
 
 
-@post('/firewall/enable')
+@post('/v1/firewall/enable')
 @handle_auth
 @reply_json
 def firewall_enable():
     """
     ::
 
-      POST /firewall/enable
+      POST /v1/firewall/enable
 
     Set firewall device to enabled
     """
@@ -323,14 +323,14 @@ def firewall_enable():
     response.set_header("Location", location)
     return firewall
 
-@post('/firewall/disable')
+@post('/v1/firewall/disable')
 @handle_auth
 @reply_json
 def firewall_disable():
     """
     ::
 
-      POST /firewall/disable
+      POST /v1/firewall/disable
 
     Set firewall device to disabled
     """
@@ -344,14 +344,14 @@ def firewall_disable():
     response.set_header("Location", location)
     return firewall
 
-@post('/firewall/sync')
+@post('/v1/firewall/sync')
 @handle_auth
 @reply_json
 def firewall_sync():
     """
     ::
 
-      POST /firewall/sync
+      POST /v1/firewall/sync
 
     Reload firewall rules
     """
@@ -366,7 +366,7 @@ def firewall_sync():
         response.set_header("Location", location)
         return firewall
 
-@post('/zones/<zone_id>/vlans')
+@post('/v1/zones/<zone_id>/vlans')
 @handle_auth
 @validate_input(name=str)
 @reply_json
@@ -374,7 +374,7 @@ def zone_vlan_create(zone_id):
     """
     ::
 
-      POST /zones/<zone_id>/vlans
+      POST /v1/zones/<zone_id>/vlans
 
     Create a new vlan in zone
     """
@@ -390,7 +390,7 @@ def zone_vlan_create(zone_id):
     return vlan
 
 
-@post('/firewalls/<firewall_id>/anycasts')
+@post('/v1/firewalls/<firewall_id>/anycasts')
 @handle_auth
 @validate_input(anycast_id=str)
 @reply_json
@@ -398,7 +398,7 @@ def firewall_add_anycast(firewall_id):
     """
     ::
 
-      POST /firewalls/<firewall_id>/anycasts
+      POST /v1/firewalls/<firewall_id>/anycasts
 
     Attach vlan to firewall device
     """
@@ -414,14 +414,14 @@ def firewall_add_anycast(firewall_id):
     return firewall
 
 
-@delete('/firewalls/<firewall_id>/anycasts/<anycast_id>')
+@delete('/v1/firewalls/<firewall_id>/anycasts/<anycast_id>')
 @handle_auth
 @reply_json
 def firewall_remove_anycast(firewall_id, anycast_id):
     """
     ::
 
-      POST /firewalls/<firewall_id>/anycasts/<anycast_id>
+      POST /v1/firewalls/<firewall_id>/anycasts/<anycast_id>
 
     Attach anycasts to firewall device
     """
@@ -431,7 +431,7 @@ def firewall_remove_anycast(firewall_id, anycast_id):
     return firewall
 
 
-@post('/anycasts')
+@post('/v1/anycasts')
 @handle_auth
 @validate_input(cidr=str)
 @reply_json
@@ -439,7 +439,7 @@ def anycast_create():
     """
     ::
 
-      POST /anycasts
+      POST /v1/anycasts
 
     Create a new anycast range
     """
@@ -455,7 +455,7 @@ def anycast_create():
     return anycast
 
 
-@post('/vlans/<vlan_id>/subnets')
+@post('/v1/vlans/<vlan_id>/subnets')
 @handle_auth
 @validate_input(cidr=str)
 @reply_json
@@ -463,7 +463,7 @@ def vlan_subnet_create(vlan_id):
     """
     ::
 
-      POST /vlans/<vlan_id>/subnets
+      POST /v1/vlans/<vlan_id>/subnets
 
     Create a new subnet in vlan
     """
@@ -479,7 +479,7 @@ def vlan_subnet_create(vlan_id):
     return subnet
 
 
-@post('/anycasts/<anycast_id>/anycastips')
+@post('/v1/anycasts/<anycast_id>/anycastips')
 @handle_auth
 @validate_input(ip=str)
 @reply_json
@@ -487,7 +487,7 @@ def anycast_anycastip_create(anycast_id):
     """
     ::
 
-      POST /anycasts/<anycast_id>/anycastips
+      POST /v1/anycasts/<anycast_id>/anycastips
 
     Create a new ip in anycast subnet
     """
@@ -503,7 +503,7 @@ def anycast_anycastip_create(anycast_id):
     return ip
 
 
-@post('/subnets/<subnet_id>/ips')
+@post('/v1/subnets/<subnet_id>/ips')
 @handle_auth
 @validate_input(ip=str)
 @reply_json
@@ -511,7 +511,7 @@ def subnet_ip_create(subnet_id):
     """
     ::
 
-      POST /subnets/<subnet_id>/ips
+      POST /v1/subnets/<subnet_id>/ips
 
     Create a new ip in subnet
     """
@@ -527,14 +527,14 @@ def subnet_ip_create(subnet_id):
     return ip
 
 
-@post('/interfaces')
+@post('/v1/interfaces')
 @handle_auth
 @reply_json
 def interface_create():
     """
     ::
 
-      POST /interfaces
+      POST /v1/interfaces
 
     Create a new interface
     """
@@ -550,14 +550,14 @@ def interface_create():
     return interface
 
 
-@post('/interfaces/<interface_id>/ips')
+@post('/v1/interfaces/<interface_id>/ips')
 @handle_auth
 @reply_json
 def interface_add_ip(interface_id):
     """
     ::
 
-      POST /interfaces/<interface_id>/ips
+      POST /v1/interfaces/<interface_id>/ips
 
     Attach IP to interface
     """
@@ -571,14 +571,14 @@ def interface_add_ip(interface_id):
     return interface
 
 
-@delete('/interfaces/<interface_id>/ips/<ip_id>')
+@delete('/v1/interfaces/<interface_id>/ips/<ip_id>')
 @handle_auth
 @reply_json
 def interface_remove_ip(interface_id, ip_id):
     """
     ::
 
-      DELETE /interfaces/<interface_id>/ips/<ip_id>
+      DELETE /v1/interfaces/<interface_id>/ips/<ip_id>
 
     Detach ip from interface
     """
