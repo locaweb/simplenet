@@ -88,7 +88,6 @@ html_theme = 'sphinx-bootstrap'
 html_theme_options = {
     'analytics_code': 'UA-00000000-1',
     'home_url': 'https://code.locaweb.com.br/iaas/simplenet',
-    'bootstrap_theme': 'http://bootswatch.com/united/bootstrap.min.css'
 }
 
 # Add any paths that contain custom themes here, relative to this directory.
