@@ -1,6 +1,6 @@
-#!/usr/bin/python
+#!/usr/bin/python2.6
 
-# Copyright 2012 Locaweb.
+# Copyright 2014 Locaweb.
 # All Rights Reserved.
 #
 #    Licensed under the Apache License, Version 2.0 (the "License");
@@ -77,6 +77,7 @@ def _run_cmd(args):
 def add_flow(addr, flow):
     # TODO: configure ovs remote access using
     # run ovs-vsctl set-controller xapi<number> pssl:port
+    addr = addr.split(":")[1]
     command = ["ovs-ofctl", "add-flow", addr, flow]
     print command
     _run_cmd(command)
@@ -84,25 +85,22 @@ def add_flow(addr, flow):
 def del_flow(addr, flow):
     # TODO: configure ovs remote access using
     # run ovs-vsctl set-controller xapi<number> pssl:port
+    addr = addr.split(":")[1]
     command = ["ovs-ofctl", "del-flows", addr, flow]
     print command
     _run_cmd(command)
 
-def add_vlan(addr, port, tag, ovsdb):
+def add_vlan(addr, port, tag):
     # TODO: configure ovsdb remote access using
     # ovsdb-server --remote=ptcp:port
-    addr = ":".join(addr.split(":")[0:2] + [ovsdb])
-    command = ["ovs-vsctl", "-t 2", "--db=%s" % addr,
-               "set", "port", port, "tag=%s" % tag]
+    command = ["ovs-vsctl", "set", "port", port, "tag=%s" % tag]
     print command
     _run_cmd(command)
 
-def remove_vlan(addr, port, ovsdb):
+def remove_vlan(addr, port):
     # TODO: configure ovsdb remote access using
     # ovsdb-server --remote=ptcp:port
-    addr = ":".join(addr.split(":")[0:2] + [ovsdb])
-    command = ["ovs-vsctl", "-t 2", "--db=%s" % addr,
-               "clear", "port", port, "tag"]
+    command = ["ovs-vsctl", "clear", "port", port, "tag"]
     print command
     _run_cmd(command)
 
@@ -169,59 +167,59 @@ class NetworkWorker(object):
         actions = "mod_vlan_vid:%s,%s" % (vlan_id, output_ports)
         allow_ipv4 = "in_port=%s priority=40000 dl_type=0x0800 "
         allow_ipv4 += "dl_src=%s nw_src=%s actions=%s"
-        add_flow(data['switch_id']['address'],
+        add_flow(data['switch_id']['name'],
                 allow_ipv4 % (data['ofport'], data['id'], ip['ip'], actions))
 
         allow_arp = "in_port=%s priority=40000 dl_type=0x0806 "
         allow_arp += "dl_src=%s nw_src=%s actions=%s"
-        add_flow(data['switch_id']['address'],
+        add_flow(data['switch_id']['name'],
                 allow_arp % (data['ofport'], data['id'], ip['ip'], actions))
 
         drop = "in_port=%s priority=30000 action=drop"
-        add_flow(data['switch_id']['address'],
+        add_flow(data['switch_id']['name'],
                 drop % data['ofport'])
 
         for gateway in data['firewalls']:
             gw_to_mac = "priority=25000 dl_src=%s dl_dst=%s "
             gw_to_mac += "actions=strip_vlan,output:%s"
-            add_flow(data['switch_id']['address'],
+            add_flow(data['switch_id']['name'],
                     gw_to_mac % (gateway['mac'], data['id'], data['ofport']))
 
             gw_broadcast = "priority=25000 dl_src=%s dl_dst=%s "
             gw_broadcast += "actions=strip_vlan,normal"
-            add_flow(data['switch_id']['address'],
+            add_flow(data['switch_id']['name'],
                     gw_broadcast % (gateway['mac'], "ff:ff:ff:ff:ff:ff"))
 
         dhcp_request = "priority=41000,udp,tp_src=68,tp_dst=67 "
         dhcp_request += "actions=mod_dl_dst:%s,local"
-        add_flow(data['switch_id']['address'],
+        add_flow(data['switch_id']['name'],
                 dhcp_request % (data['switch_id']['mac']))
 
         dhcp_src = "priority=29000,arp,dl_src=%s actions=normal"
-        add_flow(data['switch_id']['address'],
+        add_flow(data['switch_id']['name'],
                 dhcp_src % (data['switch_id']['mac']))
 
         dhcp_dst = "priority=41000,arp,dl_dst=%s actions=local"
-        add_flow(data['switch_id']['address'],
+        add_flow(data['switch_id']['name'],
                 dhcp_dst % (data['switch_id']['mac']))
 
         dhcp_reply = "priority=41000,udp,dl_src=%s,tp_src=67,"
         dhcp_reply += "tp_dst=68 actions=normal"
-        add_flow(data['switch_id']['address'],
+        add_flow(data['switch_id']['name'],
                 dhcp_reply % (data['switch_id']['mac']))
 
     def remove_from_private_vlan(self, data):
-        del_flow(data['switch_id']['address'],
+        del_flow(data['switch_id']['name'],
                 "dl_src=%s" % data['id'])
-        del_flow(data['switch_id']['address'],
+        del_flow(data['switch_id']['name'],
                 "dl_dst=%s" % data['id'])
 
     def add_to_vlan(self, ip, data):
         vlan_id = re.search('vlan(\d+)', ip['subnet']['vlan']['name'], re.I).group(1)
-        add_vlan(data['switch_id']['address'], data['name'], vlan_id, data['ovsdb'])
+        add_vlan(data['switch_id']['name'], data['name'], vlan_id)
 
     def remove_from_vlan(self, ip, data):
-        remove_vlan(data['switch_id']['address'], data['name'], data['ovsdb'])
+        remove_vlan(data['switch_id']['name'], data['name'])
 
 class Worker(ConsumerMixin):
     def __init__(self, connection, lockfile, ovsdb):
@@ -330,4 +328,3 @@ if __name__ == '__main__':
         daemon.stop()
     elif action == 'foreground':
         main(user, config)
-
