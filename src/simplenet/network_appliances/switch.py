@@ -101,7 +101,7 @@ class Net(SimpleNet):
             for fw in self.firewall_list_by_zone(zone):
                 _data['firewalls'].append(fw)
 
-        event.EventManager().raise_event(_data['switch_id']['name'], _data)
+        event.EventManager().raise_event(_data['switch_id']['name'].split(":")[0], _data)
 
         return _data
 
@@ -123,7 +123,7 @@ class Net(SimpleNet):
                 raise Exception(e)
 
             _data['action'] = "unplug"
-            event.EventManager().raise_event(_data['switch_id']['name'], _data)
+            event.EventManager().raise_event(_data['switch_id']['name'].split(":")[0], _data)
 
             return _data
         else:
