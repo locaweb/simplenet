@@ -155,12 +155,13 @@ def pod(action=None, name=None, datacenter=None):
     params={'action': '<list all|create|delete|firewall_list|dhcp_list>',
             'name': 'vlan name',
             'type': 'vlan type',
+            'number': 'vlan number',
             'pod': 'POD (zone) name to bind the vlan'}
 )
-def vlan(action=None, name=None, pod=None, type=None):
+def vlan(action=None, name=None, number=None, pod=None, type=None):
     """Manage a vlan related to a POD (zone)
     
-    simplenet-cli vlan create --name vlan01 --pod pod01
+    simplenet-cli vlan create --name vlan01 --number 1 --pod pod01
     """
     base_url = '%s/vlans' % (server)
     r = None
@@ -173,7 +174,7 @@ def vlan(action=None, name=None, pod=None, type=None):
 
         zone_id = fetch_id('zones', pod)
         r = call('post', '%s/zones/%s/vlans' % (server, zone_id),
-            data=json.dumps({'name': name, 'type': type})
+                data=json.dumps({'name': name, 'type': type, 'vlan_num': number})
         )
     elif action == 'delete':
         r = call('delete', '%s/%s/delete' %

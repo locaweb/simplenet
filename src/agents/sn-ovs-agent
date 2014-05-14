@@ -161,7 +161,7 @@ class NetworkWorker(object):
 #        switch.remove_flow("", strict=False)
 
     def add_to_private_vlan(self, ip, data):
-        vlan_id = re.search('vlan(\d+)', ip['subnet']['vlan']['name'], re.I).group(1)
+        vlan_id = ip['subnet']['vlan']['vlan_num']
         #FIXME OFPorts for output
         output_ports = "bundle(eth_src,0,hrw,ofport,slaves:1,2)"
         actions = "mod_vlan_vid:%s,%s" % (vlan_id, output_ports)

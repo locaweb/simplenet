@@ -375,11 +375,12 @@ Create a new vlan at zone
 
 Example::
 
-    $ curl http://localhost:8081/v1/zones/cd819175-e810-4cda-ba77-c7a300ff9648/vlans -d '{"name": "vlan000", "type": "private_vlan"}' -X POST
+    $ curl http://localhost:8081/v1/zones/cd819175-e810-4cda-ba77-c7a300ff9648/vlans -d '{"name": "vlan000", "type": "private_vlan", "vlan_num": 1}' -X POST
     {
         "id": "6000cc53-f9ba-4340-bdf0-d6ed615fa05a",
         "name": "vlan000",
         "type": "private_vlan",
+        "vlan_num": 1,
         "zone": "zone000",
         "zone_id": "cd819175-e810-4cda-ba77-c7a300ff9648"
     }

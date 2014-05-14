@@ -382,7 +382,13 @@ def zone_vlan_create(zone_id):
     data = request.body.readline()
     if not data:
         abort(400, 'No data received')
+
     data = json.loads(data)
+
+    if data.get("type", None) is None:
+        abort(400, 'Missing vlan type')
+    elif data.get("vlan_num", None) is None:
+        abort(400, 'Missing vlan number')
     vlan = manager.vlan_create(zone_id, data)
     location = "vlans/%s" % (vlan['id'])
     response.set_header("Location", location)

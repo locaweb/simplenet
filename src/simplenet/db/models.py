@@ -20,7 +20,7 @@ import uuid
 
 from ipaddr import IPv4Network, IPv4Address, IPv6Network, IPv6Address, IPNetwork, IPAddress
 
-from sqlalchemy import event, Column, String, Boolean, create_engine, ForeignKey
+from sqlalchemy import event, Column, Integer, String, Boolean, create_engine, ForeignKey
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.schema import UniqueConstraint
 from sqlalchemy.orm import relationship, backref
@@ -256,15 +256,17 @@ class Vlan(Base):
     id = Column(String(36), primary_key=True)
     name = Column(String(255), unique=True)
     type = Column(String(100))
+    vlan_num = Column(Integer())
     description = Column(String(255))
     zone_id = Column(String(36), ForeignKey('zones.id'))
     zone = relationship('Zone')
 
-    def __init__(self, name, zone_id, type, description=''):
+    def __init__(self, name, zone_id, type, vlan_num, description=''):
         self.id = str(uuid.uuid4())
         self.name = name
         self.zone_id = zone_id
         self.type = type
+        self.vlan_num = vlan_num
 
     def __repr__(self):
        return "<Vlan('%s','%s')>" % (self.id, self.name)
@@ -274,6 +276,7 @@ class Vlan(Base):
             'id': self.id,
             'name': self.name,
             'type': self.type,
+            'vlan_num': self.vlan_num,
             'zone': self.zone.name,
             'zone_id': self.zone_id,
         }
@@ -282,6 +285,7 @@ class Vlan(Base):
         return {
             'id': self.id,
             'type': self.type,
+            'vlan_num': self.vlan_num,
             'name': self.name,
             'zone_id': self.zone_id,
         }
