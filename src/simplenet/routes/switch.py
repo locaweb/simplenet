@@ -33,14 +33,14 @@ from simplenet.common.http_utils import (
 
 logger = get_logger()
 
-@post('/v1/switchs')
+@post('/v1/switches')
 @handle_auth
 @reply_json
 def switch_create():
     """
     ::
 
-      POST /v1/switchs
+      POST /v1/switches
 
     Create a new switch device
     """
@@ -50,18 +50,18 @@ def switch_create():
         abort(400, 'No data received')
     data = json.loads(data)
     switch = manager.switch_create(data=data)
-    location = "switchs/%s" % (switch['id'])
+    location = "switches/%s" % (switch['id'])
     response.set_header("Location", location)
     return switch
 
-@post('/v1/switchs/<switch_id>/interfaces')
+@post('/v1/switches/<switch_id>/interfaces')
 @handle_auth
 @reply_json
 def switch_add_interface(switch_id):
     """
     ::
 
-      POST /v1/switchs/<switch_id>/interfaces
+      POST /v1/switches/<switch_id>/interfaces
 
     Attach Interface to Switch
     """
@@ -73,14 +73,14 @@ def switch_add_interface(switch_id):
     interface = manager.switch_add_interface(switch_id, data)
     return interface
 
-@delete('/v1/switchs/<switch_id>/interfaces/<interface_id>')
+@delete('/v1/switches/<switch_id>/interfaces/<interface_id>')
 @handle_auth
 @reply_json
 def switch_remove_interface(switch_id, interface_id):
     """
     ::
 
-      DELETE /v1/switchs/<switch_id>/interfaces/<interface_id>
+      DELETE /v1/switches/<switch_id>/interfaces/<interface_id>
 
     Detach Interface to Switch
     """

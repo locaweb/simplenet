@@ -32,16 +32,27 @@ from simplenet.exceptions import (
 
 logger = get_logger()
 
+resource_map = {"datacenters": "datacenter",
+                "zones": "zone",
+                "vlans": "vlan",
+                "subnets": "subnet",
+                "anycasts": "anycast",
+                "ips": "ip",
+                "anycastips": "anycastip",
+                "firewalls": "firewall",
+                "dhcps": "dhcp",
+                "switches": "switch",
+                "interfaces": "interface"}
+
 def generic_router(resource):
     if resource == 'firewalls':
         return 'firewall'
-    elif resource == 'switchs':
+    elif resource == 'switches':
         return 'switch'
     elif resource == 'dhcps':
         return 'dhcp'
     else:
         return 'base'
-
 
 @get('/v1/prober')
 @handle_auth
@@ -77,7 +88,7 @@ def generic_resources_list(resource):
     """
     manager = create_manager(generic_router(resource))
     try:
-        _list = getattr(manager, '%s_list' % resource[:-1])
+        _list = getattr(manager, '%s_list' % resource_map.get(resource))
         return _list()
     except AttributeError:
         raise FeatureNotAvailable()
@@ -97,7 +108,7 @@ def generic_resource_info(resource, resource_id):
     """
     manager = create_manager(generic_router(resource))
     try:
-        _info = getattr(manager, '%s_info' % resource[:-1])
+        _info = getattr(manager, '%s_info' % resource_map.get(resource))
         return _info(resource_id)
     except AttributeError:
         raise FeatureNotAvailable()
@@ -118,7 +129,7 @@ def generic_resource_info_by_field(resource, resource_type, resource_value):
     """
     manager = create_manager(generic_router(resource))
     try:
-        _info = getattr(manager, '%s_info_by_%s' % (resource[:-1], resource_type))
+        _info = getattr(manager, '%s_info_by_%s' % (resource_map.get(resource), resource_type))
         return _info(resource_value)
     except AttributeError:
         raise FeatureNotAvailable()
@@ -138,7 +149,7 @@ def generic_resource_list_by_relationship(resource, relationship_type, relations
     """
     manager = create_manager(generic_router(resource))
     try:
-        _list = getattr(manager, '%s_list_by_%s' % (resource[:-1], relationship_type))
+        _list = getattr(manager, '%s_list_by_%s' % (resource_map.get(resource), relationship_type))
         return _list(relationship_value)
     except AttributeError:
         raise FeatureNotAvailable()
@@ -159,7 +170,7 @@ def generic_resource_delete(resource, resource_id):
     clear_cache()
     manager = create_manager(generic_router(resource))
     try:
-        _delete = getattr(manager, '%s_delete' % (resource[:-1]))
+        _delete = getattr(manager, '%s_delete' % (resource_map.get(resource)))
         return _delete(resource_id)
     except AttributeError:
         raise FeatureNotAvailable()

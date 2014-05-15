@@ -39,12 +39,12 @@ Retrieves all entries from resource
            * anycastips
            * firewalls
            * dhcps
-           * switchs
+           * switches
            * interfaces
 
 Example::
 
-    $ curl http://localhost:8081/v1/switchs/list | python -m json.tool
+    $ curl http://localhost:8081/v1/switches/list | python -m json.tool
     [
         {
             "address": "x.x.x.x:yyyy",
@@ -76,7 +76,7 @@ Retrieves resource by id
 
 Example::
 
-    $ curl http://localhost:8081/v1/switchs/b9143a51-02de-442e-a950-ef56cfdf540f/info | python -m json.tool
+    $ curl http://localhost:8081/v1/switches/b9143a51-02de-442e-a950-ef56cfdf540f/info | python -m json.tool
     {
         "address": "x.x.x.x:yyyy",
         "id": "b9143a51-02de-442e-a950-ef56cfdf540f",
@@ -99,7 +99,7 @@ Retrieves resource information by resource field
 
 Example::
 
-    $ curl http://localhost:8081/v1/switchs/by-name/vswitch01 | python -m json.tool
+    $ curl http://localhost:8081/v1/switches/by-name/vswitch01 | python -m json.tool
     {
         "address": "x.x.x.x:yyyy",
         "id": "b9143a51-02de-442e-a950-ef56cfdf540f",
@@ -729,7 +729,7 @@ Example::
 Switch API
 ==========
 
-/v1/switchs
+/v1/switches
 ===========
 
 Method POST
@@ -742,7 +742,7 @@ Create a new switch
 
 Example::
 
-    $ curl http://127.0.0.1:8081/v1/switchs -d '{"model_type": "openvswitch", "mac": "88:88:88:88:88:88", "name": "vswitch00", "address": "10.0.0.1:8888"}' -X POST | python -m json.tool
+    $ curl http://127.0.0.1:8081/v1/switches -d '{"model_type": "openvswitch", "mac": "88:88:88:88:88:88", "name": "vswitch00", "address": "10.0.0.1:8888"}' -X POST | python -m json.tool
     {
         "address": "10.0.0.1:8888",
         "id": "cbb9163c-cc3d-4584-bcb4-8489b5f4db7e",
@@ -752,7 +752,7 @@ Example::
     }
 
 
-/v1/switchs/<switch_id>/interfaces
+/v1/switches/<switch_id>/interfaces
 ==================================
 
 Method POST
@@ -765,7 +765,7 @@ Attach Interface to switch
 
 Example::
 
-    $ curl http://127.0.0.1:8081/v1/switchs/cbb9163c-cc3d-4584-bcb4-8489b5f4db7e/interfaces -d '{"ofport": "5", "int_name": "vif1.0", "interface_id": "55:55:55:55:55:55"}' -X POST
+    $ curl http://127.0.0.1:8081/v1/switches/cbb9163c-cc3d-4584-bcb4-8489b5f4db7e/interfaces -d '{"ofport": "5", "int_name": "vif1.0", "interface_id": "55:55:55:55:55:55"}' -X POST
     {
         "action": "plug",
         "firewalls": [],
@@ -785,7 +785,7 @@ Example::
     }
 
 
-/v1/switchs/<switch_id>/interfaces/<interface_id>
+/v1/switches/<switch_id>/interfaces/<interface_id>
 =================================================
 
 Method DELETE
@@ -798,7 +798,7 @@ Detach interface from switch
 
 Example::
 
-    $ curl http://127.0.0.1:8081/v1/switchs/cbb9163c-cc3d-4584-bcb4-8489b5f4db7e/interfaces/55:55:55:55:55:55 -X DELETE
+    $ curl http://127.0.0.1:8081/v1/switches/cbb9163c-cc3d-4584-bcb4-8489b5f4db7e/interfaces/55:55:55:55:55:55 -X DELETE
     {
         "action": "unplug",
         "hostname": "host00",

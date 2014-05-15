@@ -492,7 +492,7 @@ def dhcp(action=None, name=None, vlan=None):
 )
 def switch(action=None, name=None, model_type=None, mac=None,
            address=None, inter=None, int_name=None, ofport=None):
-    base_url = '%s/switchs' % (server)
+    base_url = '%s/switches' % (server)
     r = None
     if action == 'list':
         r = call('get', '%s/list' % base_url)
@@ -501,7 +501,7 @@ def switch(action=None, name=None, model_type=None, mac=None,
             if mac == None or address == None:
                 print 'Missing mac or address atributes'
                 sys.exit(1)
-            r = call('post', '%s/switchs' % (server),
+            r = call('post', '%s/switches' % (server),
                     data=json.dumps({'name': name, 'model_type': model_type,
                                     'address': address, 'mac': mac})
             )
@@ -510,7 +510,7 @@ def switch(action=None, name=None, model_type=None, mac=None,
             sys.exit(1)
     elif action == 'delete':
         r = call('delete', '%s/%s/delete' % (
-            base_url, fetch_id('switchs', name))
+            base_url, fetch_id('switches', name))
         )
     elif action == 'info':
         r = call('get', '%s/by-name/%s' % (base_url, name))
@@ -520,7 +520,7 @@ def switch(action=None, name=None, model_type=None, mac=None,
             sys.exit(1)
 
         r = call('post', '%s/%s/interfaces' %
-            (base_url, fetch_id('switchs', name)),
+            (base_url, fetch_id('switches', name)),
             data=json.dumps({'interface_id': inter,
                             'int_name': int_name,
                             'ofport': ofport})
@@ -531,7 +531,7 @@ def switch(action=None, name=None, model_type=None, mac=None,
             sys.exit(1)
 
         r = call('delete', '%s/%s/interfaces/%s' %
-            (base_url, fetch_id('switchs', name), inter)
+            (base_url, fetch_id('switches', name), inter)
         )
     else:
         baker.usage(sys._getframe().f_code.co_name)
