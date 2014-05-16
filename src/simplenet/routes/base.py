@@ -74,7 +74,7 @@ def generic_prober():
 
 
 ## Generic Resource List
-@get('/v1/<resource>/list')
+@get('/v1/<resource>')
 @handle_auth
 @reply_json
 @cache()
@@ -82,7 +82,7 @@ def generic_resources_list(resource):
     """
     ::
 
-      GET /v1/<resource>/list
+      GET /v1/<resource>
 
     Retrieves all entries from resource
     """
@@ -95,14 +95,14 @@ def generic_resources_list(resource):
 
 
 ## Generic Resource Info
-@get('/v1/<resource>/<resource_id>/info')
+@get('/v1/<resource>/<resource_id>')
 @handle_auth
 @reply_json
 def generic_resource_info(resource, resource_id):
     """
     ::
 
-      GET /v1/<resource>/<resource_id>/info
+      GET /v1/<resource>/<resource_id>
 
     Retrieves resource information
     """
@@ -156,14 +156,14 @@ def generic_resource_list_by_relationship(resource, relationship_type, relations
 
 
 ## Generic Resource Deletion
-@delete('/v1/<resource>/<resource_id>/delete')
+@delete('/v1/<resource>/<resource_id>')
 @handle_auth
 @reply_json
 def generic_resource_delete(resource, resource_id):
     """
     ::
 
-      DELETE /v1/<resource>/<resource_id>/delete
+      DELETE /v1/<resource>/<resource_id>
 
     Deletes resource
     """

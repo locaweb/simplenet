@@ -18,7 +18,7 @@ Example::
     $ curl http://localhost:8081/v1/prober
 
 
-/v1/<resource>/list
+/v1/<resource>
 ===================
 
 Method GET
@@ -44,7 +44,7 @@ Retrieves all entries from resource
 
 Example::
 
-    $ curl http://localhost:8081/v1/switches/list | python -m json.tool
+    $ curl http://localhost:8081/v1/switches | python -m json.tool
     [
         {
             "address": "x.x.x.x:yyyy",
@@ -63,7 +63,7 @@ Example::
     ]
 
 
-/v1/<resource>/<resource_id>/info
+/v1/<resource>/<resource_id>
 =================================
 
 Method GET
@@ -76,7 +76,7 @@ Retrieves resource by id
 
 Example::
 
-    $ curl http://localhost:8081/v1/switches/b9143a51-02de-442e-a950-ef56cfdf540f/info | python -m json.tool
+    $ curl http://localhost:8081/v1/switches/b9143a51-02de-442e-a950-ef56cfdf540f | python -m json.tool
     {
         "address": "x.x.x.x:yyyy",
         "id": "b9143a51-02de-442e-a950-ef56cfdf540f",
@@ -142,7 +142,7 @@ Example::
     ]
 
 
-/v1/<resource>/<resource_id>/delete
+/v1/<resource>/<resource_id>
 ==================================================
 
 Method DELETE
@@ -155,7 +155,7 @@ Delete a resource by id
 
 Example::
 
-    $ curl http://localhost:8081/v1/firewalls/b571d92f-284d-41ff-9378-c5d4fa4cdee4/delete
+    $ curl http://localhost:8081/v1/firewalls/b571d92f-284d-41ff-9378-c5d4fa4cdee4
     HTTP 200
 
 
@@ -592,7 +592,7 @@ Example::
 Policy API
 ==========
 
-/v1/<network_appliance>/policy/<owner_type>/<policy_id>/info
+/v1/<network_appliance>/policy/<owner_type>/<id>
 ============================================================
 
 Method GET
@@ -605,7 +605,7 @@ Retrieve policy information
 
 Example::
 
-    $ curl http://127.0.0.1:8081/v1/firewall/policy/subnet/d47b3b0e-5579-4884-9af9-aac7b89c7c62/info |  python -m json.tool
+    $ curl http://127.0.0.1:8081/v1/firewall/policy/subnet/d47b3b0e-5579-4884-9af9-aac7b89c7c62 |  python -m json.tool
     {
         "dst": "10.0.0.100",
         "dst_port": "None",
@@ -648,7 +648,7 @@ Example::
     }
 
 
-/v1/<network_appliance>/policy/<owner_type>/<policy_id>/delete
+/v1/<network_appliance>/policy/<owner_type>/<id>
 ======================================================
 
 Method DELETE
@@ -661,11 +661,11 @@ Deletes a policy
 
 Example::
 
-    $ curl http://127.0.0.1:8081/v1/firewall/policy/subnet/d47b3b0e-5579-4884-9af9-aac7b89c7c62/delete -X DELETE
+    $ curl http://127.0.0.1:8081/v1/firewall/policy/subnet/d47b3b0e-5579-4884-9af9-aac7b89c7c62 -X DELETE
     HTTP 200
 
 
-/v1/<network_appliance>/policy/by-type/<owner_type>/list
+/v1/<network_appliance>/policy/by-type/<owner_type>
 ========================================================
 
 Method GET
@@ -678,7 +678,7 @@ Retrieve all policy by type specified <owner_type>
 
 Example::
 
-    $ curl http://127.0.0.1:8081/v1/firewall/policy/by-type/subnet/list | python -m json.tool
+    $ curl http://127.0.0.1:8081/v1/firewall/policy/by-type/subnet | python -m json.tool
     [
         {
             "dst": "10.0.0.100",
@@ -695,7 +695,7 @@ Example::
     ]
 
 
-/v1/<network_appliance>/policy/by-owner/<owner_type>/<owner_id>/list
+/v1/<network_appliance>/policy/by-owner/<owner_type>/<id>
 ======================================================
 
 Method GET
@@ -708,7 +708,7 @@ Retrieve all policy from a given owner
 
 Example::
 
-    $ curl http://127.0.0.1:8081/v1/firewall/policy/by-owner/subnet/2368f084-426c-4a39-a07e-f65236e6bb91/list | python -m json.tool
+    $ curl http://127.0.0.1:8081/v1/firewall/policy/by-owner/subnet/2368f084-426c-4a39-a07e-f65236e6bb91 | python -m json.tool
     [
         {
             "dst": "10.0.0.100",

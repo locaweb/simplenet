@@ -101,11 +101,11 @@ def datacenter(action=None, name=None):
     base_url = '%s/datacenters' % (server)
     r = None
     if action == 'list':
-        r = call('get', '%s/list' % base_url)
+        r = call('get', '%s' % base_url)
     elif action == 'create':
         r = call('post', base_url, data=json.dumps({'name': name}))
     elif action == 'delete':
-        r = call('delete', '%s/%s/delete' %
+        r = call('delete', '%s/%s' %
             (base_url, fetch_id('datacenters', name))
         )
     elif action == 'info':
@@ -128,7 +128,7 @@ def pod(action=None, name=None, datacenter=None):
     base_url = '%s/zones' % (server)
     r = None
     if action == 'list':
-        r = call('get', '%s/list' % base_url)
+        r = call('get', '%s' % base_url)
     elif action == 'create':
         if not datacenter:
             print 'Missing datacenter_id to create'
@@ -140,7 +140,7 @@ def pod(action=None, name=None, datacenter=None):
             data=json.dumps({'name': name, 'datacenter_id': datacenter_id})
         )
     elif action == 'delete':
-        r = call('delete', '%s/%s/delete' %
+        r = call('delete', '%s/%s' %
             (base_url, fetch_id('zones', name))
         )
     elif action == 'info':
@@ -166,7 +166,7 @@ def vlan(action=None, name=None, number=None, pod=None, type=None):
     base_url = '%s/vlans' % (server)
     r = None
     if action == 'list':
-        r = call('get', '%s/list' % base_url)
+        r = call('get', '%s' % base_url)
     elif action == 'create':
         if not pod:
             print 'Missing POD to create'
@@ -177,7 +177,7 @@ def vlan(action=None, name=None, number=None, pod=None, type=None):
                 data=json.dumps({'name': name, 'type': type, 'vlan_num': number})
         )
     elif action == 'delete':
-        r = call('delete', '%s/%s/delete' %
+        r = call('delete', '%s/%s' %
             (base_url, fetch_id('vlans', name))
         )
     elif action == 'info':
@@ -209,7 +209,7 @@ def subnet(action=None, cidr=None, vlan=None):
     base_url = '%s/subnets' % (server)
     r = None
     if action == 'list':
-        r = call('get', '%s/list' % base_url)
+        r = call('get', '%s' % base_url)
     elif action == 'create':
         if not vlan:
             print 'Missing vlan to create'
@@ -220,7 +220,7 @@ def subnet(action=None, cidr=None, vlan=None):
              data=json.dumps({'cidr': cidr})
         )
     elif action == 'delete':
-        r = call('delete', '%s/%s/delete' %
+        r = call('delete', '%s/%s' %
             (base_url, fetch_id('subnets', cidr))
         )
     elif action == 'info':
@@ -245,13 +245,13 @@ def anycast(action=None, cidr=None):
     base_url = '%s/anycasts' % (server)
     r = None
     if action == 'list':
-        r = call('get', '%s/list' % base_url)
+        r = call('get', '%s' % base_url)
     elif action == 'create':
         r = call('post', '%s/anycasts' % (server),
              data=json.dumps({'cidr': cidr})
         )
     elif action == 'delete':
-        r = call('delete', '%s/%s/delete' %
+        r = call('delete', '%s/%s' %
             (base_url, fetch_id('anycasts', cidr))
         )
     elif action == 'info':
@@ -278,14 +278,14 @@ def ip(action=None, ip=None, subnet=None):
     base_url_net = '%s/subnets' % (server)
     r = None
     if action == 'list':
-        r = call('get', '%s/list' % base_url)
+        r = call('get', '%s' % base_url)
     elif action == 'create':
         if not subnet:
             print 'Missing subnet to create'
             sys.exit(1)
 
         if subnet == 'auto':
-            r = call('get', '%s/list' % base_url_net)
+            r = call('get', '%s' % base_url_net)
 
             for net in json.loads(r.text):
                 if IPNetwork(net['cidr']).Contains(IPAddress(ip)):
@@ -299,7 +299,7 @@ def ip(action=None, ip=None, subnet=None):
             data=json.dumps({'ip': ip})
         )
     elif action == 'delete':
-        r = call('delete', '%s/%s/delete' %
+        r = call('delete', '%s/%s' %
             (base_url, fetch_id('ips', ip))
         )
     elif action == 'info':
@@ -325,7 +325,7 @@ def anycastip(action=None, ip=None, anycast=None):
     base_url = '%s/anycastips' % (server)
     r = None
     if action == 'list':
-        r = call('get', '%s/list' % base_url)
+        r = call('get', '%s' % base_url)
     elif action == 'create':
         if not anycast:
             print 'Missing anycast subnet to create'
@@ -336,7 +336,7 @@ def anycastip(action=None, ip=None, anycast=None):
             data=json.dumps({'ip': ip})
         )
     elif action == 'delete':
-        r = call('delete', '%s/%s/delete' %
+        r = call('delete', '%s/%s' %
             (base_url, fetch_id('anycastips', ip))
         )
     elif action == 'info':
@@ -365,7 +365,7 @@ def firewall(action=None, name=None, pod=None,
     base_url = '%s/firewalls' % (server)
     r = None
     if action == 'list':
-        r = call('get', '%s/list' % base_url)
+        r = call('get', '%s' % base_url)
     elif action == 'create':
         if not pod:
             print 'Missing pod to create'
@@ -376,7 +376,7 @@ def firewall(action=None, name=None, pod=None,
                                 'mac': mac})
         )
     elif action == 'delete':
-        r = call('delete', '%s/%s/delete' % (
+        r = call('delete', '%s/%s' % (
             base_url, fetch_id('firewalls', name))
         )
     elif action == 'disable':
@@ -441,14 +441,14 @@ def dhcp(action=None, name=None, vlan=None):
     base_url = '%s/dhcps' % (server)
     r = None
     if action == 'list':
-        r = call('get', '%s/list' % base_url)
+        r = call('get', '%s' % base_url)
     elif action == 'create':
         vlan_id = fetch_id('vlans', vlan) if vlan else None
         r = call('post', '%s/dhcps' % (server),
                 data=json.dumps({'name': name, 'vlan_id': vlan_id})
         )
     elif action == 'delete':
-        r = call('delete', '%s/%s/delete' % (
+        r = call('delete', '%s/%s' % (
             base_url, fetch_id('dhcps', name))
         )
     elif action == 'info':
@@ -495,7 +495,7 @@ def switch(action=None, name=None, model_type=None, mac=None,
     base_url = '%s/switches' % (server)
     r = None
     if action == 'list':
-        r = call('get', '%s/list' % base_url)
+        r = call('get', '%s' % base_url)
     elif action == 'create':
         if model_type == 'openvswitch':
             if mac == None or address == None:
@@ -509,7 +509,7 @@ def switch(action=None, name=None, model_type=None, mac=None,
             print 'Unknown model_type'
             sys.exit(1)
     elif action == 'delete':
-        r = call('delete', '%s/%s/delete' % (
+        r = call('delete', '%s/%s' % (
             base_url, fetch_id('switches', name))
         )
     elif action == 'info':
@@ -549,7 +549,7 @@ def interface(action=None, mac=None, ip=None, hostname=None):
     base_url = '%s/interfaces' % (server)
     r = None
     if action == 'list':
-        r = call('get', '%s/list' % base_url)
+        r = call('get', '%s' % base_url)
     elif action == 'info':
         r = call('get', '%s/by-mac/%s' % (base_url, mac))
     elif action == 'create':
@@ -567,7 +567,7 @@ def interface(action=None, mac=None, ip=None, hostname=None):
             print 'Missing mac to delete'
             sys.exit(1)
 
-        r = call('delete', '%s/%s/delete' % (
+        r = call('delete', '%s/%s' % (
             base_url, fetch_id('interfaces', mac))
         )
     elif action == 'ip_attach':
@@ -610,13 +610,13 @@ def firewallrule(action=None, name=None, owner=None, in_iface=None,
 
     simplenet-cli firewallrule create --subnet 192.168.0.0/24 --dst 192.168.0.2 --proto tcp --table INPUT --policy DROP
     """
-    base_url = '%s/firewall/policy' % server
+    base_url = '%s/firewall/policies' % server
     r = None
     if action == 'list':
         if owner == 'all':
-            r = call('get', '%s/by-type/%s/list' % (base_url, name))
+            r = call('get', '%s/by-type/%s' % (base_url, name))
         else:
-            r = call('get', '%s/by-owner/%s/%s/list' %
+            r = call('get', '%s/by-owner/%s/%s' %
                 (base_url, name, fetch_id('%ss' % name, owner))
             )
     elif action == 'create':
@@ -642,9 +642,9 @@ def firewallrule(action=None, name=None, owner=None, in_iface=None,
             (base_url, name, owner_id), data=json.dumps(data)
         )
     elif action == 'delete':
-        r = call('delete', '%s/%s/%s/delete' % (base_url, name, owner))
+        r = call('delete', '%s/%s/%s' % (base_url, name, owner))
     elif action == 'info':
-        r = call('get', '%s/%s/%s/info' % (base_url, name, owner))
+        r = call('get', '%s/%s/%s' % (base_url, name, owner))
     else:
         baker.usage(sys._getframe().f_code.co_name)
         sys.exit(1)
