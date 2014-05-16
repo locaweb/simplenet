@@ -33,6 +33,26 @@ from simplenet.common.http_utils import (
 
 logger = get_logger()
 
+
+@get('/v1/firewalls')
+@handle_auth
+@reply_json
+def firewalls_list():
+    """
+    ::
+
+      GET /v1/firewalls
+
+    Retrieves all firewalls entries
+    """
+    manager = create_manager('firewall')
+    try:
+        _list = getattr(manager, 'firewall_list')
+        return _list()
+    except AttributeError:
+        raise FeatureNotAvailable()
+
+
 @get('/v1/<network_appliance>/policies/<owner_type>/<id>')
 @handle_auth
 @reply_json

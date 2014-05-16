@@ -73,22 +73,161 @@ def generic_prober():
         raise FeatureNotAvailable()
 
 
-## Generic Resource List
-@get('/v1/<resource>')
+@get('/v1/datacenters')
 @handle_auth
 @reply_json
 @cache()
-def generic_resources_list(resource):
+def datacenters_list():
     """
     ::
 
-      GET /v1/<resource>
+      GET /v1/datacenters
 
-    Retrieves all entries from resource
+    Retrieves all datacenters entries
     """
-    manager = create_manager(generic_router(resource))
+    manager = create_manager('base')
     try:
-        _list = getattr(manager, '%s_list' % resource_map.get(resource))
+        _list = getattr(manager, 'datacenter_list')
+        return _list()
+    except AttributeError:
+        raise FeatureNotAvailable()
+
+
+@get('/v1/zones')
+@handle_auth
+@reply_json
+@cache()
+def zone_list():
+    """
+    ::
+
+      GET /v1/zones
+
+    Retrieves all zones entries
+    """
+    manager = create_manager('base')
+    try:
+        _list = getattr(manager, 'zone_list')
+        return _list()
+    except AttributeError:
+        raise FeatureNotAvailable()
+
+
+@get('/v1/vlans')
+@handle_auth
+@reply_json
+@cache()
+def vlan_list():
+    """
+    ::
+
+      GET /v1/vlans
+
+    Retrieves all vlans entries
+    """
+    manager = create_manager('base')
+    try:
+        _list = getattr(manager, 'vlan_list')
+        return _list()
+    except AttributeError:
+        raise FeatureNotAvailable()
+
+
+@get('/v1/subnets')
+@handle_auth
+@reply_json
+@cache()
+def subnet_list():
+    """
+    ::
+
+      GET /v1/subnets
+
+    Retrieves all subnets entries
+    """
+    manager = create_manager('base')
+    try:
+        _list = getattr(manager, 'subnet_list')
+        return _list()
+    except AttributeError:
+        raise FeatureNotAvailable()
+
+
+@get('/v1/anycasts')
+@handle_auth
+@reply_json
+@cache()
+def anycast_list():
+    """
+    ::
+
+      GET /v1/anycasts
+
+    Retrieves all anycasts entries
+    """
+    manager = create_manager('base')
+    try:
+        _list = getattr(manager, 'anycast_list')
+        return _list()
+    except AttributeError:
+        raise FeatureNotAvailable()
+
+
+@get('/v1/ips')
+@handle_auth
+@reply_json
+@cache()
+def ip_list():
+    """
+    ::
+
+      GET /v1/ips
+
+    Retrieves all ips entries
+    """
+    manager = create_manager('base')
+    try:
+        _list = getattr(manager, 'ip_list')
+        return _list()
+    except AttributeError:
+        raise FeatureNotAvailable()
+
+
+@get('/v1/anycastips')
+@handle_auth
+@reply_json
+@cache()
+def anycastip_list():
+    """
+    ::
+
+      GET /v1/anycastips
+
+    Retrieves all anycastips entries
+    """
+    manager = create_manager('base')
+    try:
+        _list = getattr(manager, 'anycastip_list')
+        return _list()
+    except AttributeError:
+        raise FeatureNotAvailable()
+
+
+@get('/v1/dhcps')
+@handle_auth
+@reply_json
+@cache()
+def dhcp_list():
+    """
+    ::
+
+      GET /v1/dhcps
+
+    Retrieves all dhcps entries
+    """
+    manager = create_manager('dhcp')
+    try:
+        _list = getattr(manager, 'dhcp_list')
         return _list()
     except AttributeError:
         raise FeatureNotAvailable()

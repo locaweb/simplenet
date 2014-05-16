@@ -69,6 +69,7 @@ echo "::::: Starting Datacenter Tests "
 run_test "datacenter create datacenter01" '"name": "datacenter01"'
 run_test "datacenter create datacenter01" '"message": "Datacenter:datacenter01 already exists Forbidden"' 1
 run_firewall_test "firewallrule create" "datacenter" "datacenter01 --src 192.168.0.1 --proto tcp --table INPUT --policy ACCEPT"
+run_test "datacenter list" '"name": "datacenter01"'
 run_test "datacenter info datacenter01" '"name": "datacenter01"'
 run_test "datacenter delete datacenter01" '"message": "Successful deletetion"'
 
@@ -77,6 +78,7 @@ run_test "datacenter create datacenter01" '"name": "datacenter01"'
 run_test "pod create pod01 --datacenter datacenter01" '"name": "pod01"'
 run_test "pod create pod01 --datacenter datacenter01" '"message": "Zone:pod01 already exists Forbidden"' 1
 run_firewall_test "firewallrule create" "zone" "pod01 --src 192.168.0.1 --proto tcp --table INPUT --policy ACCEPT"
+run_test "pod list" '"name": "pod01"'
 run_test "pod info pod01" '"name": "pod01"'
 run_test "pod delete pod01" '"message": "Successful deletetion"'
 run_test "datacenter delete datacenter01" '"message": "Successful deletetion"'
@@ -88,6 +90,7 @@ run_test "firewall create firewall01 --pod pod01" '"name": "firewall01"'
 run_test "firewall create firewall02 --pod pod01" '"name": "firewall02"'
 run_test "firewall create firewall01 --pod pod01" '"message": "Firewall:firewall01 already exists Forbidden"' 1
 run_test "vlan create vlan01 --pod pod01 --number 1 --type private_vlan" '"name": "vlan01"'
+run_test "firewall list" '"name": "firewall01"'
 run_test "firewall info firewall01" '"name": "firewall01"'
 run_test "firewall info firewall02" '"name": "firewall02"'
 run_test "firewall info firewall01" '"name": "firewall01"'
@@ -110,6 +113,7 @@ run_test "dhcp vlan_attach dhcp01 --vlan vlan01" '"name": "dhcp01"'
 run_test "dhcp vlan_attach dhcp02 --vlan vlan01" '"name": "dhcp02"'
 run_test "dhcp vlan_attach dhcp01 --vlan vlan01" '"message": "dhcp_add_vlan:Entry already exist Forbidden"' 1
 run_test "dhcp vlan_detach dhcp01 --vlan vlan01" '"message": "Successful deletetion"'
+run_test "dhcp list" '"name": "dhcp01"'
 run_test "dhcp info dhcp01" '"name": "dhcp01"'
 run_test "dhcp info dhcp02" '"name": "dhcp02"'
 run_test "dhcp vlan_detach dhcp02 --vlan vlan01" '"message": "Successful deletetion"'
@@ -125,6 +129,7 @@ run_test "datacenter delete datacenter01" '"message": "Successful deletetion"'
 echo -e "\n::::: Starting Switch Device Tests "
 run_test "switch create sw01 --model_type openvswitch --address tcp:10.30.83.20:6640 --mac 10:1F:74:32:F7:49" '"name": "sw01"'
 run_test "switch create sw01 --model_type openvswitch --address tcp:10.30.83.20:6640 --mac 10:1F:74:32:F7:49" '"message": "Switch:sw01 already exists Forbidden"' 1
+run_test "switch list" '"address": "tcp:10.30.83.20:6640"'
 run_test "switch info sw01" '"address": "tcp:10.30.83.20:6640"'
 run_test "switch delete sw01" '"message": "Successful deletetion"'
 run_test "switch delete sw01" '"error": "EntityNotFound"' 1
@@ -137,6 +142,7 @@ run_test "vlan create vlan01 --pod pod01 --number 1 --type private_vlan" '"messa
 run_firewall_test "firewallrule create" "vlan" "vlan01 --dst_port 53 --proto udp --table INPUT --policy ACCEPT"
 run_firewall_test "firewallrule create" "vlan" "vlan01 --dst_port 80 --proto tcp --table INPUT --policy ACCEPT"
 run_firewall_test "firewallrule create" "vlan" "vlan01 --dst_port 443 --proto tcp --table INPUT --policy ACCEPT"
+run_test "vlan list" '"name": "vlan01"'
 run_test "vlan info vlan01" '"name": "vlan01"'
 run_test "vlan delete vlan01" '"message": "Successful deletetion"'
 run_test "pod delete pod01" '"message": "Successful deletetion"'
@@ -151,6 +157,7 @@ run_test "vlan create vlan02 --pod pod02 --number 2 --type private_vlan" '"name"
 run_test "subnet create 192.168.0.0/24 --vlan vlan01" '"cidr": "192.168.0.0/24"'
 run_test "subnet create 192.168.0.0/24 --vlan vlan01" '"message": "Subnet:192.168.0.0/24 already exists Forbidden"' 1
 run_test "subnet create 192.168.0.1/24 --vlan vlan02" '"cidr": "192.168.0.1/24"'
+run_test "subnet list" '"cidr": "192.168.0.0/24"'
 run_test "subnet info 192.168.0.0/24" '"cidr": "192.168.0.0/24"'
 run_test "subnet info 192.168.0.1/24" '"cidr": "192.168.0.1/24"'
 run_test "subnet delete 192.168.0.0/24" '"message": "Successful deletetion"'
@@ -164,6 +171,7 @@ run_test "datacenter delete datacenter01" '"message": "Successful deletetion"'
 echo -e "\n::::: Starting Anycast Tests "
 run_test "anycast create 192.168.168.0/24" '"cidr": "192.168.168.0/24"'
 run_test "anycast create 192.168.168.0/24" '"message": "Anycast:192.168.168.0/24 already exists Forbidden"' 1
+run_test "anycast list" '"cidr": "192.168.168.0/24"'
 run_test "anycast info 192.168.168.0/24" '"cidr": "192.168.168.0/24"'
 run_test "anycast delete 192.168.168.0/24" '"message": "Successful deletetion"'
 
@@ -184,6 +192,7 @@ run_firewall_test "firewallrule create" "subnet" "192.168.0.0/24 --dst 192.168.0
 run_firewall_test "firewallrule create" "ip" "192.168.0.1 --dst 192.168.0.2 --proto tcp --table INPUT --policy DROP"
 run_test "ip vlan_info 192.168.0.1" '"name": "vlan01"'
 run_test "ip vlan_info 192.168.1.1" '"error": "EntityNotFound"' 1
+run_test "ip list" '"ip": "192.168.0.1"'
 run_test "ip info 192.168.0.1" '"ip": "192.168.0.1"'
 run_test "ip delete 192.168.0.1" '"message": "Successful deletetion"'
 run_test "subnet delete 192.168.0.0/24" '"message": "Successful deletetion"'
@@ -240,6 +249,7 @@ run_test "anycast create 192.168.168.0/24" '"cidr": "192.168.168.0/24"'
 run_test "anycastip create 192.168.168.3 --anycast 192.168.168.0/24" '"ip": "192.168.168.3"'
 run_test "anycastip create 192.168.0.3 --anycast 192.168.168.0/24" '"message": "Ip:192.168.0.3 address must be contained in 192.168.168.0/24 Forbidden"' 1
 run_firewall_test "firewallrule create" "anycast" "192.168.168.0/24 --dst 192.168.168.3 --proto tcp --table OUTPUT --policy DROP"
+run_test "anycastip list" '"ip": "192.168.168.3"'
 run_test "anycastip info 192.168.168.3" '"ip": "192.168.168.3"'
 run_test "firewall anycast_attach firewall01 --anycast 192.168.168.0/24" '"name": "firewall01"'
 run_test "firewall anycast_detach firewall01 --anycast 192.168.168.0/24" '"message": "Successful deletetion"'
@@ -258,6 +268,7 @@ run_test "ip create 2804:218::2001:c62c:3ff:fe02:1 --subnet 2804:218::2001:c62c:
 run_test "ip create 2804:218::2001:c62c:3ff:fe02:1 --subnet 2804:218::2001:c62c:3ff:fe02:adcd/64" '"message": "Ip:2804:218::2001:c62c:3ff:fe02:1 already exists Forbidden"' 1
 run_firewall_test "firewallrule create" "subnet" "2804:218::2001:c62c:3ff:fe02:adcd/64 --dst 2804:218::2001:c62c:3ff:fe02:ffff --proto tcp --table OUTPUT --policy DROP"
 run_firewall_test "firewallrule create" "ip" "2804:218::2001:c62c:3ff:fe02:1 --dst 2804:218::2001:c62c:3ff:fe02:ffff --proto tcp --table OUTPUT --policy DROP"
+run_test "ip list" '"ip": "2804:218::2001:c62c:3ff:fe02:1"'
 run_test "ip info 2804:218::2001:c62c:3ff:fe02:1" '"ip": "2804:218::2001:c62c:3ff:fe02:1"'
 run_test "ip delete 2804:218::2001:c62c:3ff:fe02:1" '"message": "Successful deletetion"'
 run_test "subnet delete 2804:218::2001:c62c:3ff:fe02:adcd/64" '"message": "Successful deletetion"'

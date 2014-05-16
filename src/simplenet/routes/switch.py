@@ -33,6 +33,25 @@ from simplenet.common.http_utils import (
 
 logger = get_logger()
 
+@get('/v1/switches')
+@handle_auth
+@reply_json
+def switches_list():
+    """
+    ::
+
+      GET /v1/switches
+
+    Retrieves all switches entries
+    """
+    manager = create_manager('switch')
+    try:
+        _list = getattr(manager, 'switch_list')
+        return _list()
+    except AttributeError:
+        raise FeatureNotAvailable()
+
+
 @post('/v1/switches')
 @handle_auth
 @reply_json
