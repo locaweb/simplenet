@@ -81,9 +81,15 @@ class Net(SimpleNet):
             session.add(models.Firewall(name=data['name'], zone_id=data['zone_id'],
                                         mac=data['mac'], status=True))
             session.commit()
-        except IntegrityError:
+        except IntegrityError, e:
             session.rollback()
-            forbidden_msg = "%s already exists" % data['name']
+            msg = e.message
+            if msg.find("foreign key constraint failed") != -1:
+                forbidden_msg = "zone_id %s doesnt exist" % zone_id
+            elif msg.find("is not unique") != -1:
+                forbidden_msg = "%s already exists" % data['name']
+            else:
+                forbidden_msg = "Unknown error"
             raise OperationNotPermited('Firewall', forbidden_msg)
         except Exception, e:
             session.rollback()

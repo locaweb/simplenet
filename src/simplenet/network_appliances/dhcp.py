@@ -38,9 +38,13 @@ class Net(SimpleNet):
         try:
             session.add(models.Dhcp(name=data['name']))
             session.commit()
-        except IntegrityError:
+        except IntegrityError, e:
             session.rollback()
-            forbidden_msg = "%s already exists" % data['name']
+            msg = e.message
+            if msg.find("is not unique") != -1:
+                forbidden_msg = "%s already exists" % data['name']
+            else:
+                forbidden_msg = "Unknown error"
             raise OperationNotPermited('Dhcp', forbidden_msg)
         except Exception, e:
             session.rollback()

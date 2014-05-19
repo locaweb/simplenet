@@ -209,9 +209,13 @@ class SimpleNet(object):
         try:
             session.add(models.Datacenter(name=data['name']))
             session.commit()
-        except IntegrityError:
+        except IntegrityError, e:
             session.rollback()
-            forbidden_msg = "%s already exists" % data['name']
+            msg = e.message
+            if msg.find("is not unique") != -1:
+                forbidden_msg = "%s already exists" % data['name']
+            else:
+                forbidden_msg = "Unknown error"
             raise OperationNotPermited('Datacenter', forbidden_msg)
         except Exception, e:
             session.rollback()
@@ -252,9 +256,15 @@ class SimpleNet(object):
                 name=data['name'], datacenter_id=datacenter_id)
             )
             session.commit()
-        except IntegrityError:
+        except IntegrityError, e:
             session.rollback()
-            forbidden_msg = "%s already exists" % data['name']
+            msg = e.message
+            if msg.find("foreign key constraint failed") != -1:
+                forbidden_msg = "datacenter_id %s doesnt exist" % datacenter_id
+            elif msg.find("is not unique") != -1:
+                forbidden_msg = "%s already exists" % data['name']
+            else:
+                forbidden_msg = "Unknown error"
             raise OperationNotPermited('Zone', forbidden_msg)
         except Exception, e:
             session.rollback()
@@ -307,9 +317,15 @@ class SimpleNet(object):
             session.add(models.Vlan(name=data['name'], zone_id=zone_id,
                                     type=data['type'], vlan_num=data['vlan_num']))
             session.commit()
-        except IntegrityError:
+        except IntegrityError, e:
             session.rollback()
-            forbidden_msg = "%s already exists" % data['name']
+            msg = e.message
+            if msg.find("foreign key constraint failed") != -1:
+                forbidden_msg = "zone_id %s doesnt exist" % zone_id
+            elif msg.find("is not unique") != -1:
+                forbidden_msg = "%s already exists" % data['name']
+            else:
+                forbidden_msg = "Unknown error"
             raise OperationNotPermited('Vlan', forbidden_msg)
         except Exception, e:
             session.rollback()
@@ -357,9 +373,15 @@ class SimpleNet(object):
         try:
             session.add(models.Subnet(cidr=data['cidr'], vlan_id=vlan_id))
             session.commit()
-        except IntegrityError:
+        except IntegrityError, e:
             session.rollback()
-            forbidden_msg = "%s already exists" % data['cidr']
+            msg = e.message
+            if msg.find("foreign key constraint failed") != -1:
+                forbidden_msg = "vlan_id %s doesnt exist" % vlan_id
+            elif msg.find("is not unique") != -1:
+                forbidden_msg = "%s already exists" % data['cidr']
+            else:
+                forbidden_msg = "Unknown error -- %s" % msg
             raise OperationNotPermited('Subnet', forbidden_msg)
         except Exception, e:
             session.rollback()
@@ -374,9 +396,13 @@ class SimpleNet(object):
         try:
             session.add(models.Anycast(cidr=data['cidr']))
             session.commit()
-        except IntegrityError:
+        except IntegrityError, e:
             session.rollback()
-            forbidden_msg = "%s already exists" % data['cidr']
+            msg = e.message
+            if msg.find("is not unique") != -1:
+                forbidden_msg = "%s already exists" % data['cidr']
+            else:
+                forbidden_msg = "Unknown error"
             raise OperationNotPermited('Anycast', forbidden_msg)
         except Exception, e:
             session.rollback()
@@ -446,9 +472,15 @@ class SimpleNet(object):
         try:
             session.add(models.Ip(ip=data['ip'], subnet_id=subnet_id))
             session.commit()
-        except IntegrityError:
+        except IntegrityError, e:
             session.rollback()
-            forbidden_msg = "%s already exists" % data['ip']
+            msg = e.message
+            if msg.find("foreign key constraint failed") != -1:
+                forbidden_msg = "subnet_id %s doesnt exist" % subnet_id
+            elif msg.find("is not unique") != -1:
+                forbidden_msg = "%s already exists" % data['ip']
+            else:
+                forbidden_msg = "Unknown error"
             raise OperationNotPermited('Ip', forbidden_msg)
         except Exception, e:
             session.rollback()
@@ -476,9 +508,15 @@ class SimpleNet(object):
                 models.Anycastip(ip=data['ip'], anycast_id=anycast_id)
             )
             session.commit()
-        except IntegrityError:
+        except IntegrityError, e:
             session.rollback()
-            forbidden_msg = "%s already exists" % data['ip']
+            msg = e.message
+            if msg.find("foreign key constraint failed") != -1:
+                forbidden_msg = "anycast_id %s doesnt exist" % anycast_id
+            elif msg.find("is not unique") != -1:
+                forbidden_msg = "%s already exists" % data['ip']
+            else:
+                forbidden_msg = "Unknown error"
             raise OperationNotPermited('Anycastip', forbidden_msg)
         except Exception, e:
             session.rollback()
@@ -544,9 +582,13 @@ class SimpleNet(object):
         try:
             session.add(models.Interface(id=data['mac'], hostname=data['hostname']))
             session.commit()
-        except IntegrityError:
+        except IntegrityError, e:
             session.rollback()
-            forbidden_msg = "%s already exists" % data['mac']
+            msg = e.message
+            if msg.find("is not unique") != -1:
+                forbidden_msg = "%s already exists" % data['mac']
+            else:
+                forbidden_msg = "Unknown error"
             raise OperationNotPermited('Interface', forbidden_msg)
         except Exception, e:
             session.rollback()
