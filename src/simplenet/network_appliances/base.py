@@ -461,6 +461,8 @@ class SimpleNet(object):
             (subnet_id, data)
         )
         subnet = session.query(models.Subnet).get(subnet_id)
+        if not subnet:
+            raise OperationNotPermited('Ip', "subnet_id %s doesnt exist" % subnet_id)
         if not subnet.contains(data['ip']):
             raise OperationNotPermited(
                 'Ip', "%s address must be contained in %s" % (
