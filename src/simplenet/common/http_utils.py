@@ -96,7 +96,6 @@ def validate_input(src="query", *vargs, **vkwargs):
                         assert ptype.search(pvalue) is not None
                         continue
                 except NullParameter, e:
-                    logger.warn(str(e))
                     abort(400, str(e))
                 except Exception, e:
                     logger.warn("Error: the '%s' param has an unexpected type or an invalid format" % param) \
