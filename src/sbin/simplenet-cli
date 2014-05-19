@@ -135,8 +135,8 @@ def pod(action=None, name=None, datacenter=None):
             sys.exit(1)
 
         datacenter_id = fetch_id('datacenters', datacenter)
-        r = call('post', '%s/datacenters/%s/zones' %
-            (server, datacenter_id),
+        r = call('post', '%s/zones' %
+            (server),
             data=json.dumps({'name': name, 'datacenter_id': datacenter_id})
         )
     elif action == 'delete':
@@ -173,8 +173,8 @@ def vlan(action=None, name=None, number=None, pod=None, type=None):
             sys.exit(1)
 
         zone_id = fetch_id('zones', pod)
-        r = call('post', '%s/zones/%s/vlans' % (server, zone_id),
-                data=json.dumps({'name': name, 'type': type, 'vlan_num': number})
+        r = call('post', '%s/vlans' % (server),
+                data=json.dumps({'name': name, 'type': type, 'vlan_num': number, 'zone_id': zone_id})
         )
     elif action == 'delete':
         r = call('delete', '%s/%s' %
@@ -216,8 +216,8 @@ def subnet(action=None, cidr=None, vlan=None):
             sys.exit(1)
 
         vlan_id = fetch_id('vlans', vlan)
-        r = call('post', '%s/vlans/%s/subnets' % (server, vlan_id),
-             data=json.dumps({'cidr': cidr})
+        r = call('post', '%s/subnets' % (server),
+                data=json.dumps({'cidr': cidr, 'vlan_id': vlan_id})
         )
     elif action == 'delete':
         r = call('delete', '%s/%s' %
@@ -294,9 +294,9 @@ def ip(action=None, ip=None, subnet=None):
                 print 'Could not find a suitable subnet'
                 sys.exit(1)
 
-        r = call('post', '%s/subnets/%s/ips' %
-            (server, fetch_id('subnets', subnet)),
-            data=json.dumps({'ip': ip})
+        r = call('post', '%s/ips' %
+            (server),
+            data=json.dumps({'ip': ip, 'subnet_id': fetch_id('subnets', subnet)})
         )
     elif action == 'delete':
         r = call('delete', '%s/%s' %
@@ -331,9 +331,9 @@ def anycastip(action=None, ip=None, anycast=None):
             print 'Missing anycast subnet to create'
             sys.exit(1)
 
-        r = call('post', '%s/anycasts/%s/anycastips' %
-            (server, fetch_id('anycasts', anycast)),
-            data=json.dumps({'ip': ip})
+        r = call('post', '%s/anycastips' %
+            (server),
+            data=json.dumps({'ip': ip, 'anycast_id': fetch_id('anycasts', anycast)})
         )
     elif action == 'delete':
         r = call('delete', '%s/%s' %

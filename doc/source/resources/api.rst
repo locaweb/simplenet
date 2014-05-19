@@ -179,7 +179,7 @@ Example::
     }
 
 
-/v1/datacenters/<datacenter_id>/zones
+/v1/zones
 =====================================
 
 Method POST
@@ -192,7 +192,7 @@ Create a new zone in datacenter
 
 Example::
 
-    $ curl http://localhost:8081/v1/datacenters/a0c72c62-c312-4273-92db-363f52c1682f/zones -d '{"name": "zone000"}' -X POST | python -m json.tool
+    $ curl http://localhost:8081/v1/zones -d '{"name": "zone000", "datacenter_id": "a0c72c62-c312-4273-92db-363f52c1682f"}' -X POST | python -m json.tool
     {
         "datacenter": "datacenter02",
         "datacenter_id": "a0c72c62-c312-4273-92db-363f52c1682f",
@@ -358,7 +358,7 @@ Example::
         "zone_id": "cd819175-e810-4cda-ba77-c7a300ff9648"
     }
 
-/v1/zones/<zone_id>/vlans
+/v1/vlans
 =========================
 
 Method POST
@@ -375,7 +375,7 @@ Create a new vlan at zone
 
 Example::
 
-    $ curl http://localhost:8081/v1/zones/cd819175-e810-4cda-ba77-c7a300ff9648/vlans -d '{"name": "vlan000", "type": "private_vlan", "vlan_num": 1}' -X POST
+    $ curl http://localhost:8081/v1/vlans -d '{"name": "vlan000", "type": "private_vlan", "vlan_num": 1, "zone_id": "cd819175-e810-4cda-ba77-c7a300ff9648"}' -X POST
     {
         "id": "6000cc53-f9ba-4340-bdf0-d6ed615fa05a",
         "name": "vlan000",
@@ -448,7 +448,7 @@ Example::
     HTTP 200
 
 
-/v1/vlans/<vlan_id>/subnets
+/v1/subnets
 ===========================
 
 Method POST
@@ -461,7 +461,7 @@ Create a new subnet in vlan
 
 Example::
 
-    $ curl http://localhost:8081/v1/vlans/6000cc53-f9ba-4340-bdf0-d6ed615fa05a/subnets -d '{"cidr": "10.0.0.0/24"}' -X POST
+    $ curl http://localhost:8081/v1/subnets -d '{"cidr": "10.0.0.0/24", "vlan_id": "6000cc53-f9ba-4340-bdf0-d6ed615fa05a"}' -X POST
     {
         "cidr": "10.0.0.0/24",
         "gateway": "10.0.0.1",
@@ -472,7 +472,7 @@ Example::
         "vlan_id": "6000cc53-f9ba-4340-bdf0-d6ed615fa05a"
     }
 
-/v1/anycasts/<anycast_id>/anycastips
+/v1/anycastips
 ====================================
 
 Method POST
@@ -485,7 +485,7 @@ Create a new ip in anycast subnet
 
 Example::
 
-    $ curl http://localhost:8081/v1/anycasts/55b0b07e-cbbc-4477-a7d4-8dd7f07d380c/anycastips -d '{"ip": "192.168.0.100"}' -X POST
+    $ curl http://localhost:8081/v1/anycastips -d '{"ip": "192.168.0.100", "anycast_id": "55b0b07e-cbbc-4477-a7d4-8dd7f07d380c"}' -X POST
     {
         "anycast": "192.168.0.0/24",
         "anycast_id": "55b0b07e-cbbc-4477-a7d4-8dd7f07d380c",
@@ -493,7 +493,7 @@ Example::
         "ip": "192.168.0.100"
     }
 
-/v1/subnets/<subnet_id>/ips
+/v1/ips
 ===========================
 
 Method POST
@@ -506,7 +506,7 @@ Create a new ip in subnet
 
 Example::
 
-    $ curl http://localhost:8081/v1/subnets/2368f084-426c-4a39-a07e-f65236e6bb91/ips -d '{"ip": "10.0.0.100"}' -X POST | python -m json.tool
+    $ curl http://localhost:8081/v1/ips -d '{"ip": "10.0.0.100", "subnet_id": "2368f084-426c-4a39-a07e-f65236e6bb91"}' -X POST | python -m json.tool
     {
         "hostname": null,
         "id": "6ed4b2ec-133f-4be6-9620-d90041475259",

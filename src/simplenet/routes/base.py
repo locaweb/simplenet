@@ -339,15 +339,15 @@ def datacenter_create():
     return datacenter
 
 
-@post('/v1/datacenters/<datacenter_id>/zones')
+@post('/v1/zones')
 @handle_auth
-@validate_input(name=str)
+@validate_input(name=str, datacenter_id=str)
 @reply_json
-def datacenter_zone_create(datacenter_id):
+def datacenter_zone_create():
     """
     ::
 
-      POST /v1/datacenters/<datacenter_id>/zones
+      POST /v1/zones
 
     Create a new zone in datacenter
     """
@@ -356,7 +356,7 @@ def datacenter_zone_create(datacenter_id):
     if not data:
         abort(400, 'No data received')
     data = json.loads(data)
-    zone = manager.zone_create(datacenter_id, data)
+    zone = manager.zone_create(data['datacenter_id'], data)
     location = "zones/%s" % (zone['id'])
     response.set_header("Location", location)
     clear_cache()
@@ -418,9 +418,9 @@ def dhcp_remove_vlan(dhcp_id, vlan_id):
     """
     ::
 
-      POST /v1/dhcps/<dhcp_id>/vlans/<vlan_id>
+      DELETE /v1/dhcps/<dhcp_id>/vlans/<vlan_id>
 
-    Attach vlan to DHCP device
+    Detach vlan to DHCP device
     """
     manager = create_manager('dhcp')
     dhcp = manager.dhcp_remove_vlan(dhcp_id, vlan_id)
@@ -516,15 +516,15 @@ def firewall_sync():
         response.set_header("Location", location)
         return firewall
 
-@post('/v1/zones/<zone_id>/vlans')
+@post('/v1/vlans')
 @handle_auth
-@validate_input(name=str)
+@validate_input(name=str, zone_id=str, type=str, vlan_num=str)
 @reply_json
-def zone_vlan_create(zone_id):
+def zone_vlan_create():
     """
     ::
 
-      POST /v1/zones/<zone_id>/vlans
+      POST /v1/vlans
 
     Create a new vlan in zone
     """
@@ -535,11 +535,7 @@ def zone_vlan_create(zone_id):
 
     data = json.loads(data)
 
-    if data.get("type", None) is None:
-        abort(400, 'Missing vlan type')
-    elif data.get("vlan_num", None) is None:
-        abort(400, 'Missing vlan number')
-    vlan = manager.vlan_create(zone_id, data)
+    vlan = manager.vlan_create(data['zone_id'], data)
     location = "vlans/%s" % (vlan['id'])
     response.set_header("Location", location)
     clear_cache()
@@ -577,9 +573,9 @@ def firewall_remove_anycast(firewall_id, anycast_id):
     """
     ::
 
-      POST /v1/firewalls/<firewall_id>/anycasts/<anycast_id>
+      DELETE /v1/firewalls/<firewall_id>/anycasts/<anycast_id>
 
-    Attach anycasts to firewall device
+    Detach anycasts to firewall device
     """
     manager = create_manager('firewall')
     firewall = manager.firewall_remove_anycast(firewall_id, anycast_id)
@@ -611,15 +607,15 @@ def anycast_create():
     return anycast
 
 
-@post('/v1/vlans/<vlan_id>/subnets')
+@post('/v1/subnets')
 @handle_auth
-@validate_input(cidr=str)
+@validate_input(cidr=str, vlan_id=str)
 @reply_json
-def vlan_subnet_create(vlan_id):
+def vlan_subnet_create():
     """
     ::
 
-      POST /v1/vlans/<vlan_id>/subnets
+      POST /v1/subnets
 
     Create a new subnet in vlan
     """
@@ -628,22 +624,22 @@ def vlan_subnet_create(vlan_id):
     if not data:
         abort(400, 'No data received')
     data = json.loads(data)
-    subnet = manager.subnet_create(vlan_id, data)
+    subnet = manager.subnet_create(data['vlan_id'], data)
     location = "subnets/%s" % (subnet['id'])
     response.set_header("Location", location)
     clear_cache()
     return subnet
 
 
-@post('/v1/anycasts/<anycast_id>/anycastips')
+@post('/v1/anycastips')
 @handle_auth
-@validate_input(ip=str)
+@validate_input(ip=str, anycast_id=str)
 @reply_json
-def anycast_anycastip_create(anycast_id):
+def anycast_anycastip_create():
     """
     ::
 
-      POST /v1/anycasts/<anycast_id>/anycastips
+      POST /v1/anycastips
 
     Create a new ip in anycast subnet
     """
@@ -652,22 +648,22 @@ def anycast_anycastip_create(anycast_id):
     if not data:
         abort(400, 'No data received')
     data = json.loads(data)
-    ip = manager.anycastip_create(anycast_id, data)
+    ip = manager.anycastip_create(data['anycast_id'], data)
     location = "anycastips/%s" % (ip['id'])
     response.set_header("Location", location)
     clear_cache()
     return ip
 
 
-@post('/v1/subnets/<subnet_id>/ips')
+@post('/v1/ips')
 @handle_auth
-@validate_input(ip=str)
+@validate_input(ip=str, subnet_id=str)
 @reply_json
-def subnet_ip_create(subnet_id):
+def subnet_ip_create():
     """
     ::
 
-      POST /v1/subnets/<subnet_id>/ips
+      POST /v1/ips
 
     Create a new ip in subnet
     """
@@ -676,7 +672,7 @@ def subnet_ip_create(subnet_id):
     if not data:
         abort(400, 'No data received')
     data = json.loads(data)
-    ip = manager.ip_create(subnet_id, data)
+    ip = manager.ip_create(data['subnet_id'], data)
     location = "ips/%s" % (ip['id'])
     response.set_header("Location", location)
     clear_cache()
