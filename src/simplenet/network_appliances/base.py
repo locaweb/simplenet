@@ -601,6 +601,9 @@ class SimpleNet(object):
     def interface_delete(self, data):
         return self._generic_delete_("interface", models.Interface, {'id': data})
 
+    def interface_info(self, mac):
+        return self.interface_info_by_mac(mac)
+
     def interface_info_by_mac(self, mac):
         return self._generic_info_("interface", models.Interface, {'id': mac})
 
