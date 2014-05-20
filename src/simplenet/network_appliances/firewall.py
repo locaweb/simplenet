@@ -156,9 +156,18 @@ class Net(SimpleNet):
 
     def firewall_sync(self, data):
         _data = {}
+        device = None
         _data['modified'] = None
 
-        device = self.firewall_info_by_name(data.get("name"))
+        if data.get("name"):
+            device = self.firewall_info_by_name(data.get("name"))
+        elif data.get("id"):
+            device = self.firewall_info(data.get("id"))
+        else:
+            raise EntityNotFound("Firewall", "Missing id or name")
+
+        if device is None:
+            raise EntityNotFound("Firewall", "not found with %s" % data)
 
         self._enqueue_device_rules_(_data, [device], "FW Reload")
 
