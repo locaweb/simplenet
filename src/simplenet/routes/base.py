@@ -233,6 +233,46 @@ def dhcp_list():
         raise FeatureNotAvailable()
 
 
+@get('/v1/interfaces')
+@handle_auth
+@reply_json
+@cache()
+def interface_list():
+    """
+    ::
+
+      GET /v1/interfaces
+
+    Retrieves all interfaces entries
+    """
+    manager = create_manager('base')
+    try:
+        _list = getattr(manager, 'interface_list')
+        return _list()
+    except AttributeError:
+        raise FeatureNotAvailable()
+
+
+@get('/v1/firewalls')
+@handle_auth
+@reply_json
+@cache()
+def firewall_list():
+    """
+    ::
+
+      GET /v1/firewalls
+
+    Retrieves all firewalls entries
+    """
+    manager = create_manager('firewall')
+    try:
+        _list = getattr(manager, 'firewall_list')
+        return _list()
+    except AttributeError:
+        raise FeatureNotAvailable()
+
+
 ## Generic Resource Info
 @get('/v1/<resource>/<resource_id>')
 @handle_auth
