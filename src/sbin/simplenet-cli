@@ -380,15 +380,15 @@ def firewall(action=None, name=None, pod=None,
             base_url, fetch_id('firewalls', name))
         )
     elif action == 'disable':
-        r = call('post', '%s/firewall/disable' % (server),
+        r = call('post', '%s/firewalls/disable' % (server),
             data=json.dumps({'name': name})
         )
     elif action == 'enable':
-        r = call('post', '%s/firewall/enable' % (server),
+        r = call('post', '%s/firewalls/enable' % (server),
             data=json.dumps({'name': name})
         )
     elif action == 'sync':
-        r = call('post', '%s/firewall/sync' % (server),
+        r = call('post', '%s/firewalls/sync' % (server),
             data=json.dumps({'name': name})
         )
     elif action == 'info':

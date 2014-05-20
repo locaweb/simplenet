@@ -283,7 +283,7 @@ Example::
     }
 
 
-/v1/firewall/enable
+/v1/firewalls/enable
 ===================
 
 Method POST
@@ -296,7 +296,7 @@ Set firewall device to enabled
 
 Example::
 
-    $ curl http://localhost:8081/v1/firewall/enable -X POST -d '{"id": "036749a9-0da1-431f-8d48-24bd64a04429"}'
+    $ curl http://localhost:8081/v1/firewalls/enable -X POST -d '{"id": "036749a9-0da1-431f-8d48-24bd64a04429"}'
     {
         "address": null,
         "id": "036749a9-0da1-431f-8d48-24bd64a04429",
@@ -308,7 +308,7 @@ Example::
     }
 
 
-/v1/firewall/disable
+/v1/firewalls/disable
 ====================
 
 Method POST
@@ -322,7 +322,7 @@ Firewall stop receiving rules updates when its disabled
 
 Example::
 
-    $ curl http://localhost:8081/v1/firewall/enable -X POST -d '{"id": "036749a9-0da1-431f-8d48-24bd64a04429"}'
+    $ curl http://localhost:8081/v1/firewalls/disable -X POST -d '{"id": "036749a9-0da1-431f-8d48-24bd64a04429"}'
     {
         "address": null,
         "id": "036749a9-0da1-431f-8d48-24bd64a04429",
@@ -334,7 +334,7 @@ Example::
     }
 
 
-/v1/firewall/sync
+/v1/firewalls/sync
 =================
 
 Method POST
@@ -347,7 +347,7 @@ Reload firewall rules
 
 Example::
 
-    $ curl http://localhost:8081/v1/firewall/sync -X POST -d '{"name": "firewall00"}'
+    $ curl http://localhost:8081/v1/firewalls/sync -X POST -d '{"name": "firewall00"}'
     {
         "address": null,
         "id": "036749a9-0da1-431f-8d48-24bd64a04429",

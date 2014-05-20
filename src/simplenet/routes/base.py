@@ -492,14 +492,14 @@ def firewall_create():
     return firewall
 
 
-@post('/v1/firewall/enable')
+@post('/v1/firewalls/enable')
 @handle_auth
 @reply_json
 def firewall_enable():
     """
     ::
 
-      POST /v1/firewall/enable
+      POST /v1/firewalls/enable
 
     Set firewall device to enabled
     """
@@ -513,14 +513,14 @@ def firewall_enable():
     response.set_header("Location", location)
     return firewall
 
-@post('/v1/firewall/disable')
+@post('/v1/firewalls/disable')
 @handle_auth
 @reply_json
 def firewall_disable():
     """
     ::
 
-      POST /v1/firewall/disable
+      POST /v1/firewalls/disable
 
     Set firewall device to disabled
     """
@@ -534,14 +534,14 @@ def firewall_disable():
     response.set_header("Location", location)
     return firewall
 
-@post('/v1/firewall/sync')
+@post('/v1/firewalls/sync')
 @handle_auth
 @reply_json
 def firewall_sync():
     """
     ::
 
-      POST /v1/firewall/sync
+      POST /v1/firewalls/sync
 
     Reload firewall rules
     """

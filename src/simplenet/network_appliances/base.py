@@ -16,6 +16,7 @@
 # @author: Juliano Martinez (ncode), Locaweb.
 # @author: Luiz Ozaki, Locaweb.
 
+from uuid import UUID
 from simplenet.common.config import get_logger
 from simplenet.common.hooks import post_run
 from simplenet.db import models, db_utils
@@ -30,6 +31,14 @@ session = db_utils.get_database_session()
 
 
 class SimpleNet(object):
+    @staticmethod
+    def valid_uuid(data):
+        try:
+            UUID(data)
+        except ValueError:
+            return False
+
+        return True
 
     def _generic_list_(self, name, model):
         logger.debug("Listing %s" % name)
@@ -635,6 +644,12 @@ class SimpleNet(object):
     @post_run
     def interface_remove_ip(self, interface_id, ip_id):
         interface = session.query(models.Interface).get(interface_id)
+        if not self.valid_uuid(ip_id):
+            new_ip_id = self.ip_info_by_ip(ip_id)
+            if not self.valid_uuid(new_ip_id.get("id")):
+                raise EntityNotFound('Ip', ip_id)
+            ip_id = new_ip_id.get("id")
+
         ip = session.query(models.Ip).get(ip_id)
 
         if not ip:

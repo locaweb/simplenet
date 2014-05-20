@@ -30,8 +30,8 @@ from sqlalchemy.exc import IntegrityError
 logger = get_logger()
 session = db_utils.get_database_session()
 
-class Net(SimpleNet):
 
+class Net(SimpleNet):
     def switch_list(self):
         return self._generic_list_("switches", models.Switch)
 
@@ -72,12 +72,17 @@ class Net(SimpleNet):
         logger.debug("Adding interface using data: %s" % data)
 
         interface = session.query(models.Interface).get(data['interface_id'])
+        if not self.valid_uuid(switch_id):
+            new_switch_id = self.switch_info_by_name(switch_id)
+            if not self.valid_uuid(new_switch_id.get("id")):
+                raise EntityNotFound('Switch', switch_id)
+            switch_id = new_switch_id.get("id")
 
         if not interface:
             raise EntityNotFound('Interface', data['interface_id'])
 
         if interface.switch_id:
-            raise Exception("Interface already attached")
+            raise Exception("Interface already attached to %s" % interface.switch_id)
 
         session.begin(subtransactions=True)
         try:
@@ -109,6 +114,12 @@ class Net(SimpleNet):
         interface = session.query(models.Interface).get(int_id)
         if not interface:
             raise EntityNotFound('Interface', int_id)
+
+        if not self.valid_uuid(switch_id):
+            new_switch_id = self.switch_info_by_name(switch_id)
+            if not self.valid_uuid(new_switch_id.get("id")):
+                raise EntityNotFound('Switch', switch_id)
+            switch_id = new_switch_id.get("id")
 
         if not interface.switch_id:
             return
