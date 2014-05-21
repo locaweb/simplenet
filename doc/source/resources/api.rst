@@ -592,7 +592,7 @@ Example::
 Policy API
 ==========
 
-/v1/<network_appliance>/policy/<owner_type>/<id>
+/v1/firewalls/policies/<owner_type>/<id>
 ============================================================
 
 Method GET
@@ -605,7 +605,7 @@ Retrieve policy information
 
 Example::
 
-    $ curl http://127.0.0.1:8081/v1/firewall/policy/subnet/d47b3b0e-5579-4884-9af9-aac7b89c7c62 |  python -m json.tool
+    $ curl http://127.0.0.1:8081/v1/firewalls/policies/subnet/d47b3b0e-5579-4884-9af9-aac7b89c7c62 |  python -m json.tool
     {
         "dst": "10.0.0.100",
         "dst_port": "None",
@@ -620,7 +620,7 @@ Example::
     }
 
 
-/v1/<network_appliance>/policy/<owner_type>/<owner_id>
+/v1/firewalls/policies/<owner_type>/<owner_id>
 ======================================================
 
 Method POST
@@ -633,7 +633,7 @@ Create a new policy
 
 Example::
 
-    $ curl http://127.0.0.1:8081/v1/firewall/policy/subnet/2368f084-426c-4a39-a07e-f65236e6bb91 -d '{"src": "None", "src_port": "None", "dst_port": "None", "proto": "tcp", "policy": "DROP", "table": "INPUT", "dst": "10.0.0.100"}' -X POST | python -m json.tool
+    $ curl http://127.0.0.1:8081/v1/firewalls/policies/subnet/2368f084-426c-4a39-a07e-f65236e6bb91 -d '{"src": "None", "src_port": "None", "dst_port": "None", "proto": "tcp", "policy": "DROP", "table": "INPUT", "dst": "10.0.0.100"}' -X POST | python -m json.tool
     {
         "dst": "10.0.0.100",
         "dst_port": "None",
@@ -648,7 +648,7 @@ Example::
     }
 
 
-/v1/<network_appliance>/policy/<owner_type>/<id>
+/v1/firewalls/policies/<owner_type>/<id>
 ======================================================
 
 Method DELETE
@@ -661,11 +661,11 @@ Deletes a policy
 
 Example::
 
-    $ curl http://127.0.0.1:8081/v1/firewall/policy/subnet/d47b3b0e-5579-4884-9af9-aac7b89c7c62 -X DELETE
+    $ curl http://127.0.0.1:8081/v1/firewalls/policies/subnet/d47b3b0e-5579-4884-9af9-aac7b89c7c62 -X DELETE
     HTTP 200
 
 
-/v1/<network_appliance>/policy/by-type/<owner_type>
+/v1/firewalls/policies/by-type/<owner_type>
 ========================================================
 
 Method GET
@@ -678,7 +678,7 @@ Retrieve all policy by type specified <owner_type>
 
 Example::
 
-    $ curl http://127.0.0.1:8081/v1/firewall/policy/by-type/subnet | python -m json.tool
+    $ curl http://127.0.0.1:8081/v1/firewalls/policies/by-type/subnet | python -m json.tool
     [
         {
             "dst": "10.0.0.100",
@@ -695,7 +695,7 @@ Example::
     ]
 
 
-/v1/<network_appliance>/policy/by-owner/<owner_type>/<id>
+/v1/firewalls/policies/by-owner/<owner_type>/<id>
 ======================================================
 
 Method GET
@@ -708,7 +708,7 @@ Retrieve all policy from a given owner
 
 Example::
 
-    $ curl http://127.0.0.1:8081/v1/firewall/policy/by-owner/subnet/2368f084-426c-4a39-a07e-f65236e6bb91 | python -m json.tool
+    $ curl http://127.0.0.1:8081/v1/firewalls/policies/by-owner/subnet/2368f084-426c-4a39-a07e-f65236e6bb91 | python -m json.tool
     [
         {
             "dst": "10.0.0.100",

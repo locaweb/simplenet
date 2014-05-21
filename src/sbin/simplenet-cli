@@ -610,7 +610,7 @@ def firewallrule(action=None, name=None, owner=None, in_iface=None,
 
     simplenet-cli firewallrule create --subnet 192.168.0.0/24 --dst 192.168.0.2 --proto tcp --table INPUT --policy DROP
     """
-    base_url = '%s/firewall/policies' % server
+    base_url = '%s/firewalls/policies' % server
     r = None
     if action == 'list':
         if owner == 'all':

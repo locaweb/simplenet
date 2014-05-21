@@ -53,83 +53,83 @@ def firewalls_list():
         raise FeatureNotAvailable()
 
 
-@get('/v1/<network_appliance>/policies/<owner_type>/<id>')
+@get('/v1/firewalls/policies/<owner_type>/<id>')
 @handle_auth
 @reply_json
-def policy_info(network_appliance, owner_type, id):
+def policy_info(owner_type, id):
     """
     ::
 
-      GET /v1/<network_appliance>/policies/<owner_type>/<id>
+      GET /v1/firewalls/policies/<owner_type>/<id>
 
     Get policy informations
     """
-    manager = create_manager(network_appliance)
+    manager = create_manager('firewall')
     return manager.policy_info(owner_type, id)
 
 
-@post('/v1/<network_appliance>/policies/<owner_type>/<id>')
+@post('/v1/firewalls/policies/<owner_type>/<id>')
 @handle_auth
 @reply_json
-def policy_create(network_appliance, owner_type, id):
+def policy_create(owner_type, id):
     """
     ::
 
-      POST /v1/<network_appliance>/policies/<owner_type>/<id>
+      POST /v1/firewalls/policies/<owner_type>/<id>
 
     Create a new policy
     """
-    manager = create_manager(network_appliance)
+    manager = create_manager('firewall')
     data = request.body.readline()
     if not data:
         abort(400, 'No data received')
     data = json.loads(data)
     policy = manager.policy_create(owner_type, id, data)
-    location = "%s/policies/%s/%s" % (network_appliance, owner_type, policy['id'])
+    location = "firewalls/policies/%s/%s" % (owner_type, policy['id'])
     response.set_header("Location", location)
     return policy
 
 
-@delete('/v1/<network_appliance>/policies/<owner_type>/<id>')
+@delete('/v1/firewalls/policies/<owner_type>/<id>')
 @handle_auth
 @reply_json
-def policy_delete(network_appliance, owner_type, id):
+def policy_delete(owner_type, id):
     """
     ::
 
-      DELETE /v1/<network_appliance>/policies/<owner_type>/<owner_id>
+      DELETE /v1/firewalls/policies/<owner_type>/<owner_id>
 
     Deletes policy
     """
-    manager = create_manager(network_appliance)
+    manager = create_manager('firewall')
     return manager.policy_delete(owner_type, id)
 
 
-@get('/v1/<network_appliance>/policies/by-type/<owner_type>')
+@get('/v1/firewalls/policies/by-type/<owner_type>')
 @handle_auth
 @reply_json
-def policy_list(network_appliance, owner_type):
+def policy_list(owner_type):
     """
     ::
 
-      GET /v1/<network_appliance>/policies/<owner_type>
+      GET /v1/firewalls/policies/<owner_type>
 
     Get all policy
     """
-    manager = create_manager(network_appliance)
+    manager = create_manager('firewall')
     return manager.policy_list(owner_type)
 
 
-@get('/v1/<network_appliance>/policies/by-owner/<owner_type>/<owner_id>')
+@get('/v1/firewalls/policies/by-owner/<owner_type>/<owner_id>')
 @handle_auth
 @reply_json
-def policy_list_by_owner(network_appliance, owner_type, owner_id):
+def policy_list_by_owner(owner_type, owner_id):
     """
     ::
 
-      GET /v1/<network_appliance>/policies/by-owner/<owner_type>/<owner_id>
+      GET /v1/firewalls/policies/by-owner/<owner_type>/<owner_id>
 
     Get all policy from a given owner
     """
-    manager = create_manager(network_appliance)
+    manager = create_manager('firewall')
     return manager.policy_list_by_owner(owner_type, owner_id)
