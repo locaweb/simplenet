@@ -105,6 +105,8 @@ class Net(SimpleNet):
         logger.debug("Adding vlan to anycast: %s using data: %s" %
             (firewall_id, data)
         )
+        firewall_id = self.retrieve_valid_uuid(firewall_id, self.firewall_info_by_name, "id")
+
         firewall = session.query(models.Firewall).get(firewall_id)
         anycast = session.query(models.Anycast).get(data['anycast_id'])
 
@@ -135,6 +137,8 @@ class Net(SimpleNet):
         )
 
     def firewall_remove_anycast(self, firewall_id, anycast_id):
+        firewall_id = self.retrieve_valid_uuid(firewall_id, self.firewall_info_by_name, "id")
+
         return self._generic_delete_(
             "anycast from firewall", models.Anycasts_to_Firewall,
             {'anycast_id': anycast_id, 'firewall_id': firewall_id}

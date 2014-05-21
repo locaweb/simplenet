@@ -72,11 +72,7 @@ class Net(SimpleNet):
         logger.debug("Adding interface using data: %s" % data)
 
         interface = session.query(models.Interface).get(data['interface_id'])
-        if not self.valid_uuid(switch_id):
-            new_switch_id = self.switch_info_by_name(switch_id)
-            if not self.valid_uuid(new_switch_id.get("id")):
-                raise EntityNotFound('Switch', switch_id)
-            switch_id = new_switch_id.get("id")
+        switch_id = self.retrieve_valid_uuid(switch_id, self.switch_info_by_name, "id")
 
         if not interface:
             raise EntityNotFound('Interface', data['interface_id'])

@@ -221,7 +221,7 @@ Example::
     }
 
 
-/v1/dhcps/<dhcp_id>/vlans
+/v1/dhcps/<dhcp_id|dhcp_name>/vlans
 =========================
 
 Method POST
@@ -241,7 +241,7 @@ Example::
     }
 
 
-/v1/dhcps/<dhcp_id>/vlans/<vlan_id>
+/v1/dhcps/<dhcp_id|dhcp_name>/vlans/<vlan_id|vlan_name>
 ===================================
 
 Method DELETE
@@ -406,7 +406,7 @@ Example::
     }
 
 
-/v1/firewalls/<firewall_id>/anycasts
+/v1/firewalls/<firewall_id|firewall_name>/anycasts
 ====================================
 
 Method POST
@@ -431,7 +431,7 @@ Example::
     }
 
 
-/v1/firewalls/<firewall_id>/anycasts/<anycast_id>
+/v1/firewalls/<firewall_id|firewall_name>/anycasts/<anycast_id|anycast_name>
 =================================================
 
 Method DELETE
@@ -565,7 +565,7 @@ Example::
     }
 
 
-/v1/interfaces/<interface_id>/ips/<ip_id>
+/v1/interfaces/<interface_id>/ips/<ip_id|ip>
 =========================================
 
 Method DELETE

@@ -67,6 +67,7 @@ class Net(SimpleNet):
         logger.debug("Adding vlan to device: %s using data: %s" %
             (dhcp_id, vlan_id)
         )
+        dhcp_id = self.retrieve_valid_uuid(dhcp_id, self.dhcp_info_by_name, "id")
         dhcp = session.query(models.Dhcp).get(dhcp_id)
         vlan = session.query(models.Vlan).get(vlan_id)
 
@@ -94,6 +95,8 @@ class Net(SimpleNet):
         )
 
     def dhcp_remove_vlan(self, dhcp_id, vlan_id):
+        dhcp_id = self.retrieve_valid_uuid(dhcp_id, self.dhcp_info_by_name, "id")
+        vlan_id = self.retrieve_valid_uuid(vlan_id, self.vlan_info_by_name, "id")
         dhcp = session.query(models.Dhcp).get(dhcp_id)
         vlan = session.query(models.Vlan).get(vlan_id)
         ret = self._generic_delete_(

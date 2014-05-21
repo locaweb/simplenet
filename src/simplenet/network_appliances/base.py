@@ -32,13 +32,17 @@ session = db_utils.get_database_session()
 
 class SimpleNet(object):
     @staticmethod
-    def valid_uuid(data):
+    def retrieve_valid_uuid(data, _func, field):
         try:
             UUID(data)
         except ValueError:
-            return False
+            _dd = _func(data)
+            if _dd:
+                return _dd.get(field)
+            else:
+                return None
 
-        return True
+        return data
 
     def _generic_list_(self, name, model):
         logger.debug("Listing %s" % name)
@@ -54,6 +58,8 @@ class SimpleNet(object):
     def _generic_delete_(self, name, model, value):
         logger.debug("Deleting %s from %s" % (value, name))
         ss = session.query(model).filter_by(**value).first()
+        if ss is None:
+            return
         session.begin(subtransactions=True)
         try:
             session.delete(ss)
@@ -621,12 +627,15 @@ class SimpleNet(object):
         logger.debug("Adding IP to interface using data: %s" % data)
 
         interface = session.query(models.Interface).get(interface_id)
-        ip = session.query(models.Ip).filter_by(**data).first()
+        if not interface:
+            raise EntityNotFound('Interface', interface_id)
 
+        if data == {} or type(data) != dict or (not data.get("id") and not data.get("ip")):
+            raise OperationNotPermited('Interface', "%s is not a valid input" % data)
+
+        ip = session.query(models.Ip).filter_by(**data).first()
         if not ip:
             raise EntityNotFound('Ip', data)
-        elif not interface:
-            raise EntityNotFound('Interface', interface_id)
 
         session.begin(subtransactions=True)
         try:
@@ -644,11 +653,7 @@ class SimpleNet(object):
     @post_run
     def interface_remove_ip(self, interface_id, ip_id):
         interface = session.query(models.Interface).get(interface_id)
-        if not self.valid_uuid(ip_id):
-            new_ip_id = self.ip_info_by_ip(ip_id)
-            if not self.valid_uuid(new_ip_id.get("id")):
-                raise EntityNotFound('Ip', ip_id)
-            ip_id = new_ip_id.get("id")
+        ip_id = self.retrieve_valid_uuid(ip_id, self.ip_info_by_ip, "id")
 
         ip = session.query(models.Ip).get(ip_id)
 
