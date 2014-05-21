@@ -53,7 +53,7 @@ def firewalls_list():
         raise FeatureNotAvailable()
 
 
-@get('/v1/firewalls/policies/<owner_type>/<id>')
+@get('/v1/firewalls/policies/<owner_type:re:(?!by).+>/<id>')
 @handle_auth
 @reply_json
 def policy_info(owner_type, id):
@@ -68,7 +68,7 @@ def policy_info(owner_type, id):
     return manager.policy_info(owner_type, id)
 
 
-@post('/v1/firewalls/policies/<owner_type>/<id>')
+@post('/v1/firewalls/policies/<owner_type:re:(?!by).+>/<id>')
 @handle_auth
 @reply_json
 def policy_create(owner_type, id):
@@ -90,7 +90,7 @@ def policy_create(owner_type, id):
     return policy
 
 
-@delete('/v1/firewalls/policies/<owner_type>/<id>')
+@delete('/v1/firewalls/policies/<owner_type:re:(?!by).+>/<id>')
 @handle_auth
 @reply_json
 def policy_delete(owner_type, id):
@@ -103,7 +103,6 @@ def policy_delete(owner_type, id):
     """
     manager = create_manager('firewall')
     return manager.policy_delete(owner_type, id)
-
 
 @get('/v1/firewalls/policies/by-type/<owner_type>')
 @handle_auth
