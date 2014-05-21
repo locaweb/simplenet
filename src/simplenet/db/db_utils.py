@@ -25,7 +25,7 @@ logger = get_logger()
 _engine = models.engine
 _maker = None
 
-def get_database_session(autocommit=True, expire_on_commit=False):
+def get_database_session(autocommit=True, expire_on_commit=True):
     global _maker, _engine
     if not _maker:
         assert _engine
