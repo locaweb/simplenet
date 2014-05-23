@@ -295,7 +295,7 @@ def main(user, config_file):
         os.makedirs(lockdir)
 
 
-    with BrokerConnection(config.get('ovs','uri')) as conn:
+    with BrokerConnection(config.get('ovs','broker')) as conn:
         Worker(conn, config.get('ovs','lockfile'), config.get('ovs','ovsdb-port')).run()
 
 
