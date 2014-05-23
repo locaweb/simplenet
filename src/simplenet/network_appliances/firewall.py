@@ -297,7 +297,7 @@ class Net(SimpleNet):
         _model = getattr(models, "%sPolicy" % owner_type.capitalize())
         ss = session.query(_model).get(id)
         if not ss:
-            raise EntityNotFound('%sPolicy' % owner_type.capitalize(), id)
+            return True
         owner_id = ss.owner_id
         session.begin(subtransactions=True)
         try:
