@@ -59,8 +59,8 @@ class SyslogWrapper(object):
         syslog.syslog(syslog.LOG_ERR, msg)
 
     def debug(self, msg):
-        if self.config.has_section(caller) and \
-           self.config.getboolean(caller, 'debug'):
+        if self.config.has_section('server') and \
+           self.config.getboolean('server', 'debug'):
             syslog.syslog(syslog.LOG_DEBUG, msg)
 
 
