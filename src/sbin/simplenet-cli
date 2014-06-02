@@ -55,6 +55,7 @@ def call(method, url, data=None):
                 }
             )
             ret = _ret
+    print url, data
     return ret
 
 
@@ -540,12 +541,13 @@ def switch(action=None, name=None, model_type=None, mac=None,
 
 
 @baker.command(
-    params={'action': '<list all|info|create|delete|ip_attach|ip_detach>',
+    params={'action': '<list all|info|create|delete|ip_attach|ip_detach|vlan_attach|vlan_detach>',
             'mac': 'interface mac address',
             'ip': 'ip address',
+            'vlan': 'vlan',
             'hostname': 'hostname'}
 )
-def interface(action=None, mac=None, ip=None, hostname=None):
+def interface(action=None, mac=None, ip=None, vlan=None, hostname=None):
     base_url = '%s/interfaces' % (server)
     r = None
     if action == 'list':
@@ -570,6 +572,19 @@ def interface(action=None, mac=None, ip=None, hostname=None):
         r = call('delete', '%s/%s' % (
             base_url, fetch_id('interfaces', mac))
         )
+    elif action == 'vlan_attach':
+        if not vlan:
+            print 'Missing vlan to attach'
+            sys.exit(1)
+
+        r = call('post', '%s/%s/vlans' %
+            (base_url, mac), data=json.dumps({'name': vlan}))
+    elif action == 'vlan_detach':
+        if not vlan:
+            print 'Missing vlan to detach'
+            sys.exit(1)
+        r = call('delete', '%s/%s/vlans/%s' %
+            (base_url, mac, vlan))
     elif action == 'ip_attach':
         if not ip:
             print 'Missing ip to attach'

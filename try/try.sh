@@ -43,6 +43,7 @@ function run_test(){
             echo -e "\033[01;32m[ OK ]\033[00m Result: $to_find"
         fi
     fi
+    echo $result
 }
 
 function run_firewall_test(){
@@ -210,6 +211,7 @@ run_test "pod create pod01 --datacenter datacenter01" '"name": "pod01"'
 run_test "pod create pod02 --datacenter datacenter01" '"name": "pod02"'
 run_test "vlan create vlan01 --pod pod01 --number 1 --type private_vlan" '"name": "vlan01"'
 run_test "vlan create vlan02 --pod pod02 --number 2 --type private_vlan" '"name": "vlan02"'
+run_test "vlan create vlan03 --pod pod01 --number 3 --type dedicated_vlan" '"name": "vlan03"'
 run_test "subnet create 192.168.0.0/24 --vlan vlan01" '"cidr": "192.168.0.0/24"'
 run_test "subnet create 192.168.0.1/24 --vlan vlan02" '"cidr": "192.168.0.1/24"'
 run_test "dhcp create dhcp01" '"name": "dhcp01"'
@@ -218,25 +220,31 @@ run_test "ip create 192.168.0.1 --subnet 192.168.0.0/24" '"ip": "192.168.0.1"'
 run_test "ip create 192.168.1.1 --subnet 192.168.0.1/24" '"message": "Ip:192.168.1.1 address must be contained in 192.168.0.1/24 Forbidden"' 1
 run_test "ip create 192.168.0.2 --subnet 192.168.0.0/24" '"ip": "192.168.0.2"'
 run_test "interface create 84:2b:2b:00:96:22" '"id": "84:2b:2b:00:96:22"'
+run_test "interface create 84:2b:2b:00:96:20" '"id": "84:2b:2b:00:96:20"'
 run_test "interface ip_attach 84:2b:2b:00:96:22 192.168.0.1" '"id": "84:2b:2b:00:96:22"'
 run_test "interface ip_attach 84:2b:2b:00:96:22 192.168.0.2" '"id": "84:2b:2b:00:96:22"'
 run_test "interface ip_attach 84:2b:2b:00:96:22 192.168.0.3" '"error": "EntityNotFound"' 1
 run_test "interface ip_attach 84:2b:2b:00:96:21 192.168.0.2" '"error": "EntityNotFound"' 1
+run_test "interface vlan_attach 84:2b:2b:00:96:20 --vlan vlan01" '"error": "OperationNotPermited"' 1
+run_test "interface vlan_attach 84:2b:2b:00:96:20 --vlan vlan03" '"id": "84:2b:2b:00:96:20"'
 run_test "dhcp vlan_detach dhcp01 vlan01" '"message": "Successful deletetion"'
 run_test "dhcp delete dhcp01" '"message": "Successful deletetion"'
 run_test "switch create sw01 --model_type openvswitch --address tcp:10.30.83.20:6640 --mac 10:1F:74:32:F7:49" '"name": "sw01"'
 run_test "switch int_attach sw01 --inter 84:2b:2b:00:96:22 --int_name vif0.1 --ofport 44" '"id": "84:2b:2b:00:96:22"'
 run_test "switch int_attach sw01 --inter 84:2b:2b:00:96:21 --int_name vif1.1 --ofport 55" '"error": "EntityNotFound"' 1
 run_test "ip delete 192.168.0.1" '"message": "Successful deletetion"'
+run_test "interface vlan_detach 84:2b:2b:00:96:20 --vlan vlan03" '"message": "Successful deletetion"'
 run_test "interface ip_detach 84:2b:2b:00:96:22 192.168.0.2" '"message": "Successful deletetion"'
 run_test "interface ip_detach 84:2b:2b:00:96:22 192.168.0.1" '"error": "EntityNotFound"' 1
 run_test "ip delete 192.168.0.2" '"message": "Successful deletetion"'
 run_test "interface delete 84:2b:2b:00:96:22" '"message": "Successful deletetion"'
+run_test "interface delete 84:2b:2b:00:96:20" '"message": "Successful deletetion"'
 run_test "switch delete sw01" '"message": "Successful deletetion"'
 run_test "subnet delete 192.168.0.0/24" '"message": "Successful deletetion"'
 run_test "subnet delete 192.168.0.1/24" '"message": "Successful deletetion"'
 run_test "vlan delete vlan01" '"message": "Successful deletetion"'
 run_test "vlan delete vlan02" '"message": "Successful deletetion"'
+run_test "vlan delete vlan03" '"message": "Successful deletetion"'
 run_test "pod delete pod01" '"message": "Successful deletetion"'
 run_test "pod delete pod02" '"message": "Successful deletetion"'
 run_test "datacenter delete datacenter01" '"message": "Successful deletetion"'

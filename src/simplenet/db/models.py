@@ -220,9 +220,11 @@ class Interface(Base):
 
     id = Column(String(36), primary_key=True, unique=True)
     switch_id = Column(String(36), ForeignKey('switches.id'))
+    vlan_id = Column(String(36), ForeignKey('vlans.id'))
     status = Column(String(100))
     name = Column(String(255))
     hostname = Column(String(255))
+    vlan = relationship('Vlan', backref='interface')
     switch = relationship('Switch')
 
     def __init__(self, id, hostname):
@@ -234,6 +236,7 @@ class Interface(Base):
             'id': self.id,
             'name': self.name,
             'hostname': self.hostname,
+            'vlan_id': self.vlan.id if self.vlan else None,
             'switch_id': self.switch.id if self.switch else None,
             'ips': [x.to_dict()['ip'] for x in self.ips],
         }
@@ -244,7 +247,8 @@ class Interface(Base):
             'name': self.name,
             'hostname': self.hostname,
             'status': self.status,
-            'switch_id': self.switch.tree_dict(),
+            'vlan_id': self.vlan.tree_dict() if self.vlan else None,
+            'switch_id': self.switch.tree_dict() if self.switch else None,
             'ips': [x.tree_dict() for x in self.ips],
         }
 

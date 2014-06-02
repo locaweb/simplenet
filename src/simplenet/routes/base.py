@@ -781,3 +781,40 @@ def interface_remove_ip(interface_id, ip_id):
     interface = manager.interface_remove_ip(interface_id, ip_id)
     clear_cache()
     return interface
+
+@post('/v1/interfaces/<interface_id>/vlans')
+@handle_auth
+@reply_json
+def interface_add_ip(interface_id):
+    """
+    ::
+
+      POST /v1/interfaces/<interface_id>/vlans
+
+    Attach VLAN to interface
+    """
+    manager = create_manager('base')
+    data = request.body.readline()
+    if not data:
+        abort(400, 'No data received')
+    data = json.loads(data)
+    interface = manager.interface_add_vlan(interface_id, data)
+    clear_cache()
+    return interface
+
+
+@delete('/v1/interfaces/<interface_id>/vlans/<vlan_id>')
+@handle_auth
+@reply_json
+def interface_remove_ip(interface_id, vlan_id):
+    """
+    ::
+
+      DELETE /v1/interfaces/<interface_id>/vlans/<vlan_id>
+
+    Detach VLAN from interface
+    """
+    manager = create_manager('base')
+    interface = manager.interface_remove_vlan(interface_id, vlan_id)
+    clear_cache()
+    return interface

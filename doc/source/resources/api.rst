@@ -588,6 +588,62 @@ Example::
     }
 
 
+/v1/interfaces/<interface_id>/vlans
+=================================
+
+Method POST
+-----------
+
+:status: * 200 Ok
+         * xxx Error
+
+Attach VLAN to interface
+VLAN needs to be type dedicated_vlan
+
+Example::
+
+    Invalid VLAN type:
+    $ curl http://localhost:8081/v1/interfaces/55:55:55:55:55:55/vlans -d '{"name": "vlan01"}' -X POST | python -m json.tool
+    {
+        "message": {
+            "error": "OperationNotPermited",
+            "message": "Vlan:Cannot attach to interface a vlan with type private_vlan Forbidden"
+        },
+        "status": 403
+    }
+
+    $ curl http://localhost:8081/v1/interfaces/55:55:55:55:55:55/vlans -d '{"name": "vlan03"}' -X POST | python -m json.tool
+    {
+        "hostname": null,
+        "id": "55:55:55:55:55:55",
+        "ips": [],
+        "name": null,
+        "switch_id": null,
+        "vlan_id": "085aa702-1752-409b-9440-6a9f59750865"
+    }
+
+/v1/interfaces/<interface_id>/vlans/<vlan_id|vlan>
+=========================================
+
+Method DELETE
+-------------
+
+:status: * 200 Ok
+         * xxx Error
+
+Detach VLAN from interface
+
+Example::
+
+    $ curl http://localhost:8081/v1/interfaces/55:55:55:55:55:55/vlans/vlan03 -X DELETE
+    {
+        "message": {
+            "message": "Successful deletetion"
+        },
+        "status": 200
+    }
+
+
 ==========
 Policy API
 ==========
