@@ -602,10 +602,10 @@ class SimpleNet(object):
         except IntegrityError, e:
             session.rollback()
             msg = e.message
-            if msg.find("is not unique") != -1:
+            if msg.find("is not unique") != -1 or msg.find("Duplicate entry") != -1:
                 forbidden_msg = "%s already exists" % data['mac']
             else:
-                forbidden_msg = "Unknown error"
+                forbidden_msg = "Unknown error -- %s" % msg
             raise OperationNotPermited('Interface', forbidden_msg)
         except Exception, e:
             session.rollback()
@@ -621,6 +621,60 @@ class SimpleNet(object):
 
     def interface_info_by_mac(self, mac):
         return self._generic_info_("interface", models.Interface, {'id': mac})
+
+    def interface_add_vlan(self, interface_id, data):
+        logger.debug("Adding VLAN to interface using data: %s" % data)
+
+        interface = session.query(models.Interface).get(interface_id)
+        if not interface:
+            raise EntityNotFound('Interface', interface_id)
+
+        if data == {} or type(data) != dict or (not data.get("id") and not data.get("name")):
+            raise OperationNotPermited('Interface', "%s is not a valid input" % data)
+
+        vlan = session.query(models.Vlan).filter_by(**data).first()
+        if not vlan:
+            raise EntityNotFound('Vlan', data)
+
+        if vlan.type != "dedicated_vlan":
+            raise OperationNotPermited('Vlan', "Cannot attach to interface a vlan with type %s" % vlan.type)
+
+        session.begin(subtransactions=True)
+        try:
+            interface.vlan_id = vlan.id
+            session.commit()
+        except Exception, e:
+            session.rollback()
+            raise Exception(e)
+        _data = interface.to_dict()
+        logger.debug("Successful adding IP to interface status: %s" % _data)
+
+        return _data
+
+    def interface_remove_vlan(self, interface_id, vlan_id):
+        interface = session.query(models.Interface).get(interface_id)
+        vlan_id = self.retrieve_valid_uuid(vlan_id, self.vlan_info_by_name, "id")
+
+        if not vlan_id:
+            raise EntityNotFound('Vlan', vlan_id)
+        elif not interface:
+            raise EntityNotFound('Interface', interface_id)
+
+        if interface.vlan_id == vlan_id:
+            session.begin(subtransactions=True)
+            try:
+                interface.vlan_id = None
+                session.commit()
+            except Exception, e:
+                session.rollback()
+                raise Exception(e)
+            _data = interface.to_dict()
+            logger.debug("Successful removing IP to interface status: %s" % _data)
+            return _data
+        else:
+            msg = "Vlan id doesnt match -- iface vlan (%s) received (%s)" % (interface.vlan_id, vlan_id)
+            raise OperationNotPermited('Interface', msg)
+            logger.error(msg)
 
     @post_run
     def interface_add_ip(self, interface_id, data):
