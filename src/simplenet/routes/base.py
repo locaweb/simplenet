@@ -309,7 +309,10 @@ def generic_resource_info_by_field(resource, resource_type, resource_value):
     manager = create_manager(generic_router(resource))
     try:
         _info = getattr(manager, '%s_info_by_%s' % (resource_map.get(resource), resource_type))
-        return _info(resource_value)
+        if type(_info(resource_value)) != list:
+            return [_info(resource_value)]
+        else:
+            return _info(resource_value)
     except AttributeError:
         raise FeatureNotAvailable()
 

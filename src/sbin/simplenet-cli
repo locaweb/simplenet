@@ -71,7 +71,7 @@ def fetch_id(_type, _data):
         data = call('get', '%s/%s/by-name/%s' % (server, _type, _data))
 
     try:
-        return json.loads(data.text)['id']
+        return json.loads(data.text)[0]['id']
     except:
         pretty_output(data)
         sys.exit(1)
