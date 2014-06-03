@@ -298,6 +298,7 @@ class Net(SimpleNet):
         ss = session.query(_model).get(id)
         if not ss:
             return True
+        modified = ss.to_dict()
         owner_id = ss.owner_id
         session.begin(subtransactions=True)
         try:
@@ -308,7 +309,7 @@ class Net(SimpleNet):
             raise Exception(e)
 
         logger.debug("Successful deletion of policy %s" % id)
-        self._enqueue_rules_(owner_type, owner_id, ss.to_dict())
+        self._enqueue_rules_(owner_type, owner_id, modified)
         return True
 
     def policy_list_by_owner(self, owner_type, id):
