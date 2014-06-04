@@ -21,7 +21,7 @@ from simplenet.common.config import get_logger
 from simplenet.db import models, db_utils
 from simplenet.exceptions import (
     FeatureNotAvailable, EntityNotFound,
-    OperationNotPermited
+    OperationNotPermited, DuplicatedEntryError
 )
 from simplenet.network_appliances.base import SimpleNet
 
@@ -45,8 +45,7 @@ class Net(SimpleNet):
             session.commit()
         except IntegrityError:
             session.rollback()
-            forbidden_msg = "%s already exists" % data['name']
-            raise OperationNotPermited('Switch', forbidden_msg)
+            raise DuplicatedEntryError('Switch', "%s already exists" % data['name'])
         except Exception, e:
             session.rollback()
             raise Exception(e)
@@ -100,7 +99,7 @@ class Net(SimpleNet):
         _data['firewalls'] = []
         for zone in zones:
             for fw in self.firewall_list_by_zone(zone):
-                _data['firewalls'].append(fw)
+                _data['firewalls'].append(fw) if firewall.mac is not None else None
 
         event.EventManager().raise_event(_data['switch_id']['name'].split(":")[0], _data)
 
@@ -111,11 +110,7 @@ class Net(SimpleNet):
         if not interface:
             raise EntityNotFound('Interface', int_id)
 
-        if not self.valid_uuid(switch_id):
-            new_switch_id = self.switch_info_by_name(switch_id)
-            if not self.valid_uuid(new_switch_id.get("id")):
-                raise EntityNotFound('Switch', switch_id)
-            switch_id = new_switch_id.get("id")
+        switch_id = self.retrieve_valid_uuid(switch_id, self.switch_info_by_name, "id")
 
         if not interface.switch_id:
             return

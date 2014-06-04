@@ -22,7 +22,7 @@ from simplenet.common.hooks import post_run
 from simplenet.db import models, db_utils
 from simplenet.exceptions import (
     FeatureNotAvailable, EntityNotFound,
-    OperationNotPermited
+    OperationNotPermited, DuplicatedEntryError
 )
 from sqlalchemy.exc import IntegrityError
 
@@ -228,10 +228,9 @@ class SimpleNet(object):
             session.rollback()
             msg = e.message
             if msg.find("is not unique") != -1:
-                forbidden_msg = "%s already exists" % data['name']
+                raise DuplicatedEntryError('Datacenter', "%s already exists" % data['name'])
             else:
-                forbidden_msg = "Unknown error"
-            raise OperationNotPermited('Datacenter', forbidden_msg)
+                raise OperationNotPermited('Datacenter', "Unknown error")
         except Exception, e:
             session.rollback()
             raise Exception(e)
@@ -277,7 +276,7 @@ class SimpleNet(object):
             if msg.find("foreign key constraint failed") != -1:
                 forbidden_msg = "datacenter_id %s doesnt exist" % datacenter_id
             elif msg.find("is not unique") != -1:
-                forbidden_msg = "%s already exists" % data['name']
+                raise DuplicatedEntryError('Zone', "%s already exists" % data['name'])
             else:
                 forbidden_msg = "Unknown error"
             raise OperationNotPermited('Zone', forbidden_msg)
@@ -338,7 +337,7 @@ class SimpleNet(object):
             if msg.find("foreign key constraint failed") != -1:
                 forbidden_msg = "zone_id %s doesnt exist" % zone_id
             elif msg.find("is not unique") != -1:
-                forbidden_msg = "%s already exists" % data['name']
+                raise DuplicatedEntryError('Vlan', "%s already exists" % data['name'])
             else:
                 forbidden_msg = "Unknown error"
             raise OperationNotPermited('Vlan', forbidden_msg)
@@ -394,7 +393,7 @@ class SimpleNet(object):
             if msg.find("foreign key constraint failed") != -1:
                 forbidden_msg = "vlan_id %s doesnt exist" % vlan_id
             elif msg.find("is not unique") != -1:
-                forbidden_msg = "%s already exists" % data['cidr']
+                raise DuplicatedEntryError('Subnet', "%s already exists" % data['cidr'])
             else:
                 forbidden_msg = "Unknown error -- %s" % msg
             raise OperationNotPermited('Subnet', forbidden_msg)
@@ -415,7 +414,7 @@ class SimpleNet(object):
             session.rollback()
             msg = e.message
             if msg.find("is not unique") != -1:
-                forbidden_msg = "%s already exists" % data['cidr']
+                raise DuplicatedEntryError('Anycast', "%s already exists" % data['cidr'])
             else:
                 forbidden_msg = "Unknown error"
             raise OperationNotPermited('Anycast', forbidden_msg)
@@ -495,7 +494,7 @@ class SimpleNet(object):
             if msg.find("foreign key constraint failed") != -1:
                 forbidden_msg = "subnet_id %s doesnt exist" % subnet_id
             elif msg.find("is not unique") != -1:
-                forbidden_msg = "%s already exists" % data['ip']
+                raise DuplicatedEntryError('Ip', "%s already exists" % data['ip'])
             else:
                 forbidden_msg = "Unknown error"
             raise OperationNotPermited('Ip', forbidden_msg)
@@ -531,7 +530,7 @@ class SimpleNet(object):
             if msg.find("foreign key constraint failed") != -1:
                 forbidden_msg = "anycast_id %s doesnt exist" % anycast_id
             elif msg.find("is not unique") != -1:
-                forbidden_msg = "%s already exists" % data['ip']
+                raise DuplicatedEntryError('Anycastip', "%s already exists" % data['ip'])
             else:
                 forbidden_msg = "Unknown error"
             raise OperationNotPermited('Anycastip', forbidden_msg)
@@ -603,7 +602,7 @@ class SimpleNet(object):
             session.rollback()
             msg = e.message
             if msg.find("is not unique") != -1 or msg.find("Duplicate entry") != -1:
-                forbidden_msg = "%s already exists" % data['mac']
+                raise DuplicatedEntryError('Interface', "%s already exists" % data['mac'])
             else:
                 forbidden_msg = "Unknown error -- %s" % msg
             raise OperationNotPermited('Interface', forbidden_msg)

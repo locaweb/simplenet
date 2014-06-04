@@ -22,7 +22,7 @@ from simplenet.common.config import get_logger
 from simplenet.db import models, db_utils
 from simplenet.exceptions import (
     FeatureNotAvailable, EntityNotFound,
-    OperationNotPermited
+    OperationNotPermited, DuplicatedEntryError
 )
 from simplenet.network_appliances.base import SimpleNet
 
@@ -87,7 +87,7 @@ class Net(SimpleNet):
             if msg.find("foreign key constraint failed") != -1:
                 forbidden_msg = "zone_id %s doesnt exist" % zone_id
             elif msg.find("is not unique") != -1:
-                forbidden_msg = "%s already exists" % data['name']
+                raise DuplicatedEntryError('Firewall', "%s already exists" % data['name'])
             else:
                 forbidden_msg = "Unknown error"
             raise OperationNotPermited('Firewall', forbidden_msg)
@@ -267,8 +267,7 @@ class Net(SimpleNet):
             session.commit()
         except IntegrityError:
             session.rollback()
-            forbidden_msg = "%s already exists" % data
-            raise OperationNotPermited('Firewall', forbidden_msg)
+            raise DuplicatedEntryError('Firewall', "%s already exists" % data)
         except Exception, e:
             session.rollback()
             raise Exception(e)

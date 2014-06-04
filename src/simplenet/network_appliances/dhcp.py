@@ -20,7 +20,7 @@ from simplenet.common import event
 from simplenet.common.config import get_logger
 from simplenet.db import models, db_utils
 from simplenet.exceptions import (
-    FeatureNotAvailable, OperationNotPermited
+    FeatureNotAvailable, OperationNotPermited, DuplicatedEntryError
 )
 from simplenet.network_appliances.base import SimpleNet
 
@@ -42,7 +42,7 @@ class Net(SimpleNet):
             session.rollback()
             msg = e.message
             if msg.find("is not unique") != -1:
-                forbidden_msg = "%s already exists" % data['name']
+                raise DuplicatedEntryError('Dhcp', "%s already exists" % data['name'])
             else:
                 forbidden_msg = "Unknown error"
             raise OperationNotPermited('Dhcp', forbidden_msg)
@@ -81,7 +81,7 @@ class Net(SimpleNet):
             session.flush()
         except FlushError:
             session.rollback()
-            raise OperationNotPermited('dhcp_add_vlan', 'Entry already exist')
+            raise DuplicatedEntryError('Dhcp', 'Entry already exist')
         self._enqueue_dhcp_(vlan, dhcp, 'new')
         _data = dhcp.to_dict()
         logger.debug("Successful adding vlan to device:"

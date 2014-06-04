@@ -53,3 +53,9 @@ class OperationNotPermited(SimpleNetError):
             403, "%s:%s Forbidden" % (forbidden_type, forbidden_id)
         )
 
+class DuplicatedEntryError(SimpleNetError):
+    def __init__(self, forbidden_type, forbidden_id):
+        simplenet_error = super(DuplicatedEntryError, self)
+        simplenet_error.__init__(
+            403, "%s:%s Duplicated" % (forbidden_type, forbidden_id)
+        )
