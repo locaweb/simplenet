@@ -86,7 +86,7 @@ class Net(SimpleNet):
             msg = e.message
             if msg.find("foreign key constraint failed") != -1:
                 forbidden_msg = "zone_id %s doesnt exist" % zone_id
-            elif msg.find("is not unique") != -1:
+            elif msg.find("is not unique") != -1 or msg.find("Duplicate entry") != -1:
                 raise DuplicatedEntryError('Firewall', "%s already exists" % data['name'])
             else:
                 forbidden_msg = "Unknown error"

@@ -41,7 +41,7 @@ class Net(SimpleNet):
         except IntegrityError, e:
             session.rollback()
             msg = e.message
-            if msg.find("is not unique") != -1:
+            if msg.find("is not unique") != -1 or msg.find("Duplicate entry") != -1:
                 raise DuplicatedEntryError('Dhcp', "%s already exists" % data['name'])
             else:
                 forbidden_msg = "Unknown error"
