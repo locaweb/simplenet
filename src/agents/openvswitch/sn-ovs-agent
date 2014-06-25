@@ -139,22 +139,27 @@ class NetworkWorker(object):
 #                switch.remove_flow("dl_src=%s" % (gateway.mac), strict=False)
 
     def add(self, data):
-        for ip in data['ips']:
-            if ip['subnet']['vlan']['type'] == "private_vlan":
-                self.add_to_private_vlan(ip, data)
-            elif ip['subnet']['vlan']['type'] == "dedicated":
-                self.add_to_vlan(ip, data)
-            else:
-                logging.info("Unknown type. Ignoring...")
+        if data.get("vlan_id", {}).get("type", {}) == "dedicated_vlan":
+            switch = data['switch_id']['name']
+            vif = data['name']
+            vlan_num = data.get("vlan_id", {}).get("vlan_num", {})
+            self.add_vlan(switch, vif, vlan_num)
+        else:
+            for ip in data['ips']:
+                if ip['subnet']['vlan']['type'] == "private_vlan":
+                    self.add_to_private_vlan(ip, data)
 
     def remove(self, data):
-        for ip in data['ips']:
-            if ip['subnet']['vlan']['type'] == "private_vlan":
-                self.remove_from_private_vlan(data)
-            elif ip['subnet']['vlan']['type'] == "dedicated":
-                self.remove_from_vlan(ip, data)
-            else:
-                logging.info("Unknown type. Ignoring...")
+        if data.get("vlan_id", {}).get("type", {}) == "dedicated_vlan":
+            switch = data['switch_id']['name']
+            vif = data['name']
+            self.remove_vlan(switch, vif)
+        else:
+            for ip in data['ips']:
+                if ip['subnet']['vlan']['type'] == "private_vlan":
+                    self.remove_from_private_vlan(data)
+                else:
+                    logging.info("Unknown type. Ignoring...")
 
 #    def flush(self, switch_id):
 #        switch = plugin_api.switch_get(switch_id)
@@ -213,13 +218,6 @@ class NetworkWorker(object):
                 "dl_src=%s" % data['id'])
         del_flow(data['switch_id']['name'],
                 "dl_dst=%s" % data['id'])
-
-    def add_to_vlan(self, ip, data):
-        vlan_id = re.search('vlan(\d+)', ip['subnet']['vlan']['name'], re.I).group(1)
-        add_vlan(data['switch_id']['name'], data['name'], vlan_id)
-
-    def remove_from_vlan(self, ip, data):
-        remove_vlan(data['switch_id']['name'], data['name'])
 
 class Worker(ConsumerMixin):
     def __init__(self, connection, lockfile, ovsdb):
