@@ -79,7 +79,6 @@ def add_flow(addr, flow):
     # run ovs-vsctl set-controller xapi<number> pssl:port
     addr = addr.split(":")[1]
     command = ["ovs-ofctl", "add-flow", addr, flow]
-    print command
     _run_cmd(command)
 
 def del_flow(addr, flow):
@@ -87,21 +86,18 @@ def del_flow(addr, flow):
     # run ovs-vsctl set-controller xapi<number> pssl:port
     addr = addr.split(":")[1]
     command = ["ovs-ofctl", "del-flows", addr, flow]
-    print command
     _run_cmd(command)
 
 def add_vlan(addr, port, tag):
     # TODO: configure ovsdb remote access using
     # ovsdb-server --remote=ptcp:port
     command = ["ovs-vsctl", "set", "port", port, "tag=%s" % tag]
-    print command
     _run_cmd(command)
 
 def remove_vlan(addr, port):
     # TODO: configure ovsdb remote access using
     # ovsdb-server --remote=ptcp:port
     command = ["ovs-vsctl", "clear", "port", port, "tag"]
-    print command
     _run_cmd(command)
 
 def _natural_sort_(l):
@@ -143,7 +139,7 @@ class NetworkWorker(object):
             switch = data['switch_id']['name']
             vif = data['name']
             vlan_num = data.get("vlan_id", {}).get("vlan_num", {})
-            self.add_vlan(switch, vif, vlan_num)
+            add_vlan(switch, vif, vlan_num)
         else:
             for ip in data['ips']:
                 if ip['subnet']['vlan']['type'] == "private_vlan":
@@ -153,7 +149,7 @@ class NetworkWorker(object):
         if data.get("vlan_id", {}).get("type", {}) == "dedicated_vlan":
             switch = data['switch_id']['name']
             vif = data['name']
-            self.remove_vlan(switch, vif)
+            remove_vlan(switch, vif)
         else:
             for ip in data['ips']:
                 if ip['subnet']['vlan']['type'] == "private_vlan":
