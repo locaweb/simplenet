@@ -135,7 +135,7 @@ class NetworkWorker(object):
 #                switch.remove_flow("dl_src=%s" % (gateway.mac), strict=False)
 
     def add(self, data):
-        if data.get("vlan_id", {}).get("type", {}) == "dedicated_vlan":
+        if data.get("vlan_id") is not None and data.get("vlan_id").get("type") == "dedicated_vlan":
             switch = data['switch_id']['name']
             vif = data['name']
             vlan_num = data.get("vlan_id", {}).get("vlan_num", {})
@@ -146,7 +146,7 @@ class NetworkWorker(object):
                     self.add_to_private_vlan(ip, data)
 
     def remove(self, data):
-        if data.get("vlan_id", {}).get("type", {}) == "dedicated_vlan":
+        if data.get("vlan_id") is not None and data.get("vlan_id").get("type") == "dedicated_vlan":
             switch = data['switch_id']['name']
             vif = data['name']
             remove_vlan(switch, vif)

@@ -99,7 +99,7 @@ class Net(SimpleNet):
         _data['firewalls'] = []
         for zone in zones:
             for fw in self.firewall_list_by_zone(zone):
-                _data['firewalls'].append(fw) if firewall.mac is not None else None
+                _data['firewalls'].append(fw) if fw.get("mac") is not None else None
 
         event.EventManager().raise_event(_data['switch_id']['name'].split(":")[0], _data)
 
