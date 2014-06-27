@@ -55,7 +55,6 @@ def call(method, url, data=None):
                 }
             )
             ret = _ret
-    print url, data
     return ret
 
 

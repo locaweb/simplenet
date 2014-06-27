@@ -17,8 +17,7 @@
 # @author: Luiz Ozaki, Locaweb.
 
 from simplenet.common import event
-from simplenet.common.config import get_logger
-from simplenet.db import models, db_utils
+from simplenet.db.models import Dhcp, Vlan, Vlans_to_Dhcp
 from simplenet.exceptions import (
     FeatureNotAvailable, OperationNotPermited, DuplicatedEntryError
 )
@@ -26,20 +25,17 @@ from simplenet.network_appliances.base import SimpleNet
 
 from sqlalchemy.exc import IntegrityError, FlushError
 
-logger = get_logger()
-session = db_utils.get_database_session()
-
 class Net(SimpleNet):
 
     def dhcp_create(self, data):
-        logger.debug("Creating device(DHCP) using data: %s" % data)
+        self.logger.debug("Creating device(DHCP) using data: %s" % data)
 
-        session.begin(subtransactions=True)
+        self.session.begin(subtransactions=True)
         try:
-            session.add(models.Dhcp(name=data['name']))
-            session.commit()
+            self.session.add(Dhcp(name=data['name']))
+            self.session.commit()
         except IntegrityError, e:
-            session.rollback()
+            self.session.rollback()
             msg = e.message
             if msg.find("is not unique") != -1 or msg.find("Duplicate entry") != -1:
                 raise DuplicatedEntryError('Dhcp', "%s already exists" % data['name'])
@@ -47,84 +43,84 @@ class Net(SimpleNet):
                 forbidden_msg = "Unknown error"
             raise OperationNotPermited('Dhcp', forbidden_msg)
         except Exception, e:
-            session.rollback()
+            self.session.rollback()
             raise Exception(e)
-        logger.debug("Created device(DHCP) using data: %s" % data)
+        self.logger.debug("Created device(DHCP) using data: %s" % data)
 
         return self.dhcp_info_by_name(data['name'])
 
     def dhcp_list(self):
-        return self._generic_list_("dhcps", models.Dhcp)
+        return self._generic_list_("Dhcp")
 
     def dhcp_rebuild_queues(self, vlan_id):
-        logger.debug("Rebuilding queue for %s" %
+        self.logger.debug("Rebuilding queue for %s" %
             (vlan_id)
         )
-        vlan = session.query(models.Vlan).get(vlan_id)
+        vlan = self.session.query(Vlan).get(vlan_id)
         self._enqueue_dhcp_(vlan, '', 'rebuild_queues')
 
     def dhcp_add_vlan(self, dhcp_id, vlan_id):
-        logger.debug("Adding vlan to device: %s using data: %s" %
+        self.logger.debug("Adding vlan to device: %s using data: %s" %
             (dhcp_id, vlan_id)
         )
         dhcp_id = self.retrieve_valid_uuid(dhcp_id, self.dhcp_info_by_name, "id")
-        dhcp = session.query(models.Dhcp).get(dhcp_id)
-        vlan = session.query(models.Vlan).get(vlan_id)
+        dhcp = self.session.query(Dhcp).get(dhcp_id)
+        vlan = self.session.query(Vlan).get(vlan_id)
 
-        session.expire_all()
-        session.begin(subtransactions=True)
+        self.session.expire_all()
+        self.session.begin(subtransactions=True)
         try:
-            relationship = models.Vlans_to_Dhcp()
+            relationship = Vlans_to_Dhcp()
             relationship.vlan = vlan
             dhcp.vlans_to_dhcps.append(relationship)
-            session.commit()
-            session.flush()
+            self.session.commit()
+            self.session.flush()
         except FlushError:
-            session.rollback()
+            self.session.rollback()
             raise DuplicatedEntryError('Dhcp', 'Entry already exist')
         self._enqueue_dhcp_(vlan, dhcp, 'new')
         _data = dhcp.to_dict()
-        logger.debug("Successful adding vlan to device:"
+        self.logger.debug("Successful adding vlan to device:"
             " %s device status: %s" % (dhcp_id, _data)
         )
         return _data
 
     def dhcp_list_by_vlan(self, vlan_id):
         return self._generic_list_by_something_(
-            "dhcps by vlan", models.Vlans_to_Dhcp, {'vlan_id': vlan_id}
+            "Vlans_to_Dhcp", {'vlan_id': vlan_id}
         )
 
     def dhcp_remove_vlan(self, dhcp_id, vlan_id):
         dhcp_id = self.retrieve_valid_uuid(dhcp_id, self.dhcp_info_by_name, "id")
         vlan_id = self.retrieve_valid_uuid(vlan_id, self.vlan_info_by_name, "id")
-        dhcp = session.query(models.Dhcp).get(dhcp_id)
-        vlan = session.query(models.Vlan).get(vlan_id)
+        dhcp = self.session.query(Dhcp).get(dhcp_id)
+        vlan = self.session.query(Vlan).get(vlan_id)
         ret = self._generic_delete_(
-            "vlan from dhcps", models.Vlans_to_Dhcp,
+            "Vlans_to_Dhcp",
             {'vlan_id': vlan_id, 'dhcp_id': dhcp_id}
         )
         self._enqueue_dhcp_(vlan, dhcp, 'remove')
         return ret
 
     def dhcp_info(self, id):
-        return self._generic_info_("dhcp", models.Dhcp, {'id': id})
+        return self._generic_info_("Dhcp", {'id': id})
 
     def dhcp_info_by_name(self, name):
         return self._generic_info_(
-            "dhcp", models.Dhcp, {'name': name}
+            "Dhcp", {'name': name}
         )
 
     def dhcp_update(self, *args, **kawrgs):
         raise FeatureNotAvailable()
 
     def dhcp_delete(self, id):
-        return self._generic_delete_("dhcp", models.Dhcp, {'id': id})
+        return self._generic_delete_("Dhcp", {'id': id})
 
     def _enqueue_dhcp_(self, vlan, dhcp, action):
         _data = {}
         entries = {}
         _data['action'] = action
-        ss = [x.vlan.subnet for x in session.query(models.Vlans_to_Dhcp).filter_by(**{'dhcp_id': dhcp.id}).all()]
+        ss = [x.vlan.subnet for x in self.session.query(Vlans_to_Dhcp).filter_by(**{'dhcp_id': dhcp.id}).all()]
         subnets = []
         if ss:
             [subnets.extend(x) for x in ss]

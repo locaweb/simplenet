@@ -29,6 +29,9 @@ from simplenet.common.config import config
 
 Base = declarative_base()
 
+def new_model(model_name):
+    model = globals()[model_name]
+    return model, model.__tablename__
 
 class Prober(Base):
 

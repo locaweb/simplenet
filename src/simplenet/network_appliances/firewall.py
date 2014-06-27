@@ -19,7 +19,8 @@
 import json
 from simplenet.common import event
 from simplenet.common.config import get_logger
-from simplenet.db import models, db_utils
+from simplenet.db.models import new_model, Firewall, Anycast, Anycasts_to_Firewall
+from simplenet.db import db_utils
 from simplenet.exceptions import (
     FeatureNotAvailable, EntityNotFound,
     OperationNotPermited, DuplicatedEntryError
@@ -52,7 +53,7 @@ class Net(SimpleNet):
     def firewall_enable(self, data):
         session.begin()
         try:
-            firewall = session.query(models.Firewall).filter_by(**data).first()
+            firewall = session.query(Firewall).filter_by(**data).first()
             firewall.enable()
             session.commit()
         except Exception, e:
@@ -64,7 +65,7 @@ class Net(SimpleNet):
     def firewall_disable(self, data):
         session.begin()
         try:
-            firewall = session.query(models.Firewall).filter_by(**data).first()
+            firewall = session.query(Firewall).filter_by(**data).first()
             firewall.disable()
             session.commit()
         except Exception, e:
@@ -78,7 +79,7 @@ class Net(SimpleNet):
 
         session.begin(subtransactions=True)
         try:
-            session.add(models.Firewall(name=data['name'], zone_id=data['zone_id'],
+            session.add(Firewall(name=data['name'], zone_id=data['zone_id'],
                                         mac=data['mac'], status=True))
             session.commit()
         except IntegrityError, e:
@@ -99,7 +100,7 @@ class Net(SimpleNet):
         return self.firewall_info_by_name(data['name'])
 
     def firewall_list(self):
-        return self._generic_list_("firewalls", models.Firewall)
+        return self._generic_list_("Firewall")
 
     def firewall_add_anycast(self, firewall_id, data):
         logger.debug("Adding vlan to anycast: %s using data: %s" %
@@ -107,12 +108,12 @@ class Net(SimpleNet):
         )
         firewall_id = self.retrieve_valid_uuid(firewall_id, self.firewall_info_by_name, "id")
 
-        firewall = session.query(models.Firewall).get(firewall_id)
-        anycast = session.query(models.Anycast).get(data['anycast_id'])
+        firewall = session.query(Firewall).get(firewall_id)
+        anycast = session.query(Anycast).get(data['anycast_id'])
 
         session.begin(subtransactions=True)
         try:
-            relationship = models.Anycasts_to_Firewall()
+            relationship = Anycasts_to_Firewall()
             relationship.anycast = anycast
             firewall.anycasts_to_firewalls.append(relationship)
             session.commit()
@@ -127,12 +128,12 @@ class Net(SimpleNet):
 
     def firewall_list_by_vlan(self, vlan_id):
         return self._generic_list_by_something_(
-            "firewalls by vlan", models.Vlans_to_Firewall, {'vlan_id': vlan_id}
+            "Vlans_to_Firewall", {'vlan_id': vlan_id}
         )
 
     def firewall_list_by_anycast(self, anycast_id):
         return self._generic_list_by_something_(
-            "firewalls by anycast", models.Anycasts_to_Firewall,
+            "Anycasts_to_Firewall",
             {'anycast_id': anycast_id}
         )
 
@@ -140,23 +141,23 @@ class Net(SimpleNet):
         firewall_id = self.retrieve_valid_uuid(firewall_id, self.firewall_info_by_name, "id")
 
         return self._generic_delete_(
-            "anycast from firewall", models.Anycasts_to_Firewall,
+            "Anycasts_to_Firewall",
             {'anycast_id': anycast_id, 'firewall_id': firewall_id}
         )
 
     def firewall_info(self, id):
-        return self._generic_info_("firewall", models.Firewall, {'id': id})
+        return self._generic_info_("Firewall", {'id': id})
 
     def firewall_info_by_name(self, name):
         return self._generic_info_(
-            "firewall", models.Firewall, {'name': name}
+            "Firewall", {'name': name}
         )
 
     def firewall_update(self, *args, **kawrgs):
         raise FeatureNotAvailable()
 
     def firewall_delete(self, id):
-        return self._generic_delete_("firewall", models.Firewall, {'id': id})
+        return self._generic_delete_("Firewall", {'id': id})
 
     def firewall_sync(self, data):
         _data = {}
@@ -191,8 +192,9 @@ class Net(SimpleNet):
 
         self._enqueue_device_rules_(_data, devices, owner_type)
 
-    def _enqueue_device_rules_(self, _data, devices, owner_type):
+    def _enqueue_device_rules_(self, data, devices, owner_type):
         policy_list = []
+        cache = {}
         try:
             devices = devices.split()
         except AttributeError:
@@ -203,64 +205,58 @@ class Net(SimpleNet):
                 logger.info("Device %s ignored, status disabled" % device.get("name"))
                 continue
             logger.debug("Getting data from device: %s" % device['id'])
-            vlans = []
-            subnets = []
-            ips = []
-            anycasts = []
-            anycastips = []
+            owners_ids = []
             zone_id = device['zone_id']
-            _data.update(self._get_data_zone_(zone_id))
-            _data['anycasts'] = []
-            _data['anycastips'] = []
-            dev_id = device.get('device_id') or device.get('id')
 
-            logger.debug("Getting policy data from zone %s" % zone_id)
-            policy_list += self.policy_list_by_owner('zone', zone_id)
-            for vlan in self.vlan_list_by_zone(zone_id): # Cascade thru the vlans of the device
-                vlans.append(vlan['id'])
-                for subnet in self.subnet_list_by_vlan(vlan['id']): # Cascade thru the subnets of the vlan
-                    subnets.append(subnet['id'])
-                    for ip in self.ip_list_by_subnet(subnet['id']): # Cascade thru the IPs of the subnet
-                        ips.append(ip)
+            if cache.get(zone_id):
+                logger.info("Sending cached event to %s" % device['name'])
+                event.EventManager().raise_event(device['name'], cache.get(zone_id))
+            else:
+                _data = data
+                _data.update(self._get_data_zone_(zone_id))
+                _data['anycasts'] = []
+                _data['anycastips'] = []
+                dev_id = device.get('device_id') or device.get('id')
 
-            for anycast in self.anycast_list_by_firewall(dev_id): # Cascade thru the anycasts of the device
-                anycasts.append(anycast['anycast_id'])
-                _data['anycasts'].append(anycast)
-                for anycastip in self.anycastip_list_by_anycast(anycast['anycast_id']): # Cascade thru the IPs of the anycast subnet
-                    _data['anycastips'].append(anycastip)
-                    anycastips.append(anycastip['id'])
+                logger.debug("Getting policy data from zone %s" % zone_id)
+                policy_list += self.policy_list_by_owner('zone', zone_id)
+                for vlan in self.vlan_list_by_zone(zone_id): # Cascade thru the vlans of the device
+                    owners_ids.append(vlan['id'])
+                    for subnet in self.subnet_list_by_vlan(vlan['id']): # Cascade thru the subnets of the vlan
+                        owners_ids.append(subnet['id'])
+                        for ip in self.ip_list_by_subnet(subnet['id']): # Cascade thru the IPs of the subnet
+                            owners_ids.append(ip['id'])
 
-            logger.debug("Getting policy data from vlans: %s" % vlans)
-            policy_list += self.policy_list_by_owners('vlan', vlans)
-            logger.debug("Getting policy data from subnets: %s" % subnets)
-            policy_list += self.policy_list_by_owners('subnet', subnets)
-            logger.debug("Getting policy data from ips: %s" % [x['id'] for x in ips])
-            policy_list += self.policy_list_by_owners('ip', [x['id'] for x in ips])
+                for anycast in self.anycast_list_by_firewall(dev_id): # Cascade thru the anycasts of the device
+                    owners_ids.append(anycast['anycast_id'])
+                    _data['anycasts'].append(anycast)
+                    for anycastip in self.anycastip_list_by_anycast(anycast['anycast_id']): # Cascade thru the IPs of the anycast subnet
+                        _data['anycastips'].append(anycastip)
+                        owners_ids.append(anycastip['id'])
 
-            logger.debug("Getting policy data from anycasts %s" % anycasts)
-            policy_list = policy_list + self.policy_list_by_owners('anycast', anycasts)
-            logger.debug("Getting policy data from anycasips %s" % anycastips)
-            policy_list = policy_list + self.policy_list_by_owners('anycastip', anycastips)
+                logger.debug("Getting policy data")
+                policy_list += self.policy_list_by_owners(owners_ids)
 
-            _data.update({'policy': policy_list})
-            logger.debug("Received rules: %s from %s with id %s and device %s" % (
-                _data, owner_type, id, device['name'])
-            )
-            if policy_list:
-                logger.info("Sending event to %s" % device['name'])
-                event.EventManager().raise_event(device['name'], _data)
+                _data.update({'policy': policy_list})
+                logger.debug("Received rules: %s from %s with id %s and device %s" % (
+                    _data, owner_type, id, device['name'])
+                )
+                if policy_list:
+                    logger.info("Sending event to %s" % device['name'])
+                    cache[zone_id] = _data
+                    event.EventManager().raise_event(device['name'], _data)
 
     def policy_list(self, owner_type):
-        _model = getattr(models, "%sPolicy" % owner_type.capitalize())
-        return self._generic_list_("%sPolicy" % owner_type.capitalize(), _model)
+        return self._generic_list_("%sPolicy" % owner_type.capitalize())
 
     def policy_create(self, owner_type, owner_id, data):
         logger.debug("Creating rule on %s: %s using data: %s" %
             (owner_type, owner_id, data)
         )
         data.update({'owner_id': owner_id})
-        _model = getattr(models, "%sPolicy" % owner_type.capitalize())
+        _model, _ = new_model("%sPolicy" % owner_type.capitalize())
         policy = _model(**data)
+
         session.begin(subtransactions=True)
         try:
             session.add(policy)
@@ -280,20 +276,20 @@ class Net(SimpleNet):
         try:
             self._enqueue_rules_(owner_type, owner_id, pol)
         except Exception, e:
+            raise
             logger.error("Policy created but firewall event failed %s" % str(e))
 
         return pol
 
     def policy_info(self, owner_type, id):
-        _model = getattr(models, "%sPolicy" % owner_type.capitalize())
-        return self._generic_info_("%sPolicy" % owner_type.capitalize(), _model, {'id': id})
+        return self._generic_info_("%sPolicy" % owner_type.capitalize(), {'id': id})
 
     def policy_update(self, *args, **kwargs):
         raise FeatureNotAvailable()
 
     def policy_delete(self, owner_type, id):
         logger.debug("Deleting policy %s" % id)
-        _model = getattr(models, "%sPolicy" % owner_type.capitalize())
+        _model, _ = new_model("%sPolicy" % owner_type.capitalize())
         ss = session.query(_model).get(id)
         if not ss:
             return True
@@ -311,23 +307,34 @@ class Net(SimpleNet):
         self._enqueue_rules_(owner_type, owner_id, modified)
         return True
 
+    def policy_delete_by_owner(self, owner_type, id):
+        _model, _ = new_model("%sPolicy" % owner_type.capitalize())
+        ss = session.query(_model).filter_by(**{'owner_id': id}).all()
+        if ss:
+            try:
+                for s in ss:
+                    session.delete(s)
+                session.commit()
+            except Exception, e:
+                session.rollback()
+                raise Exception(e)
+            self._enqueue_rules_(owner_type, id, {})
+
     def policy_list_by_owner(self, owner_type, id):
-        _model = getattr(models, "%sPolicy" % owner_type.capitalize())
         return self._generic_list_by_something_(
-            "%sPolicy" % owner_type.capitalize(), _model, {'owner_id': id}
+            "%sPolicy" % owner_type.capitalize(), {'owner_id': id}
         )
 
-    def policy_list_by_owners(self, owner_type, ids):
+    def policy_list_by_owners(self, ids):
         if ids == []:
             return []
-        _type = "%sPolicy" % owner_type.capitalize()
-        model = getattr(models, _type)
-        logger.debug("Getting %s by %s" % (_type, ids))
+        model, _ = new_model("Policy")
+        logger.debug("Getting policies by ids %s" % (ids))
         ss = session.query(model).filter(model.owner_id.in_(ids)).all()
         _values = []
         for _value in ss:
             _values.append(
                 _value.to_dict()
             )
-        logger.debug("Received %s: %s from [%s]" % (_type, _values, ids))
+        logger.debug("Received: %s from [%s]" % (_values, ids))
         return _values

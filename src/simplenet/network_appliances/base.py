@@ -19,18 +19,24 @@
 from uuid import UUID
 from simplenet.common.config import get_logger
 from simplenet.common.hooks import post_run
-from simplenet.db import models, db_utils
+from simplenet.db.models import (
+        new_model, Prober, Datacenter, Zone, Interface,
+        Vlan, Subnet, Anycast, Ip, Anycastip
+)
+from simplenet.db import db_utils
 from simplenet.exceptions import (
     FeatureNotAvailable, EntityNotFound,
     OperationNotPermited, DuplicatedEntryError
 )
 from sqlalchemy.exc import IntegrityError
 
-logger = get_logger()
-session = db_utils.get_database_session()
-
 
 class SimpleNet(object):
+
+    def __init__(self):
+        self.logger = get_logger()
+        self.session = db_utils.get_database_session()
+
     @staticmethod
     def retrieve_valid_uuid(data, _func, field):
         try:
@@ -44,60 +50,64 @@ class SimpleNet(object):
 
         return data
 
-    def _generic_list_(self, name, model):
-        logger.debug("Listing %s" % name)
-        ss = session.query(model).all()
+    def _generic_list_(self, model_name):
+        model, name = new_model(model_name)
+        self.logger.debug("Listing %s" % name)
+        ss = self.session.query(model).all()
         _values = []
         for _value in ss:
             _values.append(
                 _value.to_dict(),
             )
-        logger.debug("Received %s: %s" % (name, _values))
+        self.logger.debug("Received %s: %s" % (name, _values))
         return _values
 
-    def _generic_delete_(self, name, model, value):
-        logger.debug("Deleting %s from %s" % (value, name))
-        ss = session.query(model).filter_by(**value).first()
+    def _generic_delete_(self, model_name, value):
+        model, name = new_model(model_name)
+        self.logger.debug("Deleting %s from %s" % (value, name))
+        ss = self.session.query(model).filter_by(**value).first()
         if ss is None:
             return
-        session.begin(subtransactions=True)
+        self.session.begin(subtransactions=True)
         try:
-            session.delete(ss)
-            session.commit()
+            self.session.delete(ss)
+            self.session.commit()
         except Exception, e:
-            session.rollback()
+            self.session.rollback()
             raise Exception(e)
-        logger.debug("Successful deletion of %s from %s" % (value, name))
+        self.logger.debug("Successful deletion of %s from %s" % (value, name))
         return True
 
-    def _generic_info_(self, name, model, value):
-        logger.debug("Getting %s info by %s" % (name, value))
-        ss = session.query(model).filter_by(**value).first()
+    def _generic_info_(self, model_name, value):
+        model, name = new_model(model_name)
+        self.logger.debug("Getting %s info by %s" % (name, value))
+        ss = self.session.query(model).filter_by(**value).first()
         if not ss:
-            raise EntityNotFound(name.capitalize(), value)
+            raise EntityNotFound(name, value)
         data = ss.to_dict()
-        logger.debug("Received %s from [%s]" % (data, value))
+        self.logger.debug("Received %s from [%s]" % (data, value))
         return data
 
-    def _generic_list_by_something_(self, name, model, value):
-        logger.debug("Getting %s by %s" % (name, value))
-        ss = session.query(model).filter_by(**value).all()
+    def _generic_list_by_something_(self, model_name, value):
+        model, name = new_model(model_name)
+        self.logger.debug("Getting %s by %s" % (name, value))
+        ss = self.session.query(model).filter_by(**value).all()
         _values = []
         for _value in ss:
             _values.append(
                 _value.to_dict()
             )
-        logger.debug("Received %s: %s from [%s]" % (name, _values, value))
+        self.logger.debug("Received %s: %s from [%s]" % (name, _values, value))
         return _values
 
     def _get_data_ip_(self, id):
-        logger.debug("Getting ip data %s" % id)
+        self.logger.debug("Getting ip data %s" % id)
         ip = self.ip_info(id)
         subnet = self.subnet_info(ip['subnet_id'])
         vlan = self.vlan_info(subnet['vlan_id'])
         zone = self.zone_info(vlan['zone_id'])
         datacenter = self.datacenter_info(zone['datacenter_id'])
-        logger.debug("Received ip: %s vlan: %s zone: %s "
+        self.logger.debug("Received ip: %s vlan: %s zone: %s "
             "datacenter: %s from [%s]" %
             (ip, vlan, zone, datacenter, id)
         )
@@ -114,10 +124,10 @@ class SimpleNet(object):
         }
 
     def _get_data_anycastip_(self, id):
-        logger.debug("Getting ip anycast data %s" % id)
+        self.logger.debug("Getting ip anycast data %s" % id)
         ip = self.anycastip_info(id)
         anycast = self.anycast_info(ip['anycast_id'])
-        logger.debug("Received anycast: %s from [%s]" %
+        self.logger.debug("Received anycast: %s from [%s]" %
             (anycast, id)
         )
         return {
@@ -127,12 +137,12 @@ class SimpleNet(object):
         }
 
     def _get_data_subnet_(self, id):
-        logger.debug("Getting subnet data %s" % id)
+        self.logger.debug("Getting subnet data %s" % id)
         subnet = self.subnet_info(id)
         vlan = self.vlan_info(subnet['vlan_id'])
         zone = self.zone_info(vlan['zone_id'])
         datacenter = self.datacenter_info(zone['datacenter_id'])
-        logger.debug("Received subnet: %s vlan: %s "
+        self.logger.debug("Received subnet: %s vlan: %s "
             "zone: %s datacenter: %s from [%s]" %
             (subnet, vlan, zone, datacenter, id)
         )
@@ -148,9 +158,9 @@ class SimpleNet(object):
         }
 
     def _get_data_anycast_(self, id):
-        logger.debug("Getting anycast data %s" % id)
+        self.logger.debug("Getting anycast data %s" % id)
         anycast = self.anycast_info(id)
-        logger.debug("Received anycast: %s from [%s]" %
+        self.logger.debug("Received anycast: %s from [%s]" %
             (anycast, id)
         )
         return {
@@ -160,11 +170,11 @@ class SimpleNet(object):
         }
 
     def _get_data_vlan_(self, id):
-        logger.debug("Getting vlan data %s" % id)
+        self.logger.debug("Getting vlan data %s" % id)
         vlan = self.vlan_info(id)
         zone = self.zone_info(vlan['zone_id'])
         datacenter = self.datacenter_info(zone['datacenter_id'])
-        logger.debug("Received vlan: %s zone: %s "
+        self.logger.debug("Received vlan: %s zone: %s "
             "datacenter: %s from [%s]" % (vlan, zone, datacenter, id)
         )
         return {
@@ -178,10 +188,10 @@ class SimpleNet(object):
         }
 
     def _get_data_zone_(self, id):
-        logger.debug("Getting zone data %s" % id)
+        self.logger.debug("Getting zone data %s" % id)
         zone = self.zone_info(id)
         datacenter = self.datacenter_info(zone['datacenter_id'])
-        logger.debug("Received zone: %s datacenter: %s from [%s]" %
+        self.logger.debug("Received zone: %s datacenter: %s from [%s]" %
             (zone, datacenter, id)
         )
         return {
@@ -194,9 +204,9 @@ class SimpleNet(object):
         }
 
     def _get_data_datacenter_(self, id):
-        logger.debug("Getting datacenter data %s" % id)
+        self.logger.debug("Getting datacenter data %s" % id)
         datacenter = self.datacenter_info(id)
-        logger.debug("Received datacenter: %s from [%s]" %
+        self.logger.debug("Received datacenter: %s from [%s]" %
             (datacenter, id)
         )
         return {
@@ -205,73 +215,73 @@ class SimpleNet(object):
         }
 
     def prober(self):
-        logger.debug("Getting prober data")
-        ss = session.query(models.Prober).all()
-        logger.debug("Received prober: %s" % ss)
+        self.logger.debug("Getting prober data")
+        ss = self.session.query(Prober).all()
+        self.logger.debug("Received prober: %s" % ss)
         return ss
 
     def firewall_list_by_zone(self, zone_id):
         return self._generic_list_by_something_(
-            "firewalls by zone", models.Firewall, {'zone_id': zone_id}
+            "Firewall", {'zone_id': zone_id}
         )
 
     def datacenter_list(self):
-        return self._generic_list_("datacenters", models.Datacenter)
+        return self._generic_list_("Datacenter")
 
     def datacenter_create(self, data):
-        logger.debug("Creating datacenter using data: %s" % data)
-        session.begin(subtransactions=True)
+        self.logger.debug("Creating datacenter using data: %s" % data)
+        self.session.begin(subtransactions=True)
         try:
-            session.add(models.Datacenter(name=data['name']))
-            session.commit()
+            self.session.add(Datacenter(name=data['name']))
+            self.session.commit()
         except IntegrityError, e:
-            session.rollback()
+            self.session.rollback()
             msg = e.message
             if msg.find("is not unique") != -1  or msg.find("Duplicate entry") != -1:
                 raise DuplicatedEntryError('Datacenter', "%s already exists" % data['name'])
             else:
                 raise OperationNotPermited('Datacenter', "Unknown error")
         except Exception, e:
-            session.rollback()
+            self.session.rollback()
             raise Exception(e)
-        logger.debug("Created datacenter using data: %s" % data)
+        self.logger.debug("Created datacenter using data: %s" % data)
         return self.datacenter_info_by_name(data['name'])
 
     def datacenter_update(self, *args, **kawrgs):
         raise FeatureNotAvailable()
 
     def datacenter_info(self, id):
-        return self._generic_info_("datacenter", models.Datacenter, {'id': id})
+        return self._generic_info_("Datacenter", {'id': id})
 
     def datacenter_info_by_name(self, name):
         return self._generic_info_(
-            "datacenter", models.Datacenter, {'name': name}
+            "Datacenter", {'name': name}
         )
 
     def datacenter_delete(self, id):
-        return self._generic_delete_("datacenter", models.Datacenter, {'id': id})
+        return self._generic_delete_("Datacenter", {'id': id})
 
     def zone_list(self):
-        return self._generic_list_("zones", models.Zone)
+        return self._generic_list_("Zone")
 
     def zone_list_by_datacenter(self, datacenter_id):
         return self._generic_list_by_something_(
-            "zones by datacenter", models.Zone,
+            "Zone",
             {'datacenter_id': datacenter_id}
         )
 
     def zone_create(self, datacenter_id, data):
-        logger.debug("Creating zone on datacenter: %s using data: %s" %
+        self.logger.debug("Creating zone on datacenter: %s using data: %s" %
             (datacenter_id, data)
         )
-        session.begin(subtransactions=True)
+        self.session.begin(subtransactions=True)
         try:
-            session.add(models.Zone(
+            self.session.add(Zone(
                 name=data['name'], datacenter_id=datacenter_id)
             )
-            session.commit()
+            self.session.commit()
         except IntegrityError, e:
-            session.rollback()
+            self.session.rollback()
             msg = e.message
             if msg.find("foreign key constraint failed") != -1:
                 forbidden_msg = "datacenter_id %s doesnt exist" % datacenter_id
@@ -281,9 +291,9 @@ class SimpleNet(object):
                 forbidden_msg = "Unknown error"
             raise OperationNotPermited('Zone', forbidden_msg)
         except Exception, e:
-            session.rollback()
+            self.session.rollback()
             raise Exception(e)
-        logger.debug("Created zone on datacenter: %s using data: %s" %
+        self.logger.debug("Created zone on datacenter: %s using data: %s" %
             (datacenter_id, data)
         )
         return self.zone_info_by_name(data['name'])
@@ -292,47 +302,47 @@ class SimpleNet(object):
         raise FeatureNotAvailable()
 
     def zone_info(self, id):
-        return self._generic_info_("zone", models.Zone, {'id': id})
+        return self._generic_info_("Zone", {'id': id})
 
     def zone_info_by_name(self, name):
         return self._generic_info_(
-            "zone", models.Zone, {'name': name}
+            "Zone", {'name': name}
         )
 
     def zone_delete(self, id):
-        return self._generic_delete_("zone", models.Zone, {'id': id})
+        return self._generic_delete_("Zone", {'id': id})
 
     def vlan_list(self):
-        return self._generic_list_("vlans", models.Vlan)
+        return self._generic_list_("Vlan")
 
     def vlan_list_by_firewall(self, firewall_id):
         return self._generic_list_by_something_(
-            "vlans by firewall", models.Vlans_to_Firewall,
+            "Vlans_to_Firewall",
             {'firewall_id': firewall_id}
         )
 
     def vlan_list_by_dhcp(self, dhcp_id):
         return self._generic_list_by_something_(
-            "vlans by dhcp", models.Vlans_to_Dhcp,
+            "Vlans_to_Dhcp",
             {'dhcp_id': dhcp_id}
         )
 
     def vlan_list_by_zone(self, zone_id):
         return self._generic_list_by_something_(
-            "vlans by zone", models.Vlan, {'zone_id': zone_id}
+            "Vlan", {'zone_id': zone_id}
         )
 
     def vlan_create(self, zone_id, data):
-        logger.debug("Creating vlan on zone: %s using data: %s" %
+        self.logger.debug("Creating vlan on zone: %s using data: %s" %
             (zone_id, data)
         )
-        session.begin(subtransactions=True)
+        self.session.begin(subtransactions=True)
         try:
-            session.add(models.Vlan(name=data['name'], zone_id=zone_id,
+            self.session.add(Vlan(name=data['name'], zone_id=zone_id,
                                     type=data['type'], vlan_num=data['vlan_num']))
-            session.commit()
+            self.session.commit()
         except IntegrityError, e:
-            session.rollback()
+            self.session.rollback()
             msg = e.message
             if msg.find("foreign key constraint failed") != -1:
                 forbidden_msg = "zone_id %s doesnt exist" % zone_id
@@ -342,53 +352,53 @@ class SimpleNet(object):
                 forbidden_msg = "Unknown error"
             raise OperationNotPermited('Vlan', forbidden_msg)
         except Exception, e:
-            session.rollback()
+            self.session.rollback()
             raise Exception(e)
-        logger.debug("Created vlan on zone: %s using data: %s" %
+        self.logger.debug("Created vlan on zone: %s using data: %s" %
             (zone_id, data)
         )
         return self.vlan_info_by_name(data['name'])
 
     def vlan_info(self, id):
-        return self._generic_info_("vlan", models.Vlan, {'id': id})
+        return self._generic_info_("Vlan", {'id': id})
 
     def vlan_info_by_name(self, name):
         return self._generic_info_(
-            "vlan", models.Vlan, {'name': name}
+            "Vlan", {'name': name}
         )
 
     def vlan_update(self, *args, **kawrgs):
         raise FeatureNotAvailable()
 
     def vlan_delete(self, id):
-        return self._generic_delete_("vlan", models.Vlan, {'id': id})
+        return self._generic_delete_("Vlan", {'id': id})
 
     def subnet_list(self):
-        return self._generic_list_("subnets", models.Subnet)
+        return self._generic_list_("Subnet")
 
     def anycast_list(self):
-        return self._generic_list_("anycasts", models.Anycast)
+        return self._generic_list_("Anycast")
 
     def anycast_list_by_firewall(self, firewall_id):
         return self._generic_list_by_something_(
-            "anycasts by firewall", models.Anycasts_to_Firewall,
+            "Anycasts_to_Firewall",
             {'firewall_id': firewall_id}
         )
 
     def subnet_list_by_vlan(self, vlan_id):
         return self._generic_list_by_something_(
-            "subnets by vlan", models.Subnet,
+            "Subnet",
             {'vlan_id': vlan_id}
         )
 
     @post_run
     def subnet_create(self, vlan_id, data):
-        session.begin(subtransactions=True)
+        self.session.begin(subtransactions=True)
         try:
-            session.add(models.Subnet(cidr=data['cidr'], vlan_id=vlan_id))
-            session.commit()
+            self.session.add(Subnet(cidr=data['cidr'], vlan_id=vlan_id))
+            self.session.commit()
         except IntegrityError, e:
-            session.rollback()
+            self.session.rollback()
             msg = e.message
             if msg.find("foreign key constraint failed") != -1:
                 forbidden_msg = "vlan_id %s doesnt exist" % vlan_id
@@ -398,20 +408,20 @@ class SimpleNet(object):
                 forbidden_msg = "Unknown error -- %s" % msg
             raise OperationNotPermited('Subnet', forbidden_msg)
         except Exception, e:
-            session.rollback()
+            self.session.rollback()
             raise Exception(e)
-        vlan = session.query(models.Vlan).get(vlan_id)
+        vlan = self.session.query(Vlan).get(vlan_id)
         #self._enqueue_dhcp_entries_(vlan, 'update')
         return self.subnet_info_by_cidr(data['cidr'])
 
     def anycast_create(self, data):
-        logger.debug("Creating subnet using data: %s" % data)
-        session.begin(subtransactions=True)
+        self.logger.debug("Creating subnet using data: %s" % data)
+        self.session.begin(subtransactions=True)
         try:
-            session.add(models.Anycast(cidr=data['cidr']))
-            session.commit()
+            self.session.add(Anycast(cidr=data['cidr']))
+            self.session.commit()
         except IntegrityError, e:
-            session.rollback()
+            self.session.rollback()
             msg = e.message
             if msg.find("is not unique") != -1 or msg.find("Duplicate entry") != -1:
                 raise DuplicatedEntryError('Anycast', "%s already exists" % data['cidr'])
@@ -419,25 +429,25 @@ class SimpleNet(object):
                 forbidden_msg = "Unknown error"
             raise OperationNotPermited('Anycast', forbidden_msg)
         except Exception, e:
-            session.rollback()
+            self.session.rollback()
             raise Exception(e)
-        logger.debug("Created subnet using data: %s" % data)
+        self.logger.debug("Created subnet using data: %s" % data)
         return self.anycast_info_by_cidr(data['cidr'])
 
     def anycast_info_by_cidr(self, cidr):
         return self._generic_info_(
-            "anycast", models.Anycast, {'cidr': cidr.replace('_','/')}
+            "Anycast", {'cidr': cidr.replace('_','/')}
         )
 
     def subnet_info(self, id):
-        return self._generic_info_("subnet", models.Subnet, {'id': id})
+        return self._generic_info_("Subnet", {'id': id})
 
     def anycast_info(self, id):
-        return self._generic_info_("anycast", models.Anycast, {'id': id})
+        return self._generic_info_("Anycast", {'id': id})
 
     def subnet_info_by_cidr(self, cidr):
         return self._generic_info_(
-            "subnet", models.Subnet, {'cidr': cidr.replace('_','/')}
+            "Subnet", {'cidr': cidr.replace('_','/')}
         )
 
     def subnet_update(self, *args, **kwargs):
@@ -445,36 +455,41 @@ class SimpleNet(object):
 
     @post_run
     def subnet_delete(self, id):
-        subnet = session.query(models.Subnet).get(id)
+        subnet = self.session.query(Subnet).get(id)
         vlan = subnet.vlan
-        ret = self._generic_delete_("subnet", models.Subnet, {'id': id})
+        ret = self._generic_delete_("Subnet", {'id': id})
         #self._enqueue_dhcp_entries_(vlan, 'update')
         return ret
 
     def anycast_delete(self, id):
-        return self._generic_delete_("anycast", models.Anycast, {'id': id})
+        return self._generic_delete_("Anycast", {'id': id})
 
     def ip_list(self):
-        return self._generic_list_("ips", models.Ip)
+        return self._generic_list_("Ip")
 
     def ip_list_by_subnet(self, subnet_id):
         return self._generic_list_by_something_(
-            "ip info by subnet", models.Ip, {'subnet_id': subnet_id}
+            "Ip", {'subnet_id': subnet_id}
+        )
+
+    def ip_list_by_id(self, ip_id):
+        return self._generic_list_by_something_(
+            "Ip", {'id': ip_id}
         )
 
     def anycastip_list_by_anycast(self, anycast_id):
         return self._generic_list_by_something_(
-            "ip info by anycast", models.Anycastip, {'anycast_id': anycast_id}
+            "Anycastip", {'anycast_id': anycast_id}
         )
 
     def anycastip_list(self):
-        return self._generic_list_("ips anycast", models.Anycastip)
+        return self._generic_list_("Anycastip")
 
     def ip_create(self, subnet_id, data):
-        logger.debug("Creating ip on subnet: %s using data: %s" %
+        self.logger.debug("Creating ip on subnet: %s using data: %s" %
             (subnet_id, data)
         )
-        subnet = session.query(models.Subnet).get(subnet_id)
+        subnet = self.session.query(Subnet).get(subnet_id)
         if not subnet:
             raise OperationNotPermited('Ip', "subnet_id %s doesnt exist" % subnet_id)
         if not subnet.contains(data['ip']):
@@ -484,12 +499,12 @@ class SimpleNet(object):
                         subnet.cidr
                 )
             )
-        session.begin(subtransactions=True)
+        self.session.begin(subtransactions=True)
         try:
-            session.add(models.Ip(ip=data['ip'], subnet_id=subnet_id))
-            session.commit()
+            self.session.add(Ip(ip=data['ip'], subnet_id=subnet_id))
+            self.session.commit()
         except IntegrityError, e:
-            session.rollback()
+            self.session.rollback()
             msg = e.message
             if msg.find("foreign key constraint failed") != -1:
                 forbidden_msg = "subnet_id %s doesnt exist" % subnet_id
@@ -499,18 +514,18 @@ class SimpleNet(object):
                 forbidden_msg = "Unknown error"
             raise OperationNotPermited('Ip', forbidden_msg)
         except Exception, e:
-            session.rollback()
+            self.session.rollback()
             raise Exception(e)
-        logger.debug("Created ip on subnet: %s using data: %s" %
+        self.logger.debug("Created ip on subnet: %s using data: %s" %
             (subnet_id, data)
         )
         return self.ip_info_by_ip(data['ip'])
 
     def anycastip_create(self, anycast_id, data):
-        logger.debug("Creating ip on anycast: %s using data: %s" %
+        self.logger.debug("Creating ip on anycast: %s using data: %s" %
             (anycast_id, data)
         )
-        anycast = session.query(models.Anycast).get(anycast_id)
+        anycast = self.session.query(Anycast).get(anycast_id)
         if not anycast.contains(data['ip']):
             raise OperationNotPermited(
                 'Ip', "%s address must be contained in %s" % (
@@ -518,14 +533,14 @@ class SimpleNet(object):
                         anycast.cidr
                 )
             )
-        session.begin(subtransactions=True)
+        self.session.begin(subtransactions=True)
         try:
-            session.add(
-                models.Anycastip(ip=data['ip'], anycast_id=anycast_id)
+            self.session.add(
+                Anycastip(ip=data['ip'], anycast_id=anycast_id)
             )
-            session.commit()
+            self.session.commit()
         except IntegrityError, e:
-            session.rollback()
+            self.session.rollback()
             msg = e.message
             if msg.find("foreign key constraint failed") != -1:
                 forbidden_msg = "anycast_id %s doesnt exist" % anycast_id
@@ -535,50 +550,47 @@ class SimpleNet(object):
                 forbidden_msg = "Unknown error"
             raise OperationNotPermited('Anycastip', forbidden_msg)
         except Exception, e:
-            session.rollback()
+            self.session.rollback()
             raise Exception(e)
-        logger.debug("Created ip on anycast: %s using data: %s" %
+        self.logger.debug("Created ip on anycast: %s using data: %s" %
             (anycast_id, data)
         )
         return self.anycastip_info_by_ip(data['ip'])
 
     def ip_info(self, id):
-        return self._generic_info_("ip", models.Ip, {'id': id})
+        return self._generic_info_("Ip", {'id': id})
 
     def anycastip_info(self, id):
-        return self._generic_info_("ip anycast", models.Anycastip, {'id': id})
+        return self._generic_info_("Anycastip", {'id': id})
 
     def vlan_info_by_ip(self, ip):
         query = {'ip': ip}
-        ss = session.query(models.Ip).filter_by(**query).first()
+        ss = self.session.query(Ip).filter_by(**query).first()
         if not ss:
             raise EntityNotFound('Ip', query)
 
         return ss.subnet.vlan.to_dict()
 
     def ip_info_by_ip(self, ip):
-        return self._generic_info_("ip", models.Ip, {'ip': ip})
+        return self._generic_info_("Ip", {'ip': ip})
 
     def anycastip_info_by_ip(self, ip):
         return self._generic_info_(
-            "ip anycast", models.Anycastip, {'ip': ip}
+            "Anycastip", {'ip': ip}
         )
 
     def ip_update(self, *args, **kawrgs):
         raise FeatureNotAvailable()
 
     def ip_delete(self, id):
-        try:
-            val = self._generic_delete_("ip", models.Ip, {'id': id})
-        except:
-            raise
+        val = self._generic_delete_("Ip", {'id': id})
         import simplenet.network_appliances.firewall
         pol = simplenet.network_appliances.firewall.Net()
-        pol.policy_delete("ip", id)
+        pol.policy_delete_by_owner("ip", id)
         return val
 
     def anycastip_delete(self, id):
-        return self._generic_delete_("ip anycast", models.Anycastip, {'id': id})
+        return self._generic_delete_("Anycastip", {'id': id})
 
     def policy_list(self, *args, **kawrgs):
         raise FeatureNotAvailable()
@@ -596,17 +608,17 @@ class SimpleNet(object):
         raise FeatureNotAvailable()
 
     def interface_list(self):
-        return self._generic_list_("interfaces", models.Interface)
+        return self._generic_list_("Interface")
 
     def interface_create(self, data):
-        logger.debug("Creating interface using data: %s" % data)
+        self.logger.debug("Creating interface using data: %s" % data)
 
-        session.begin(subtransactions=True)
+        self.session.begin(subtransactions=True)
         try:
-            session.add(models.Interface(id=data['mac'], hostname=data['hostname']))
-            session.commit()
+            self.session.add(Interface(id=data['mac'], hostname=data['hostname']))
+            self.session.commit()
         except IntegrityError, e:
-            session.rollback()
+            self.session.rollback()
             msg = e.message
             if msg.find("is not unique") != -1 or msg.find("Duplicate entry") != -1:
                 raise DuplicatedEntryError('Interface', "%s already exists" % data['mac'])
@@ -614,51 +626,51 @@ class SimpleNet(object):
                 forbidden_msg = "Unknown error -- %s" % msg
             raise OperationNotPermited('Interface', forbidden_msg)
         except Exception, e:
-            session.rollback()
+            self.session.rollback()
             raise Exception(e)
 
         return self.interface_info_by_mac(data['mac'])
 
     def interface_delete(self, data):
-        return self._generic_delete_("interface", models.Interface, {'id': data})
+        return self._generic_delete_("Interface", {'id': data})
 
     def interface_info(self, mac):
         return self.interface_info_by_mac(mac)
 
     def interface_info_by_mac(self, mac):
-        return self._generic_info_("interface", models.Interface, {'id': mac})
+        return self._generic_info_("Interface", {'id': mac})
 
     def interface_add_vlan(self, interface_id, data):
-        logger.debug("Adding VLAN to interface using data: %s" % data)
+        self.logger.debug("Adding VLAN to interface using data: %s" % data)
 
-        interface = session.query(models.Interface).get(interface_id)
+        interface = self.session.query(Interface).get(interface_id)
         if not interface:
             raise EntityNotFound('Interface', interface_id)
 
         if data == {} or type(data) != dict or (not data.get("id") and not data.get("name")):
             raise OperationNotPermited('Interface', "%s is not a valid input" % data)
 
-        vlan = session.query(models.Vlan).filter_by(**data).first()
+        vlan = self.session.query(Vlan).filter_by(**data).first()
         if not vlan:
             raise EntityNotFound('Vlan', data)
 
         if vlan.type != "dedicated_vlan":
             raise OperationNotPermited('Vlan', "Cannot attach to interface a vlan with type %s" % vlan.type)
 
-        session.begin(subtransactions=True)
+        self.session.begin(subtransactions=True)
         try:
             interface.vlan_id = vlan.id
-            session.commit()
+            self.session.commit()
         except Exception, e:
-            session.rollback()
+            self.session.rollback()
             raise Exception(e)
         _data = interface.to_dict()
-        logger.debug("Successful adding IP to interface status: %s" % _data)
+        self.logger.debug("Successful adding IP to interface status: %s" % _data)
 
         return _data
 
     def interface_remove_vlan(self, interface_id, vlan_id):
-        interface = session.query(models.Interface).get(interface_id)
+        interface = self.session.query(Interface).get(interface_id)
         vlan_id = self.retrieve_valid_uuid(vlan_id, self.vlan_info_by_name, "id")
 
         if not vlan_id:
@@ -667,15 +679,15 @@ class SimpleNet(object):
             raise EntityNotFound('Interface', interface_id)
 
         if interface.vlan_id == vlan_id:
-            session.begin(subtransactions=True)
+            self.session.begin(subtransactions=True)
             try:
                 interface.vlan_id = None
-                session.commit()
+                self.session.commit()
             except Exception, e:
-                session.rollback()
+                self.session.rollback()
                 raise Exception(e)
             _data = interface.to_dict()
-            logger.debug("Successful removing IP to interface status: %s" % _data)
+            self.logger.debug("Successful removing IP to interface status: %s" % _data)
             return _data
         else:
             msg = "Vlan id doesnt match -- iface vlan (%s) received (%s)" % (interface.vlan_id, vlan_id)
@@ -684,38 +696,38 @@ class SimpleNet(object):
 
     @post_run
     def interface_add_ip(self, interface_id, data):
-        logger.debug("Adding IP to interface using data: %s" % data)
+        self.logger.debug("Adding IP to interface using data: %s" % data)
 
-        interface = session.query(models.Interface).get(interface_id)
+        interface = self.session.query(Interface).get(interface_id)
         if not interface:
             raise EntityNotFound('Interface', interface_id)
 
         if data == {} or type(data) != dict or (not data.get("id") and not data.get("ip")):
             raise OperationNotPermited('Interface', "%s is not a valid input" % data)
 
-        ip = session.query(models.Ip).filter_by(**data).first()
+        ip = self.session.query(Ip).filter_by(**data).first()
         if not ip:
             raise EntityNotFound('Ip', data)
 
-        session.begin(subtransactions=True)
+        self.session.begin(subtransactions=True)
         try:
             interface.ips.add(ip)
-            session.commit()
+            self.session.commit()
         except Exception, e:
-            session.rollback()
+            self.session.rollback()
             raise Exception(e)
         #self._enqueue_dhcp_entries_(ip.subnet.vlan, 'update')
         _data = interface.to_dict()
-        logger.debug("Successful adding IP to interface status: %s" % _data)
+        self.logger.debug("Successful adding IP to interface status: %s" % _data)
 
         return _data
 
     @post_run
     def interface_remove_ip(self, interface_id, ip_id):
-        interface = session.query(models.Interface).get(interface_id)
+        interface = self.session.query(Interface).get(interface_id)
         ip_id = self.retrieve_valid_uuid(ip_id, self.ip_info_by_ip, "id")
 
-        ip = session.query(models.Ip).get(ip_id)
+        ip = self.session.query(Ip).get(ip_id)
 
         if not ip:
             raise EntityNotFound('Ip', ip_id)
@@ -723,15 +735,15 @@ class SimpleNet(object):
             raise EntityNotFound('Interface', interface_id)
 
         if ip in interface.ips:
-            session.begin(subtransactions=True)
+            self.session.begin(subtransactions=True)
             try:
                 interface.ips.remove(ip)
-                session.commit()
+                self.session.commit()
             except Exception, e:
-                session.rollback()
+                self.session.rollback()
                 raise Exception(e)
             _data = interface.to_dict()
-            logger.debug("Successful removing IP to interface status: %s" % _data)
+            self.logger.debug("Successful removing IP to interface status: %s" % _data)
         else:
             _data = interface.to_dict()
         #self._enqueue_dhcp_entries_(ip.subnet.vlan, 'update')

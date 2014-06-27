@@ -18,7 +18,8 @@
 
 from simplenet.common import event
 from simplenet.common.config import get_logger
-from simplenet.db import models, db_utils
+from simplenet.db.models import Switch, Interface
+from simplenet.db import db_utils
 from simplenet.exceptions import (
     FeatureNotAvailable, EntityNotFound,
     OperationNotPermited, DuplicatedEntryError
@@ -33,14 +34,14 @@ session = db_utils.get_database_session()
 
 class Net(SimpleNet):
     def switch_list(self):
-        return self._generic_list_("switches", models.Switch)
+        return self._generic_list_("Switch")
 
     def switch_create(self, data):
         logger.debug("Creating device using data: %s" % data)
 
         session.begin(subtransactions=True)
         try:
-            session.add(models.Switch(name=data['name'], mac=data['mac'],
+            session.add(Switch(name=data['name'], mac=data['mac'],
                                     address=data['address'], model_type=data['model_type']))
             session.commit()
         except IntegrityError:
@@ -53,24 +54,24 @@ class Net(SimpleNet):
         return self.switch_info_by_name(data['name'])
 
     def switch_info(self, id):
-        return self._generic_info_("switch", models.Switch, {'id': id})
+        return self._generic_info_("Switch", {'id': id})
 
 
     def switch_info_by_name(self, name):
         return self._generic_info_(
-            "switch", models.Switch, {'name': name}
+            "Switch", {'name': name}
         )
 
     def switch_update(self, *args, **kawrgs):
         raise FeatureNotAvailable()
 
     def switch_delete(self, id):
-        return self._generic_delete_("switch", models.Switch, {'id': id})
+        return self._generic_delete_("Switch", {'id': id})
 
     def switch_add_interface(self, switch_id, data):
         logger.debug("Adding interface using data: %s" % data)
 
-        interface = session.query(models.Interface).get(data['interface_id'])
+        interface = session.query(Interface).get(data['interface_id'])
         switch_id = self.retrieve_valid_uuid(switch_id, self.switch_info_by_name, "id")
 
         if not interface:
@@ -106,7 +107,7 @@ class Net(SimpleNet):
         return _data
 
     def switch_remove_interface(self, switch_id, int_id):
-        interface = session.query(models.Interface).get(int_id)
+        interface = session.query(Interface).get(int_id)
         if not interface:
             raise EntityNotFound('Interface', int_id)
 
