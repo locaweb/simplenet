@@ -489,6 +489,17 @@ class Policy(Base):
     __table_args__  = (UniqueConstraint("proto", "src", "src_port", "dst", "dst_port", "table", "policy", "in_iface", "out_iface", "owner_type", "owner_id"),)
     __mapper_args__ = {'polymorphic_on': owner_type}
 
+    def __init__(self, **kwargs):
+        self.id = str(uuid.uuid4())
+        self.proto = kwargs['proto']
+        self.src = kwargs['src']
+        self.src_port = kwargs['src_port']
+        self.dst = kwargs['dst']
+        self.dst_port = kwargs['dst_port']
+        self.table = kwargs['table']
+        self.policy = kwargs['policy']
+        self.owner_id = kwargs['owner_id']
+
 
 class DatacenterPolicy(Policy):
 
@@ -496,16 +507,8 @@ class DatacenterPolicy(Policy):
 
     datacenter = relationship('Datacenter', foreign_keys=Policy.owner_id, primaryjoin=Policy.owner_id == Datacenter.id)
 
-    def __init__(self, owner_id, proto, src, src_port, dst, dst_port, table, policy):
-        self.id = str(uuid.uuid4())
-        self.proto = proto
-        self.src = src
-        self.src_port = src_port
-        self.dst = dst
-        self.dst_port = dst_port
-        self.table = table
-        self.policy = policy
-        self.owner_id = owner_id
+    def __init__(self, **kwargs):
+        super(DatacenterPolicy, self).__init__(**kwargs)
 
     def to_dict(self):
         return { 'id': self.id,
@@ -526,16 +529,8 @@ class ZonePolicy(Policy):
 
     zone = relationship('Zone', foreign_keys=Policy.owner_id, primaryjoin=Policy.owner_id == Zone.id)
 
-    def __init__(self, owner_id, proto, src, src_port, dst, dst_port, table, policy):
-        self.id = str(uuid.uuid4())
-        self.proto = proto
-        self.src = src
-        self.src_port = src_port
-        self.dst = dst
-        self.dst_port = dst_port
-        self.table = table
-        self.policy = policy
-        self.owner_id = owner_id
+    def __init__(self, **kwargs):
+        super(ZonePolicy, self).__init__(**kwargs)
 
     def to_dict(self):
         return { 'id': self.id,
@@ -556,16 +551,8 @@ class VlanPolicy(Policy):
 
     vlan = relationship('Vlan', foreign_keys=Policy.owner_id, primaryjoin=Policy.owner_id == Vlan.id)
 
-    def __init__(self, owner_id, proto, src, src_port, dst, dst_port, table, policy):
-        self.id = str(uuid.uuid4())
-        self.proto = proto
-        self.src = src
-        self.src_port = src_port
-        self.dst = dst
-        self.dst_port = dst_port
-        self.table = table
-        self.policy = policy
-        self.owner_id = owner_id
+    def __init__(self, **kwargs):
+        super(VlanPolicy, self).__init__(**kwargs)
 
     def to_dict(self):
         return { 'id': self.id,
@@ -586,16 +573,8 @@ class AnycastPolicy(Policy):
 
     anycast = relationship('Anycast', foreign_keys=Policy.owner_id, primaryjoin=Policy.owner_id == Anycast.id)
 
-    def __init__(self, owner_id, proto, src, src_port, dst, dst_port, table, policy):
-        self.id = str(uuid.uuid4())
-        self.proto = proto
-        self.src = src
-        self.src_port = src_port
-        self.dst = dst
-        self.dst_port = dst_port
-        self.table = table
-        self.policy = policy
-        self.owner_id = owner_id
+    def __init__(self, **kwargs):
+        super(AnycastPolicy, self).__init__(**kwargs)
 
     def to_dict(self):
         return { 'id': self.id,
@@ -616,16 +595,8 @@ class SubnetPolicy(Policy):
 
     subnet = relationship('Subnet', foreign_keys=Policy.owner_id, primaryjoin=Policy.owner_id == Subnet.id)
 
-    def __init__(self, owner_id, proto, src, src_port, dst, dst_port, table, policy):
-        self.id = str(uuid.uuid4())
-        self.proto = proto
-        self.src = src
-        self.src_port = src_port
-        self.dst = dst
-        self.dst_port = dst_port
-        self.table = table
-        self.policy = policy
-        self.owner_id = owner_id
+    def __init__(self, **kwargs):
+        super(SubnetPolicy, self).__init__(**kwargs)
 
     def to_dict(self):
         return { 'id': self.id,
@@ -646,16 +617,8 @@ class AnycastipPolicy(Policy):
 
     ip = relationship('Anycastip', foreign_keys=Policy.owner_id, primaryjoin=Policy.owner_id == Anycastip.id)
 
-    def __init__(self, owner_id, proto, src, src_port, dst, dst_port, table, policy):
-        self.id = str(uuid.uuid4())
-        self.proto = proto
-        self.src = src
-        self.src_port = src_port
-        self.dst = dst
-        self.dst_port = dst_port
-        self.table = table
-        self.policy = policy
-        self.owner_id = owner_id
+    def __init__(self, **kwargs):
+        super(AnycastipPolicy, self).__init__(**kwargs)
 
     def to_dict(self):
         return { 'id': self.id,
@@ -676,16 +639,8 @@ class IpPolicy(Policy):
 
     ip = relationship('Ip', foreign_keys=Policy.owner_id, primaryjoin=Policy.owner_id == Ip.id)
 
-    def __init__(self, owner_id, proto, src, src_port, dst, dst_port, table, policy):
-        self.id = str(uuid.uuid4())
-        self.proto = proto
-        self.src = src
-        self.src_port = src_port
-        self.dst = dst
-        self.dst_port = dst_port
-        self.table = table
-        self.policy = policy
-        self.owner_id = owner_id
+    def __init__(self, **kwargs):
+        super(IpPolicy, self).__init__(**kwargs)
 
     def to_dict(self):
         return { 'id': self.id,
