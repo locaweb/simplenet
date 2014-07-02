@@ -23,55 +23,48 @@ import ConfigParser
 import inspect
 import os
 import socket
-import syslog
+import logging
 
 caller = inspect.stack()[-1][1].split('/')[-1]
 config = ConfigParser.ConfigParser()
 config_file = "/etc/simplenet/simplenet.cfg"
 logger = None
 
+LOGGING_LEVELS = {'critical': logging.CRITICAL,
+                  'error': logging.ERROR,
+                  'warning': logging.WARNING,
+                  'info': logging.INFO,
+                  'debug': logging.DEBUG}
+
 if os.path.isfile(config_file):
     config.read(config_file)
 
 class StdOutAndErrWapper(object):
     def write(self, data):
-        if '\n' in data:
-            for line in data.split('\n'):
-                logger.info(line)
-        else:
-            logger.info(str(data).strip())
+        logger.info("[bottle] " + str(data).strip())
 
-class SyslogWrapper(object):
-
-    def __init__(self, config=None):
-        self.config = config
-
-    def info(self, msg):
-        syslog.syslog(syslog.LOG_INFO, msg)
-
-    def warning(self, msg):
-        syslog.syslog(syslog.LOG_WARNING, msg)
-
-    def critical(self, msg):
-        syslog.syslog(syslog.LOG_CRIT, msg)
-
-    def error(self, msg):
-        syslog.syslog(syslog.LOG_ERR, msg)
-
-    def debug(self, msg):
-        if self.config.has_section('server') and \
-           self.config.getboolean('server', 'debug'):
-            syslog.syslog(syslog.LOG_DEBUG, msg)
-
+def stdout_logger():
+    global logger
+    logger.addHandler(logging.StreamHandler())
 
 def get_logger():
     global logger
-    global config
     if logger: return logger
-    syslog.openlog(caller, syslog.LOG_PID, syslog.LOG_DAEMON)
-    logger = SyslogWrapper(config)
-    return logger
+    formatter = logging.Formatter('%(asctime)s [%(name)s/%(levelname)s] %(message)s')
 
+    logger = logging.getLogger('simplenet-server')
+    log_file = config.get("logging", "file")
+    log_level = LOGGING_LEVELS.get(config.get("logging", "level").lower())
+
+    logger.setLevel(log_level)
+    fileHandler.setLevel(log_level)
+
+    fileHandler = logging.FileHandler(log_file)
+    fileHandler.setFormatter(formatter)
+
+    logger.addHandler(fileHandler)
+
+    return logger
 
 def section(cfg, cfg_section):
     r = {}

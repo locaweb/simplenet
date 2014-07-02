@@ -30,7 +30,7 @@ import bottle
 from bottle import delete, put, get, post, error, run, debug
 from bottle import abort, request, ServerAdapter, response
 
-from simplenet.common.config import config, get_logger, StdOutAndErrWapper
+from simplenet.common.config import config, stdout_logger, StdOutAndErrWapper, get_logger
 from simplenet.routes import base, policy, errors, switch
 
 app = bottle.app()
@@ -57,9 +57,11 @@ def main(action="foreground"):
         sys.stderr = StdOutAndErrWapper()
         start()
     elif action == "foreground":
+        stdout_logger()
         start()
     elif action == "stop":
         daemon.stop()
+        logger.info("Stopped SimpleNet Server")
     elif action == "status":
         daemon.status()
     else:
