@@ -1,5 +1,5 @@
 #!/usr/bin/python
-
+#
 # Copyright 2012 Locaweb.
 # All Rights Reserved.
 #
@@ -59,13 +59,13 @@ def _natural_sort_(l):
     alphanum_key = lambda k: [convert(c) for c in re.split(r"([0-9]+)", k)]
     return sorted(l, key=alphanum_key)
 
-
 class Worker(ConsumerMixin):
-    def __init__(self, connection, lockfile, iptables_file, logger):
+    def __init__(self, connection, config, logger):
         self.connection = connection
-        self.lockfile = lockfile
-        self.iptables_file = iptables_file
+        self.lockfile = config.get('firewall', 'lockfile')
+        self.iptables_file = config.get('firewall', 'iptables_file')
         self.logger = logger
+        self.ext_eth = config.get('firewall', 'external_eth')
         if os.path.isfile(self.lockfile):
             os.unlink(self.lockfile)
 
@@ -74,6 +74,11 @@ class Worker(ConsumerMixin):
             myname, Exchange(myname, type="direct"),
             routing_key=myname),
         callbacks=[self.process_task])]
+
+    def send_confirmation(self, firewallrule_id):
+        media_exchange = Exchange("simplenet", type="direct", durable=True)
+        with self.connection.Producer(exchange=media_exchange, serializer="json", routing_key="simplenet") as producer:
+            producer.publish({'id': firewallrule_id, 'device': myname})
 
     def _rules_diff(self):
         new = open(self.iptables_file, "r").readlines()
@@ -94,6 +99,7 @@ class Worker(ConsumerMixin):
         self.logger.info("TASK")
         start_time = datetime.now()
         self.iptables_save = []
+        self.local_cidr = []
         self.iptables_save.append('*filter')
         #self.logger.debug("Received payload %s" % json.dumps(body, sort_keys=True, indent=4))
 
@@ -139,6 +145,8 @@ class Worker(ConsumerMixin):
         finally:
             lock.release()
         message.ack()
+        if body.get("modified") and body.get("modified").get("status") == "PENDING":
+            self.send_confirmation(body.get("modified").get("id"))
 
         stop_time = datetime.now()
         duration = stop_time - start_time
@@ -207,7 +215,11 @@ class Worker(ConsumerMixin):
                            'INPUT': ['d'],
                            'OUTPUT': ['s'] }
 
-            name = table if datacenter else "%s-%s" % (table, name)
+            if datacenter:
+                name = table
+                self.local_cidr.append(cidr)
+            else:
+                name = "%s-%s" % (table, name)
             for direction in directions[table]:
                 self._add_rule_(
                     jump.format(action='A',
@@ -351,9 +363,21 @@ class Worker(ConsumerMixin):
             rule_dzvs_block(infos)
             self._gen_jumps_(rule['table'], anycastip['anycast'], anycastip['ip'], anycastip['ip'])
 
+    def _gen_iptables_outputchains_(self):
+        if self.local_cidr != []:
+            jump = "-A FORWARD -s {cidr} -o {ext_eth} -j ACCEPT"
+            for cidr in self.local_cidr:
+                self._add_rule_(
+                    jump.format(action='A',
+                                cidr=cidr,
+                                ext_eth=self.ext_eth
+                    )
+            )
+
     def _gen_iptables_save_(self, data):
         #self.logger.debug(json.dumps(data, sort_keys=True, indent=4))
         self._gen_iptables_chains_(data)
+        self._gen_iptables_outputchains_()
         self._add_firewall_mport_rules_(data)
 
 
@@ -364,7 +388,7 @@ def help():
     print '   -c config </etc/simplenet/agents.cfg>'
 
 
-def main(user, config_file):
+def main(user, action, config_file):
     config = ConfigParser.ConfigParser()
     config.read(config_file)
 
@@ -373,13 +397,15 @@ def main(user, config_file):
         myname = config.get('firewall', 'hostname')
 
     logger = create_logger(config)
+    if action == 'foreground':
+        logger.addHandler(logging.StreamHandler())
 
     lockdir = os.path.split(config.get('firewall','lockfile'))[0]
     if not os.path.isdir(lockdir):
         os.makedirs(lockdir)
 
     with BrokerConnection(config.get('firewall', 'broker')) as conn:
-        Worker(conn, config.get('firewall', 'lockfile'), config.get('firewall', 'iptables_file'), logger).run()
+        Worker(conn, config, logger).run()
 
 
 def create_logger(config):
@@ -419,10 +445,10 @@ if __name__ == '__main__':
     daemon = Daemon(name='sn-fw-agent')
     if action == 'start':
         daemon.start()
-        main(user, config)
+        main(user, action, config)
     elif action == 'status':
         daemon.status()
     elif action == 'stop':
         daemon.stop()
     elif action == 'foreground':
-        main(user, config)
+        main(user, action, config)

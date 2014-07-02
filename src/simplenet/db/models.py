@@ -484,6 +484,7 @@ class Policy(Base):
     in_iface = Column(String(50), server_default="")
     out_iface = Column(String(50), server_default="")
     owner_type = Column(String(50), server_default="")
+    status = Column(String(50), server_default="")
     owner_id = Column(String(46), index=True)
 
     __table_args__  = (UniqueConstraint("proto", "src", "src_port", "dst", "dst_port", "table", "policy", "in_iface", "out_iface", "owner_type", "owner_id"),)
@@ -499,6 +500,7 @@ class Policy(Base):
         self.table = kwargs['table']
         self.policy = kwargs['policy']
         self.owner_id = kwargs['owner_id']
+        self.status = kwargs.get('status', 'PENDING')
 
 
 class DatacenterPolicy(Policy):
@@ -520,6 +522,7 @@ class DatacenterPolicy(Policy):
                  'dst_port': self.dst_port,
                  'table': self.table,
                  'policy': self.policy,
+                 'status': self.status,
                  'owner': self.datacenter.name }
 
 
@@ -542,6 +545,7 @@ class ZonePolicy(Policy):
                  'dst_port': self.dst_port,
                  'table': self.table,
                  'policy': self.policy,
+                 'status': self.status,
                  'owner': self.zone.name }
 
 
@@ -564,6 +568,7 @@ class VlanPolicy(Policy):
                  'dst_port': self.dst_port,
                  'table': self.table,
                  'policy': self.policy,
+                 'status': self.status,
                  'owner': self.vlan.name }
 
 
@@ -586,6 +591,7 @@ class AnycastPolicy(Policy):
                  'dst_port': self.dst_port,
                  'table': self.table,
                  'policy': self.policy,
+                 'status': self.status,
                  'owner': self.anycast.cidr }
 
 
@@ -608,6 +614,7 @@ class SubnetPolicy(Policy):
                  'dst_port': self.dst_port,
                  'table': self.table,
                  'policy': self.policy,
+                 'status': self.status,
                  'owner': self.subnet.cidr }
 
 
@@ -630,6 +637,7 @@ class AnycastipPolicy(Policy):
                  'dst_port': self.dst_port,
                  'table': self.table,
                  'policy': self.policy,
+                 'status': self.status,
                  'owner': self.ip.ip }
 
 
@@ -652,6 +660,7 @@ class IpPolicy(Policy):
                  'dst_port': self.dst_port,
                  'table': self.table,
                  'policy': self.policy,
+                 'status': self.status,
                  'owner': self.ip.ip }
 
 

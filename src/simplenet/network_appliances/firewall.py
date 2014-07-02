@@ -239,7 +239,7 @@ class Net(SimpleNet):
 
                 _data.update({'policy': policy_list})
                 logger.debug("Received rules: %s from %s with id %s and device %s" % (
-                    _data, owner_type, id, device['name'])
+                    _data, owner_type, _data['modified']['id'], device['name'])
                 )
                 if policy_list:
                     logger.info("Sending event to %s" % device['name'])
@@ -280,6 +280,20 @@ class Net(SimpleNet):
             logger.error("Policy created but firewall event failed %s" % str(e))
 
         return pol
+
+    def policy_ack(self, id):
+        _model, _ = new_model("Policy")
+        ss = session.query(_model).get(id)
+        if not ss:
+            logger.error("Policy [%s] could not be acked -- Not Found" % id)
+        else:
+            session.begin(subtransactions=True)
+            try:
+                ss.status = "INSERTED"
+                session.commit()
+            except Exception, e:
+                session.rollback()
+                raise e
 
     def policy_info(self, owner_type, id):
         return self._generic_info_("%sPolicy" % owner_type.capitalize(), {'id': id})

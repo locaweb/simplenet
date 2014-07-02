@@ -56,11 +56,11 @@ def get_logger():
     log_file = config.get("logging", "file")
     log_level = LOGGING_LEVELS.get(config.get("logging", "level").lower())
 
-    logger.setLevel(log_level)
-    fileHandler.setLevel(log_level)
-
     fileHandler = logging.FileHandler(log_file)
     fileHandler.setFormatter(formatter)
+
+    logger.setLevel(log_level)
+    fileHandler.setLevel(log_level)
 
     logger.addHandler(fileHandler)
 
