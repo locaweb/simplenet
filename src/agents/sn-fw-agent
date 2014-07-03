@@ -37,7 +37,7 @@ from lockfile import FileLock
 from supay import Daemon
 
 from kombu import Exchange, Queue
-from kombu import BrokerConnection
+from kombu import Connection
 from kombu.mixins import ConsumerMixin
 from kombu.utils.debug import setup_logging
 
@@ -64,9 +64,9 @@ class Worker(ConsumerMixin):
         self.connection = connection
         self.lockfile = config.get('firewall', 'lockfile')
         self.iptables_file = config.get('firewall', 'iptables_file')
-        self.logger = logger
         self.defaultiptables_file = config.get('firewall', 'defaultiptables_file')
         self.ext_eth = config.get('firewall', 'external_eth')
+        self.logger = logger
         if os.path.isfile(self.lockfile):
             os.unlink(self.lockfile)
 
@@ -81,7 +81,7 @@ class Worker(ConsumerMixin):
         with self.connection.Producer(exchange=media_exchange, serializer="json", routing_key="simplenet") as producer:
             producer.publish({'id': firewallrule_id, 'device': myname})
 
-    def _rules_diff(self):
+    def _rules_diff(self, body):
         new = open(self.iptables_file, "r").readlines()
         default = open(self.defaultiptables_file, "r").readlines()
         p = Popen(shlex.split('/sbin/iptables-save -t filter'), stdout=PIPE, stderr=PIPE)
@@ -89,6 +89,11 @@ class Worker(ConsumerMixin):
         old = [x.strip() for x in old.splitlines()]
         new = [x.strip() for x in new]
         default = [x.strip() for x in default]
+        try:
+            default = self._gen_iptables_defaulttemplate_(default, body, self.ext_eth)
+        except:
+            self.logger.error("Failed to parse default template")
+            raise
         new = new + default
         new = [x.replace("-I", "-A").replace("/32", "") for x in new]
         old = [x.replace("-I", "-A").replace("/32", "") for x in old]
@@ -99,11 +104,33 @@ class Worker(ConsumerMixin):
 
         return list(d.compare(old, new))
 
+    @staticmethod
+    def _gen_iptables_defaulttemplate_(iptables, body, ext_eth):
+        newiptables = set()
+        allcidrs = set()
+        allips = set()
+
+        for vlan in body.get("vlans", []):
+            for subnet in vlan.get("subnets", []):
+                if "\n".join(iptables).find("allcidrs") != -1:
+                    allcidrs.add(subnet.get("cidr"))
+                for ip in subnet.get("ips", []):
+                    if "\n".join(iptables).find("allips") != -1:
+                        allips.add(ip.get("ip"))
+
+        for line in iptables:
+            for cidr in allcidrs:
+                ll = line.format(allips="{allips}", allcidrs=cidr, ext_eth=ext_eth)
+                for ip in allips:
+                    ll = ll.format(allips=ip)
+            newiptables.add(ll)
+
+        return list(newiptables)
+
     def process_task(self, body, message):
         self.logger.info("TASK")
         start_time = datetime.now()
         self.iptables_save = []
-        self.local_cidr = []
         self.iptables_save.append('*filter')
         #self.logger.debug("Received payload %s" % json.dumps(body, sort_keys=True, indent=4))
 
@@ -118,7 +145,7 @@ class Worker(ConsumerMixin):
             if body.get("modified"):
                 self.logger.debug(body.get("modified"))
 
-            for line in self._rules_diff():
+            for line in self._rules_diff(body):
                 line = line.rstrip()
                 if line.startswith("+ "):
                     #self.logger.info(line)
@@ -219,11 +246,8 @@ class Worker(ConsumerMixin):
                            'INPUT': ['d'],
                            'OUTPUT': ['s'] }
 
-            if datacenter:
-                name = table
-                self.local_cidr.append(cidr)
-            else:
-                name = "%s-%s" % (table, name)
+            name = table if datacenter else "%s-%s" % (table, name)
+
             for direction in directions[table]:
                 self._add_rule_(
                     jump.format(action='A',
@@ -367,21 +391,9 @@ class Worker(ConsumerMixin):
             rule_dzvs_block(infos)
             self._gen_jumps_(rule['table'], anycastip['anycast'], anycastip['ip'], anycastip['ip'])
 
-    def _gen_iptables_outputchains_(self):
-        if self.local_cidr != []:
-            jump = "-A FORWARD -s {cidr} -o {ext_eth} -j ACCEPT"
-            for cidr in self.local_cidr:
-                self._add_rule_(
-                    jump.format(action='A',
-                                cidr=cidr,
-                                ext_eth=self.ext_eth
-                    )
-            )
-
     def _gen_iptables_save_(self, data):
         #self.logger.debug(json.dumps(data, sort_keys=True, indent=4))
         self._gen_iptables_chains_(data)
-        self._gen_iptables_outputchains_()
         self._add_firewall_mport_rules_(data)
 
 
@@ -408,7 +420,7 @@ def main(user, action, config_file):
     if not os.path.isdir(lockdir):
         os.makedirs(lockdir)
 
-    with BrokerConnection(config.get('firewall', 'broker')) as conn:
+    with Connection(config.get('firewall', 'broker')) as conn:
         Worker(conn, config, logger).run()
 
 
