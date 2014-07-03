@@ -65,6 +65,7 @@ class Worker(ConsumerMixin):
         self.lockfile = config.get('firewall', 'lockfile')
         self.iptables_file = config.get('firewall', 'iptables_file')
         self.logger = logger
+        self.defaultiptables_file = config.get('firewall', 'defaultiptables_file')
         self.ext_eth = config.get('firewall', 'external_eth')
         if os.path.isfile(self.lockfile):
             os.unlink(self.lockfile)
@@ -82,10 +83,13 @@ class Worker(ConsumerMixin):
 
     def _rules_diff(self):
         new = open(self.iptables_file, "r").readlines()
+        default = open(self.defaultiptables_file, "r").readlines()
         p = Popen(shlex.split('/sbin/iptables-save -t filter'), stdout=PIPE, stderr=PIPE)
         old, err = p.communicate()
         old = [x.strip() for x in old.splitlines()]
         new = [x.strip() for x in new]
+        default = [x.strip() for x in default]
+        new = new + default
         new = [x.replace("-I", "-A").replace("/32", "") for x in new]
         old = [x.replace("-I", "-A").replace("/32", "") for x in old]
         old.sort()
