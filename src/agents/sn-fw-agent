@@ -83,7 +83,10 @@ class Worker(ConsumerMixin):
 
     def _rules_diff(self, body):
         new = open(self.iptables_file, "r").readlines()
-        default = open(self.defaultiptables_file, "r").readlines()
+        try:
+            default = open(self.defaultiptables_file, "r").readlines()
+        except:
+            default = []
         p = Popen(shlex.split('/sbin/iptables-save -t filter'), stdout=PIPE, stderr=PIPE)
         old, err = p.communicate()
         old = [x.strip() for x in old.splitlines()]
@@ -94,9 +97,9 @@ class Worker(ConsumerMixin):
         except:
             self.logger.error("Failed to parse default template")
             raise
-        new = new + default
         new = [x.replace("-I", "-A").replace("/32", "") for x in new]
         old = [x.replace("-I", "-A").replace("/32", "") for x in old]
+        new = new + [x.replace("/32", "") for x in default]
         old.sort()
         new.sort()
 
@@ -119,11 +122,17 @@ class Worker(ConsumerMixin):
                         allips.add(ip.get("ip"))
 
         for line in iptables:
-            for cidr in allcidrs:
-                ll = line.format(allips="{allips}", allcidrs=cidr, ext_eth=ext_eth)
+            if line.find("allcidrs") != -1 and line.find("allips") != -1:
+                for cidr in allcidrs:
+                    ll = line.format(allips="{allips}", allcidrs=cidr, ext_eth=ext_eth)
+                    for ip in allips:
+                        newiptables.add(ll.format(allips=ip))
+            elif line.find("allcidrs") != -1:
+                for cidr in allcidrs:
+                    newiptables.add(line.format(allcidrs=cidr, ext_eth=ext_eth))
+            elif line.find("allips") != -1:
                 for ip in allips:
-                    ll = ll.format(allips=ip)
-            newiptables.add(ll)
+                    newiptables.add(line.format(allips=ip))
 
         return list(newiptables)
 
