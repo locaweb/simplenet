@@ -133,6 +133,8 @@ class Worker(ConsumerMixin):
             elif line.find("allips") != -1:
                 for ip in allips:
                     newiptables.add(line.format(allips=ip))
+            else:
+                newiptables.add(line)
 
         return list(newiptables)
 
