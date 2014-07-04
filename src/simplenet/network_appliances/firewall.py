@@ -325,6 +325,7 @@ class Net(SimpleNet):
         _model, _ = new_model("%sPolicy" % owner_type.capitalize())
         ss = session.query(_model).filter_by(**{'owner_id': id}).all()
         if ss:
+            session.begin(subtransactions=True)
             try:
                 for s in ss:
                     session.delete(s)
