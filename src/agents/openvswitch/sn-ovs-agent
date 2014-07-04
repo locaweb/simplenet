@@ -1,5 +1,4 @@
 #!/usr/bin/python2.6
-
 # Copyright 2014 Locaweb.
 # All Rights Reserved.
 #
@@ -19,6 +18,7 @@
 # @author: Luiz Ozaki, Locaweb.
 # @author: Eduardo S. Scarpellini, Locaweb.
 
+import pika
 import signal
 import re
 import getopt, sys
@@ -37,20 +37,11 @@ from ipaddr import IPv4Network, IPv4Address, IPv6Network, IPv6Address, IPNetwork
 
 from lockfile import FileLock, LockTimeout
 
-from kombu import Exchange, Queue
-from kombu import BrokerConnection
-
-from kombu.mixins import ConsumerMixin
-
-from kombu.utils import kwdict, reprcall
-from kombu.utils.debug import setup_logging
-
 import difflib
 import logging
 
 from subprocess import *
 
-setup_logging(loglevel="INFO")
 LOGGING_LEVELS = {'critical': logging.CRITICAL,
                   'error': logging.ERROR,
                   'warning': logging.WARNING,
@@ -79,6 +70,7 @@ def add_flow(addr, flow):
     # run ovs-vsctl set-controller xapi<number> pssl:port
     addr = addr.split(":")[1]
     command = ["ovs-ofctl", "add-flow", addr, flow]
+    print command
     _run_cmd(command)
 
 def del_flow(addr, flow):
@@ -86,19 +78,25 @@ def del_flow(addr, flow):
     # run ovs-vsctl set-controller xapi<number> pssl:port
     addr = addr.split(":")[1]
     command = ["ovs-ofctl", "del-flows", addr, flow]
+    print command
     _run_cmd(command)
 
 def add_vlan(addr, port, tag):
     # TODO: configure ovsdb remote access using
     # ovsdb-server --remote=ptcp:port
     command = ["ovs-vsctl", "set", "port", port, "tag=%s" % tag]
+    print command
     _run_cmd(command)
 
 def remove_vlan(addr, port):
     # TODO: configure ovsdb remote access using
     # ovsdb-server --remote=ptcp:port
-    command = ["ovs-vsctl", "clear", "port", port, "tag"]
-    _run_cmd(command)
+    try:
+        command = ["ovs-vsctl", "clear", "port", port, "tag"]
+        print command
+        _run_cmd(command)
+    except:
+        pass
 
 def _natural_sort_(l):
     l = [str(i) for i in l]
@@ -215,40 +213,10 @@ class NetworkWorker(object):
         del_flow(data['switch_id']['name'],
                 "dl_dst=%s" % data['id'])
 
-class Worker(ConsumerMixin):
-    def __init__(self, connection, lockfile, ovsdb):
-        self.connection = connection
-        self.lockfile = lockfile
-        self.ovsdb = ovsdb
-
-        if os.path.isfile(self.lockfile):
-            os.unlink(self.lockfile)
-
-    def get_consumers(self, Consumer, channel):
-        return [Consumer(queues=Queue(
-            myname, Exchange(myname, type="direct"),
-            routing_key=myname),
-        callbacks=[self.process_task])]
-
-    def process_task(self, body, message):
-        logging.debug("TASK")
-        a = datetime.now()
-
-        try:
-            lock = FileLock(self.lockfile.replace(".lock",""))
-            lock.acquire()
-            body['ovsdb'] = self.ovsdb
-            callback(body, message)
-        finally:
-            lock.release()
-
-        b = datetime.now()
-        c = b - a
-        logging.debug(c)
-
-def callback(body, message):
+def on_message(channel, method_frame, header_frame, body):
     logging.debug("Processing message with body: %s" % (body))
     try:
+        body = json.loads(body)
         nw = NetworkWorker()
         if body["action"] == "plug":
             nw.add(body)
@@ -263,7 +231,7 @@ def callback(body, message):
         #    nw.flush(body["switch_id"])
         else:
             logging.warn("Action not implemented: " + body["action"])
-        message.ack()
+        channel.basic_ack(delivery_tag=method_frame.delivery_tag)
     except AgentException as inst:
         logging.error(inst)
 
@@ -284,14 +252,22 @@ def main(user, config_file):
 
     logging.basicConfig(level=LOGGING_LEVELS.get(config.get('ovs','logging')), filename='/var/log/simplenet.log')
 
-    lockdir = os.path.split(config.get('ovs','lockfile'))[0]
-    if not os.path.isdir(lockdir):
-        os.makedirs(lockdir)
+    cred = pika.PlainCredentials(config.get('ovs','broker_user'),config.get('ovs','broker_pass'))
 
+    connection = pika.BlockingConnection(pika.ConnectionParameters(
+        config.get('ovs','broker_host'),
+        config.getint('ovs','broker_port'),
+        '/',
+        cred))
 
-    with BrokerConnection(config.get('ovs','broker')) as conn:
-        Worker(conn, config.get('ovs','lockfile'), config.get('ovs','ovsdb-port')).run()
+    channel = connection.channel()
 
+    channel.basic_consume(on_message, myname)
+
+    try:
+        channel.start_consuming()
+    finally:
+        connection.close()
 
 if __name__ == '__main__':
     try:
