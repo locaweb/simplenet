@@ -50,42 +50,26 @@ LOGGING_LEVELS = {'critical': logging.CRITICAL,
 
 
 myname = os.uname()[1]
+logger = None
 
 class AgentException(Exception):
     pass
 
 def _run_cmd(args):
-    logging.warn("Running command: %s" % (" ".join(args)))
+    logger.warn("Running command: %s" % (" ".join(args)))
     p = Popen(args, stdout=PIPE, stderr=PIPE)
     retval, reterr = p.communicate()
     if p.returncode == -(signal.SIGALRM):
-        logging.error("## timeout running command: " + " ".join(args))
+        logger.error("## timeout running command: " + " ".join(args))
     if p.returncode != 0:
         raise AgentException("Failed to run command %s.\nOutput %s" % (args, reterr))
 
     return retval
 
-def add_flow(addr, flow):
-    # TODO: configure ovs remote access using
-    # run ovs-vsctl set-controller xapi<number> pssl:port
-    addr = addr.split(":")[1]
-    command = ["ovs-ofctl", "add-flow", addr, flow]
-    print command
-    _run_cmd(command)
-
-def del_flow(addr, flow):
-    # TODO: configure ovs remote access using
-    # run ovs-vsctl set-controller xapi<number> pssl:port
-    addr = addr.split(":")[1]
-    command = ["ovs-ofctl", "del-flows", addr, flow]
-    print command
-    _run_cmd(command)
-
 def add_vlan(addr, port, tag):
     # TODO: configure ovsdb remote access using
     # ovsdb-server --remote=ptcp:port
     command = ["ovs-vsctl", "set", "port", port, "tag=%s" % tag]
-    print command
     _run_cmd(command)
 
 def remove_vlan(addr, port):
@@ -93,7 +77,6 @@ def remove_vlan(addr, port):
     # ovsdb-server --remote=ptcp:port
     try:
         command = ["ovs-vsctl", "clear", "port", port, "tag"]
-        print command
         _run_cmd(command)
     except:
         pass
@@ -106,6 +89,35 @@ def _natural_sort_(l):
 
 
 class NetworkWorker(object):
+
+    def __init__(self, body):
+        self.switch_name    = body.get("switch_id").get("name")
+        self.vlan_id        = body.get("vlan_id")
+        self.vlan_type      = self.vlan_id.get("type") if self.vlan_id is not None else None
+        self.vlan_num       = self.vlan_id.get("vlan_num", {}) if self.vlan_id is not None else None
+        self.vif            = body.get("name")
+        self.ofport         = body.get("ofport")
+        self.mac            = body.get("id")
+
+        if body.get("firewalls"):
+            self.firewall_macs  = [x['mac'] for x in body.get("firewalls") if x.get("mac")]
+        else:
+            self.firewall_macs = []
+
+    def add_flow(self, flow):
+        # TODO: configure ovs remote access using
+        # run ovs-vsctl set-controller xapi<number> pssl:port
+        addr = self.switch_name.split(":")[1]
+        command = ["ovs-ofctl", "add-flow", addr, flow]
+        _run_cmd(command)
+
+    def del_flow(self, flow):
+        # TODO: configure ovs remote access using
+        # run ovs-vsctl set-controller xapi<number> pssl:port
+        addr = self.switch_name.split(":")[1]
+        command = ["ovs-ofctl", "del-flows", addr, flow]
+        _run_cmd(command)
+
 #    def add_main_vif_gateway_flows(self, gateway_id):
 #        gateway = plugin_api.gateway_get(gateway_id)
 #        network = gateway.network
@@ -116,12 +128,12 @@ class NetworkWorker(object):
 #                mac = port.interface_id
 #                gw_to_mac = "priority=25000 dl_src=%s dl_dst=%s "
 #                gw_to_mac += "actions=strip_vlan,output:%s"
-#                switch.add_flow(gw_to_mac %
+#                switch.self.add_flow(gw_to_mac %
 #                        (gateway.mac, mac, port_binding.switch_port))
 #
 #                gw_broadcast = "priority=25000 dl_src=%s dl_dst=%s "
 #                gw_broadcast += "actions=strip_vlan,normal"
-#                switch.add_flow(gw_broadcast %
+#                switch.self.add_flow(gw_broadcast %
 #                        (gateway.mac, "ff:ff:ff:ff:ff:ff"))
 #
 #    def remove_main_vif_gateway_flows(self, gateway_id):
@@ -133,91 +145,107 @@ class NetworkWorker(object):
 #                switch.remove_flow("dl_src=%s" % (gateway.mac), strict=False)
 
     def add(self, data):
-        if data.get("vlan_id") is not None and data.get("vlan_id").get("type") == "dedicated_vlan":
-            switch = data['switch_id']['name']
-            vif = data['name']
-            vlan_num = data.get("vlan_id", {}).get("vlan_num", {})
-            add_vlan(switch, vif, vlan_num)
+        if self.vlan_id is not None and self.vlan_type == "dedicated_vlan":
+            add_vlan(self.switch_name, self.vif, self.vlan_num)
         else:
             for ip in data['ips']:
                 if ip['subnet']['vlan']['type'] == "private_vlan":
                     self.add_to_private_vlan(ip, data)
 
     def remove(self, data):
-        if data.get("vlan_id") is not None and data.get("vlan_id").get("type") == "dedicated_vlan":
-            switch = data['switch_id']['name']
-            vif = data['name']
-            remove_vlan(switch, vif)
+        if self.vlan_id is not None and self.vlan_type == "dedicated_vlan":
+            remove_vlan(self.switch_name, self.vif)
         else:
             for ip in data['ips']:
                 if ip['subnet']['vlan']['type'] == "private_vlan":
-                    self.remove_from_private_vlan(data)
+                    self.remove_from_private_vlan(ip['ip'])
                 else:
-                    logging.info("Unknown type. Ignoring...")
+                    logger.info("Unknown type. Ignoring...")
 
 #    def flush(self, switch_id):
 #        switch = plugin_api.switch_get(switch_id)
 #        switch.remove_flow("", strict=False)
 
-    def add_to_private_vlan(self, ip, data):
-        vlan_id = ip['subnet']['vlan']['vlan_num']
-        #FIXME OFPorts for output
-        output_ports = "bundle(eth_src,0,hrw,ofport,slaves:1,2)"
-        actions = "mod_vlan_vid:%s,%s" % (vlan_id, output_ports)
-        allow_ipv4 = "in_port=%s priority=40000 dl_type=0x0800 "
-        allow_ipv4 += "dl_src=%s nw_src=%s actions=%s"
-        add_flow(data['switch_id']['name'],
-                allow_ipv4 % (data['ofport'], data['id'], ip['ip'], actions))
+    def add_to_private_vlan(self, ipdata, data):
+        ip = ipdata['ip']
+        subnet_vlan_num = ipdata['subnet']['vlan']['vlan_num']
+        ##### TABLE 0 #####
+        rule = "table=0 dl_src=01:00:00:00:00:00/01:00:00:00:00:00 actions=drop" # multicast
+        self.add_flow(rule)
 
-        allow_arp = "in_port=%s priority=40000 dl_type=0x0806 "
-        allow_arp += "dl_src=%s nw_src=%s actions=%s"
-        add_flow(data['switch_id']['name'],
-                allow_arp % (data['ofport'], data['id'], ip['ip'], actions))
+        rule = "table=0 dl_dst=01:80:c2:00:00:00/ff:ff:ff:ff:ff:f0 actions=drop" # spanning tree
+        self.add_flow(rule)
 
-        drop = "in_port=%s priority=30000 action=drop"
-        add_flow(data['switch_id']['name'],
-                drop % data['ofport'])
+        rule = "table=0 priority=0 actions=resubmit(,1)" # default
+        self.add_flow(rule)
 
-        for gateway in data['firewalls']:
-            gw_to_mac = "priority=25000 dl_src=%s dl_dst=%s "
-            gw_to_mac += "actions=strip_vlan,output:%s"
-            add_flow(data['switch_id']['name'],
-                    gw_to_mac % (gateway['mac'], data['id'], data['ofport']))
+        ##### TABLE 1 #####
+        rule = "table=1 priority=0 actions=drop"
+        self.add_flow(rule)
 
-            gw_broadcast = "priority=25000 dl_src=%s dl_dst=%s "
-            gw_broadcast += "actions=strip_vlan,normal"
-            add_flow(data['switch_id']['name'],
-                    gw_broadcast % (gateway['mac'], "ff:ff:ff:ff:ff:ff"))
+        rule = "table=1 priority=100 dl_type=0x0806 actions=resubmit(,22)"
+        self.add_flow(rule)
+
+        for mac in self.firewall_macs:
+            rule = "table=1 priority=99 in_port=1 dl_src=%s actions=resubmit(,2)" % mac
+            self.add_flow(rule)
+            rule = "table=1 priority=99 dl_type=0x0800 dl_dst=%s actions=resubmit(,3)" % mac
+            ##### TABLE 22 #####
+            self.add_flow(rule)
+            rule = "table=22 priority=100 dl_type=0x0806 arp_sha=%s nw_dst=%s actions=strip_vlan,%s" % (
+                mac, ip, self.ofport
+            )
+            self.add_flow(rule)
+            rule = "table=22 priority=99 vlan_tci=0 in_port=%s dl_type=0x0806 dl_src=%s dl_dst=%s actions=mod_vlan_vid:%s,1" % (
+               self.ofport, self.mac, mac, subnet_vlan_num
+            )
+            self.add_flow(rule)
+
+        ##### TABLE 2 #####
+        rule = "table=2 priority=99 dl_type=0x0800 dl_dst=%s nw_dst=%s actions=strip_vlan,%s" % (
+            self.mac, ip, self.ofport
+        )
+        self.add_flow(rule)
+
+        ##### TABLE 3 #####
+        rule = "table=3 priority=99 dl_type=0x0800 dl_src=%s nw_src=%s actions=mod_vlan_vid:%s,1" % (
+            self.mac, ip, subnet_vlan_num
+        )
+        self.add_flow(rule)
+
+        ##### TABLE 22 #####
+        rule = "table=22 priority=99 vlan_tci=0 in_port=%s dl_type=0x0806 dl_src=%s dl_dst=ff:ff:ff:ff:ff:ff actions=mod_vlan_vid:%s,1" % (
+            self.ofport, self.mac, subnet_vlan_num
+        )
+        self.add_flow(rule)
+
+        rule = "table=22 priority=0 actions=drop"
+        self.add_flow(rule)
 
         dhcp_request = "priority=41000,udp,tp_src=68,tp_dst=67 "
         dhcp_request += "actions=mod_dl_dst:%s,local"
-        add_flow(data['switch_id']['name'],
-                dhcp_request % (data['switch_id']['mac']))
+        self.add_flow(dhcp_request % (data['switch_id']['mac']))
 
         dhcp_src = "priority=29000,arp,dl_src=%s actions=normal"
-        add_flow(data['switch_id']['name'],
-                dhcp_src % (data['switch_id']['mac']))
+        self.add_flow(dhcp_src % (data['switch_id']['mac']))
 
         dhcp_dst = "priority=41000,arp,dl_dst=%s actions=local"
-        add_flow(data['switch_id']['name'],
-                dhcp_dst % (data['switch_id']['mac']))
+        self.add_flow(dhcp_dst % (data['switch_id']['mac']))
 
         dhcp_reply = "priority=41000,udp,dl_src=%s,tp_src=67,"
         dhcp_reply += "tp_dst=68 actions=normal"
-        add_flow(data['switch_id']['name'],
-                dhcp_reply % (data['switch_id']['mac']))
+        self.add_flow(dhcp_reply % (data['switch_id']['mac']))
 
-    def remove_from_private_vlan(self, data):
-        del_flow(data['switch_id']['name'],
-                "dl_src=%s" % data['id'])
-        del_flow(data['switch_id']['name'],
-                "dl_dst=%s" % data['id'])
+    def remove_from_private_vlan(self, ip):
+        self.del_flow("dl_src=%s" % self.mac)
+        self.del_flow("dl_dst=%s" % self.mac)
+        self.del_flow("dl_type=0x0806 arp_tpa=%s" % ip)
 
 def on_message(channel, method_frame, header_frame, body):
-    logging.debug("Processing message with body: %s" % (body))
+    logger.debug("Processing message with body: %s" % (body))
     try:
         body = json.loads(body)
-        nw = NetworkWorker()
+        nw = NetworkWorker(body)
         if body["action"] == "plug":
             nw.add(body)
         elif body["action"] == "unplug":
@@ -230,10 +258,10 @@ def on_message(channel, method_frame, header_frame, body):
         #elif body["action"] == "flush":
         #    nw.flush(body["switch_id"])
         else:
-            logging.warn("Action not implemented: " + body["action"])
+            logger.warn("Action not implemented: " + body["action"])
         channel.basic_ack(delivery_tag=method_frame.delivery_tag)
     except AgentException as inst:
-        logging.error(inst)
+        logger.error(inst)
 
 def help():
     print '%s::' % sys.argv[0]
@@ -242,7 +270,8 @@ def help():
     print '   -c config </etc/simplenet/agents.cfg>'
 
 
-def main(user, config_file):
+def main(user, action, config_file):
+    global logger
     config = ConfigParser.ConfigParser()
     config.read(config_file)
 
@@ -250,7 +279,9 @@ def main(user, config_file):
         global myname
         myname = config.get('ovs','hostname')
 
-    logging.basicConfig(level=LOGGING_LEVELS.get(config.get('ovs','logging')), filename='/var/log/simplenet.log')
+    logger = create_logger(config)
+    if action == 'foreground':
+        logger.addHandler(logging.StreamHandler())
 
     cred = pika.PlainCredentials(config.get('ovs','broker_user'),config.get('ovs','broker_pass'))
 
@@ -268,6 +299,21 @@ def main(user, config_file):
         channel.start_consuming()
     finally:
         connection.close()
+
+def create_logger(config):
+    # create logger
+    logger = logging.getLogger('sn-ovs-agent')
+    logger.setLevel(LOGGING_LEVELS.get(config.get('ovs', 'logging')))
+
+    formatter = logging.Formatter('%(asctime)s [%(name)s/%(levelname)s] %(message)s')
+
+    fileHandler = logging.FileHandler('/var/log/simplenet-ovs.log')
+    fileHandler.setLevel(LOGGING_LEVELS.get(config.get('ovs', 'logging')))
+    fileHandler.setFormatter(formatter)
+
+    logger.addHandler(fileHandler)
+
+    return logger
 
 if __name__ == '__main__':
     try:
@@ -291,10 +337,10 @@ if __name__ == '__main__':
     daemon = Daemon(name='simplenet', catch_all_log='/var/log/simplenet-ovs.log')
     if action == 'start':
         daemon.start()
-        main(user, config)
+        main(user, action, config)
     elif action == 'status':
         daemon.status()
     elif action == 'stop':
         daemon.stop()
     elif action == 'foreground':
-        main(user, config)
+        main(user, action, config)
