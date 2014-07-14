@@ -16,7 +16,7 @@ NAME=simplenet-ovs-agent
 
 DAEMON=sn-ovs-agent
 DAEMON_BIN=/usr/sbin/sn-ovs-agent
-DAEMON_PIDFILE=/var/run/simplenet-ovs-agent.pid
+DAEMON_PIDFILE=/var/run/simplenet.pid
 SCRIPTNAME=/etc/init.d/$NAME
 
 # Exit if the package is not installed
@@ -51,10 +51,9 @@ rh_status_q() {
 }
 
 start() {
-    rh_status_q && return 0
     echo -n $"Starting $DESC" "$DAEMON"
     create_xconsole
-    daemon --pidfile=$DAEMON_PIDFILE $DAEMON -a start
+    daemon $DAEMON -a start
     RETVAL=$?
 
     echo
@@ -62,10 +61,9 @@ start() {
 }
 
 stop() {
-    rh_status_q && return 0
     echo -n $"Stopping $DESC" "$DAEMON"
 
-    daemon --pidfile=$DAEMON_PIDFILE $DAEMON -a stop
+    daemon $DAEMON -a stop
     RETVAL=$?
 
     echo
