@@ -91,7 +91,9 @@ def _natural_sort_(l):
 class NetworkWorker(object):
 
     def __init__(self, body):
-        self.switch_name    = body.get("switch_id").get("name")
+        self.switch_name    = None
+        if (body.get("switch_id")):
+            self.switch_name    = body.get("switch_id").get("name")
         self.vlan_id        = body.get("vlan_id")
         self.vlan_type      = self.vlan_id.get("type") if self.vlan_id is not None else None
         self.vlan_num       = self.vlan_id.get("vlan_num", {}) if self.vlan_id is not None else None
@@ -208,8 +210,8 @@ class NetworkWorker(object):
         self.add_flow(rule)
 
         ##### TABLE 3 #####
-        rule = "table=3 priority=99 dl_type=0x0800 dl_src=%s nw_src=%s actions=mod_vlan_vid:%s,1" % (
-            self.mac, ip, subnet_vlan_num
+        rule = "table=3 priority=99 in_port=%s dl_type=0x0800 dl_src=%s nw_src=%s actions=mod_vlan_vid:%s,1" % (
+            self.ofport, self.mac, ip, subnet_vlan_num
         )
         self.add_flow(rule)
 
@@ -246,9 +248,9 @@ def on_message(channel, method_frame, header_frame, body):
     try:
         body = json.loads(body)
         nw = NetworkWorker(body)
-        if body["action"] == "plug":
+        if body.get("action") and body["action"] == "plug":
             nw.add(body)
-        elif body["action"] == "unplug":
+        elif body.get("action") and body["action"] == "unplug":
             nw.remove(body)
         #elif body["action"] == "add_gw":
         #    nw.add_main_vif_gateway_flows(body["gateway_id"])
@@ -258,7 +260,7 @@ def on_message(channel, method_frame, header_frame, body):
         #elif body["action"] == "flush":
         #    nw.flush(body["switch_id"])
         else:
-            logger.warn("Action not implemented: " + body["action"])
+            logger.warn("Action not implemented: " + str(body))
         channel.basic_ack(delivery_tag=method_frame.delivery_tag)
     except AgentException as inst:
         logger.error(inst)
@@ -293,6 +295,7 @@ def main(user, action, config_file):
 
     channel = connection.channel()
 
+    channel.queue_declare(queue=myname, durable=True, exclusive=False, auto_delete=False)
     channel.basic_consume(on_message, myname)
 
     try:
