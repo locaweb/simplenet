@@ -384,9 +384,17 @@ class Ip(Base):
         self.id = str(uuid.uuid4())
         self.ip = ip
         self.subnet_id = subnet_id
+        self.switch_name = None
 
     def __repr__(self):
        return "<Ip('%s','%s','%s')>" % (self.id, self.ip, self.interface_id)
+
+    def _get_switch_name(self):
+        sw = None
+        if (self.interface.switch):
+            if (self.interface.switch.name):
+                sw = self.interface.switch.name
+        return sw
 
     def to_dict(self):
         hostname = self.interface.hostname if self.interface else None
@@ -396,6 +404,7 @@ class Ip(Base):
             'subnet': self.subnet.cidr,
             'subnet_id': self.subnet_id,
             'interface_id': self.interface_id,
+            'switch_name': self._get_switch_name(),
             'hostname': hostname,
         }
 

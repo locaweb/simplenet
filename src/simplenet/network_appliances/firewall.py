@@ -178,7 +178,7 @@ class Net(SimpleNet):
 
         return device
 
-    def _enqueue_rules_(self, owner_type, owner_id, mod):
+    def _enqueue_rules_(self, owner_type, owner_id, send_openflow, action, mod):
         logger.debug("Getting rules from %s with id %s" % (owner_type, owner_id))
         policy_list = []
         _get_data = getattr(self, "_get_data_%s_" % owner_type)
@@ -191,6 +191,15 @@ class Net(SimpleNet):
         devices = self.firewall_list_by_zone(zone_id)
 
         self._enqueue_device_rules_(_data, devices, owner_type)
+        if (send_openflow and owner_type == "ip"):
+            ip = _get_data(owner_id)
+            if (ip.get('switch_name')):
+                if action == "ADD":
+                    event.EventManager().raise_event(ip['switch_name'].split(":")[0], {"action": "add_openflow_fw",
+                        "bridge": ip['switch_name'].split(":")[1], "firewallrule": mod})
+                elif action == "DELETE":
+                    event.EventManager().raise_event(ip['switch_name'].split(":")[0], {"action": "del_openflow_fw",
+                        "bridge": ip['switch_name'].split(":")[1], "firewallrule": mod})
 
     def _enqueue_device_rules_(self, data, devices, owner_type):
         policy_list = []
@@ -239,7 +248,7 @@ class Net(SimpleNet):
 
                 _data.update({'policy': policy_list})
                 logger.debug("Received rules: %s from %s with id %s and device %s" % (
-                    _data, owner_type, _data['modified']['id'], device['name'])
+                    _data, owner_type, _data, device['name'])
                 )
                 if policy_list:
                     logger.info("Sending event to %s" % device['name'])
@@ -249,7 +258,7 @@ class Net(SimpleNet):
     def policy_list(self, owner_type):
         return self._generic_list_("%sPolicy" % owner_type.capitalize())
 
-    def policy_create(self, owner_type, owner_id, data):
+    def policy_create(self, owner_type, owner_id, send_openflow, data):
         logger.debug("Creating rule on %s: %s using data: %s" %
             (owner_type, owner_id, data)
         )
@@ -272,9 +281,8 @@ class Net(SimpleNet):
             (policy.id, owner_type, owner_id, data)
         )
         pol = self.policy_info(owner_type, policy.id)
-
         try:
-            self._enqueue_rules_(owner_type, owner_id, pol)
+            self._enqueue_rules_(owner_type, owner_id, send_openflow, "ADD", pol)
         except Exception, e:
             raise
             logger.error("Policy created but firewall event failed %s" % str(e))
@@ -318,7 +326,7 @@ class Net(SimpleNet):
             raise Exception(e)
 
         logger.debug("Successful deletion of policy %s" % id)
-        self._enqueue_rules_(owner_type, owner_id, modified)
+        self._enqueue_rules_(owner_type, owner_id, True, "DELETE", modified)
         return True
 
     def policy_delete_by_owner(self, owner_type, id):
@@ -327,13 +335,17 @@ class Net(SimpleNet):
         if ss:
             session.begin(subtransactions=True)
             try:
+                entries = []
                 for s in ss:
+                    entries.append(s.to_dict())
                     session.delete(s)
                 session.commit()
             except Exception, e:
                 session.rollback()
                 raise Exception(e)
-            self._enqueue_rules_(owner_type, id, {})
+
+            for modified in entries:
+                self._enqueue_rules_(owner_type, id, True, "DELETE", modified)
 
     def policy_list_by_owner(self, owner_type, id):
         return self._generic_list_by_something_(

@@ -33,6 +33,8 @@ from simplenet.common.http_utils import (
 
 logger = get_logger()
 
+send_openflow = config.getboolean("event", "send_openflow")
+
 
 @get('/v1/firewalls')
 @handle_auth
@@ -84,7 +86,7 @@ def policy_create(owner_type, id):
     if not data:
         abort(400, 'No data received')
     data = json.loads(data)
-    policy = manager.policy_create(owner_type, id, data)
+    policy = manager.policy_create(owner_type, id, send_openflow, data)
     location = "firewalls/policies/%s/%s" % (owner_type, policy['id'])
     response.set_header("Location", location)
     return policy
