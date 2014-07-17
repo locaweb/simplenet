@@ -327,13 +327,17 @@ class Net(SimpleNet):
         if ss:
             session.begin(subtransactions=True)
             try:
+                entries = []
                 for s in ss:
+                    entries.append(s.to_dict())
                     session.delete(s)
                 session.commit()
             except Exception, e:
                 session.rollback()
                 raise Exception(e)
-            self._enqueue_rules_(owner_type, id, {})
+
+            for modified in entries:
+                self._enqueue_rules_(owner_type, id, modified)
 
     def policy_list_by_owner(self, owner_type, id):
         return self._generic_list_by_something_(
