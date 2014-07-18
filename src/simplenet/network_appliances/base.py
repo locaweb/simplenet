@@ -23,6 +23,7 @@ from simplenet.db.models import (
         new_model, Prober, Datacenter, Zone, Interface,
         Vlan, Subnet, Anycast, Ip, Anycastip
 )
+from simplenet.common import event
 from simplenet.db import db_utils
 from simplenet.exceptions import (
     FeatureNotAvailable, EntityNotFound,
@@ -588,11 +589,14 @@ class SimpleNet(object):
         try:
             pol = simplenet.network_appliances.firewall.Net()
             pol.policy_delete_by_owner("ip", id)
-            val = self._generic_delete_("Ip", {'id': id})
-            return val
+            ip = self.ip_info(id)
+            if ip['interface_id'] is not None:
+                self.interface_remove_ip(ip['interface_id'], ip['ip'])
         except:
             self.logger.exception("Failed to delete IP")
-            raise OperationFailed("Failed to delete IP")
+            raise
+        val = self._generic_delete_("Ip", {'id': id})
+        return val
 
     def anycastip_delete(self, id):
         return self._generic_delete_("Anycastip", {'id': id})
@@ -721,10 +725,22 @@ class SimpleNet(object):
         except Exception, e:
             self.session.rollback()
             raise Exception(e)
-        #self._enqueue_dhcp_entries_(ip.subnet.vlan, 'update')
-        _data = interface.to_dict()
-        self.logger.debug("Successful adding IP to interface status: %s" % _data)
 
+        _data = interface.tree_dict()
+        _data['action'] = "replug"
+        zones = set()
+        for ip in _data['ips']:
+            zones.add(ip['subnet']['vlan']['zone_id'])
+
+        _data['firewalls'] = []
+        for zone in zones:
+            for fw in self.firewall_list_by_zone(zone):
+                _data['firewalls'].append(fw) if fw.get("mac") is not None else None
+
+        if (_data.get("switch_id")):
+            event.EventManager().raise_event(_data['switch_id']['name'].split(":")[0], _data)
+
+        self.logger.debug("Successful adding IP to interface status: %s" % _data)
         return _data
 
     @post_run
@@ -747,11 +763,17 @@ class SimpleNet(object):
             except Exception, e:
                 self.session.rollback()
                 raise Exception(e)
-            _data = interface.to_dict()
+            _data = interface.tree_dict()
+            if (_data.get("switch_id")):
+                event_data = ip.to_dict()
+                event_data['action'] = "removeip"
+                event_data['name'] = _data['name']
+                event_data['id'] = _data['id']
+                event_data['switch_id'] = _data['switch_id']
+                event.EventManager().raise_event(_data['switch_id']['name'].split(":")[0], event_data)
             self.logger.debug("Successful removing IP to interface status: %s" % _data)
         else:
             _data = interface.to_dict()
-        #self._enqueue_dhcp_entries_(ip.subnet.vlan, 'update')
         return _data
 
 class Net(SimpleNet):
