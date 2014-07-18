@@ -52,7 +52,10 @@ def error405(err):
 @error(500)
 @reply_json
 def error500(err):
-    return {"status": err.status, "message": err.exception.__repr__()}
+    if err.exception is not None:
+        return {"status": err.status, "message": err.exception.__repr__()}
+    else:
+        return {"status": err.status, "message": err.output}
 
 
 @error(501)

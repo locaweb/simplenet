@@ -26,7 +26,8 @@ from simplenet.db.models import (
 from simplenet.db import db_utils
 from simplenet.exceptions import (
     FeatureNotAvailable, EntityNotFound,
-    OperationNotPermited, DuplicatedEntryError
+    OperationNotPermited, DuplicatedEntryError,
+    OperationFailed
 )
 from sqlalchemy.exc import IntegrityError
 
@@ -583,11 +584,15 @@ class SimpleNet(object):
         raise FeatureNotAvailable()
 
     def ip_delete(self, id):
-        val = self._generic_delete_("Ip", {'id': id})
         import simplenet.network_appliances.firewall
-        pol = simplenet.network_appliances.firewall.Net()
-        pol.policy_delete_by_owner("ip", id)
-        return val
+        try:
+            pol = simplenet.network_appliances.firewall.Net()
+            pol.policy_delete_by_owner("ip", id)
+            val = self._generic_delete_("Ip", {'id': id})
+            return val
+        except:
+            self.logger.exception("Failed to delete IP")
+            raise OperationFailed("Failed to delete IP")
 
     def anycastip_delete(self, id):
         return self._generic_delete_("Anycastip", {'id': id})
