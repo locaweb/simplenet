@@ -105,11 +105,8 @@ class NetworkWorker(object):
         self.vlan_num       = self.vlan_id.get("vlan_num", {}) if self.vlan_id is not None else None
         self.vif            = body.get("name")
         self.mac            = body.get("id")
+        self.ofport         = body.get("ofport")
 
-        if (body.get("ofport")):
-            self.ofport         = body.get("ofport")
-        else:
-            self.ofport         = get_ofport(self.vif)
         if body.get("firewalls"):
             self.firewall_macs  = [x['mac'] for x in body.get("firewalls") if x.get("mac")]
         else:
@@ -262,12 +259,13 @@ def on_message(channel, method_frame, header_frame, body):
     try:
         body = json.loads(body)
         nw = NetworkWorker(body)
-        if body.get("action") and body["action"] == "plug" or body["action"] == "replug":
-            nw.add(body)
-        elif body.get("action") and body["action"] == "unplug":
-            nw.remove(body)
-        elif body.get("action") and body["action"] == "removeip":
-            nw.remove_ip_from_private_vlan(body["ip"])
+        if body.get("action"):
+            if body["action"] == "plug" or body["action"] == "replug":
+                nw.add(body)
+            elif body["action"] == "unplug":
+                nw.remove(body)
+            elif body["action"] == "removeip":
+                nw.remove_ip_from_private_vlan(body["ip"])
         #elif body["action"] == "add_gw":
         #    nw.add_main_vif_gateway_flows(body["gateway_id"])
         #elif body["action"] == "del_gw":
