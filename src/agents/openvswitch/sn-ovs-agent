@@ -81,6 +81,12 @@ def remove_vlan(addr, port):
     except:
         pass
 
+def get_ofport(port):
+    command = ["ovs-vsctl", "get", "Interface", port, "ofport"]
+    out = _run_cmd(command)
+    if out:
+        return out.strip()
+
 def _natural_sort_(l):
     l = [str(i) for i in l]
     convert = lambda s: int(s) if s.isdigit() else s.lower()
@@ -98,9 +104,9 @@ class NetworkWorker(object):
         self.vlan_type      = self.vlan_id.get("type") if self.vlan_id is not None else None
         self.vlan_num       = self.vlan_id.get("vlan_num", {}) if self.vlan_id is not None else None
         self.vif            = body.get("name")
-        self.ofport         = body.get("ofport")
         self.mac            = body.get("id")
 
+        self.ofport         = body.get("ofport")
         if body.get("firewalls"):
             self.firewall_macs  = [x['mac'] for x in body.get("firewalls") if x.get("mac")]
         else:
@@ -181,43 +187,67 @@ class NetworkWorker(object):
         rule = "table=0 priority=0 actions=resubmit(,1)" # default
         self.add_flow(rule)
 
+        rule = "table=0 priority=100 dl_type=0x0806 actions=resubmit(,22)"
+        self.add_flow(rule)
+
+        ####
+        #### TABLE 0 - Triage
+        #### TABLE 1 - MAC verification
+        #### TABLE 2 - INPUT policies
+        #### TABLE 3 - OUTPUT policies
+        #### TABLE 10 - INPUT safe
+        #### TABLE 11 - OUTPUT safe
+        #### TABLE 22 - ARP stuff
+        ####
+
         ##### TABLE 1 #####
         rule = "table=1 priority=0 actions=drop"
         self.add_flow(rule)
 
-        rule = "table=1 priority=100 dl_type=0x0806 actions=resubmit(,22)"
-        self.add_flow(rule)
-
         for mac in self.firewall_macs:
-            rule = "table=1 priority=99 in_port=1 dl_src=%s actions=resubmit(,2)" % mac
+            rule = "table=1 priority=99 in_port=1 dl_src=%s actions=resubmit(,10)" % mac
             self.add_flow(rule)
-            rule = "table=1 priority=99 dl_type=0x0800 dl_dst=%s actions=resubmit(,3)" % mac
             ##### TABLE 22 #####
             self.add_flow(rule)
-            rule = "table=22 priority=100 dl_type=0x0806 arp_sha=%s nw_dst=%s actions=strip_vlan,%s" % (
-                mac, ip, self.ofport
+            rule = "table=22 priority=100 dl_type=0x0806 arp_sha=%s nw_dst=%s actions=resubmit(,10)" % (
+                mac, ip
             )
             self.add_flow(rule)
-            rule = "table=22 priority=99 vlan_tci=0 in_port=%s dl_type=0x0806 dl_src=%s dl_dst=%s actions=mod_vlan_vid:%s,1" % (
-               self.ofport, self.mac, mac, subnet_vlan_num
+            rule = "table=22 priority=99 in_port=%s dl_src=%s dl_dst=%s actions=resubmit(,11)" % (
+               self.ofport, self.mac, mac
             )
             self.add_flow(rule)
 
-        ##### TABLE 2 #####
-        rule = "table=2 priority=99 dl_type=0x0800 dl_dst=%s nw_dst=%s actions=strip_vlan,%s" % (
-            self.mac, ip, self.ofport
+        rule = "table=1 priority=99 dl_type=0x0800 dl_dst=%s nw_dst=%s actions=resubmit(,10)" % (
+            self.mac, ip
         )
         self.add_flow(rule)
 
-        ##### TABLE 3 #####
-        rule = "table=3 priority=99 in_port=%s dl_type=0x0800 dl_src=%s nw_src=%s actions=mod_vlan_vid:%s,1" % (
-            self.ofport, self.mac, ip, subnet_vlan_num
+        rule = "table=1 priority=99 in_port=%s dl_type=0x0800 dl_src=%s nw_src=%s actions=resubmit(,11)" % (
+            self.ofport, self.mac, ip
+        )
+        self.add_flow(rule)
+
+        ##### TABLE 10 #####
+        rule = "table=10 priority=99 dl_dst=%s actions=strip_vlan,%s" % (
+            self.mac, self.ofport
+        )
+        self.add_flow(rule) # MAC based OUTPUT
+
+        rule = "table=10 priority=99 ip nw_dst=%s actions=strip_vlan,%s" % (
+            ip, self.ofport
+        )
+        self.add_flow(rule) # IP based OUTPUT
+
+        ##### TABLE 11 #####
+        rule = "table=11 priority=99 dl_src=%s actions=mod_vlan_vid:%s,1" % (
+            self.mac, subnet_vlan_num
         )
         self.add_flow(rule)
 
         ##### TABLE 22 #####
-        rule = "table=22 priority=99 vlan_tci=0 in_port=%s dl_type=0x0806 dl_src=%s dl_dst=ff:ff:ff:ff:ff:ff actions=mod_vlan_vid:%s,1" % (
-            self.ofport, self.mac, subnet_vlan_num
+        rule = "table=22 priority=99 vlan_tci=0 in_port=%s dl_type=0x0806 dl_src=%s dl_dst=ff:ff:ff:ff:ff:ff actions=resubmit(,11)" % (
+            self.ofport, self.mac
         )
         self.add_flow(rule)
 
@@ -243,15 +273,26 @@ class NetworkWorker(object):
         self.del_flow("dl_dst=%s" % self.mac)
         self.del_flow("dl_type=0x0806 arp_tpa=%s" % ip)
 
+    def remove_ip_from_private_vlan(self, ip):
+        self.del_flow("ip,dl_src=%s,nw_src=%s" % (self.mac, ip))
+        self.del_flow("ip,dl_dst=%s,nw_dst=%s" % (self.mac, ip))
+        self.del_flow("arp,arp_tpa=%s" % ip)
+
 def on_message(channel, method_frame, header_frame, body):
     logger.debug("Processing message with body: %s" % (body))
     try:
         body = json.loads(body)
         nw = NetworkWorker(body)
-        if body.get("action") and body["action"] == "plug":
-            nw.add(body)
-        elif body.get("action") and body["action"] == "unplug":
-            nw.remove(body)
+        #self.ofport         = get_ofport(self.vif)
+        if body.get("action"):
+            if body["action"] == "plug" or body["action"] == "replug":
+                nw.add(body)
+            elif body["action"] == "unplug":
+                nw.remove(body)
+            elif body["action"] == "removeip":
+                nw.remove_ip_from_private_vlan(body["ip"])
+            #elif body["action"] == "add_openflow_fw":
+            #    nw.add_of(body["firewallrule"], body["bridge"])
         #elif body["action"] == "add_gw":
         #    nw.add_main_vif_gateway_flows(body["gateway_id"])
         #elif body["action"] == "del_gw":
