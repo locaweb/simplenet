@@ -105,6 +105,7 @@ class NetworkWorker(object):
         self.vlan_num       = self.vlan_id.get("vlan_num", {}) if self.vlan_id is not None else None
         self.vif            = body.get("name")
         self.mac            = body.get("id")
+        self.ofport         = body.get("ofport")
 
         self.ofport         = body.get("ofport")
         if body.get("firewalls"):
