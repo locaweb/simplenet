@@ -31,7 +31,7 @@ import bottle
 from bottle import delete, put, get, post, error, run, debug
 from bottle import abort, request, ServerAdapter, response
 
-from simplenet.common.callback import callback_run
+from simplenet.common.callback import callback_run, callback_run2
 from simplenet.common.config import config, stdout_logger, StdOutAndErrWapper, get_logger
 from simplenet.routes import base, policy, errors, switch
 
@@ -47,6 +47,7 @@ def start():
     logger.info("Starting SimpleNet Server")
     try:
         thread.start_new_thread( callback_run )
+        thread.start_new_thread( callback_run2 )
     except:
         logger.exception("Error: unable to start thread")
     run(host=bind_addr, port=port, server="gevent")

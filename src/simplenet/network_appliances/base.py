@@ -115,6 +115,8 @@ class SimpleNet(object):
         )
         return {
             'ip': ip['ip'],
+            'switch_name': ip['switch_name'],
+            'mac': ip['interface_id'],
             'subnet': subnet['cidr'],
             'subnet_id': subnet['id'],
             'vlan': vlan['name'],

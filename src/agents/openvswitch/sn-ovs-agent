@@ -100,6 +100,8 @@ class NetworkWorker(object):
         self.switch_name    = None
         if (body.get("switch_id")):
             self.switch_name    = body.get("switch_id").get("name")
+        elif (body.get("switch_name")):
+            self.switch_name    = body.get("switch_name")
         self.vlan_id        = body.get("vlan_id")
         self.vlan_type      = self.vlan_id.get("type") if self.vlan_id is not None else None
         self.vlan_num       = self.vlan_id.get("vlan_num", {}) if self.vlan_id is not None else None
@@ -107,7 +109,9 @@ class NetworkWorker(object):
         self.mac            = body.get("id")
         self.ofport         = body.get("ofport")
 
-        self.ofport         = body.get("ofport")
+        if (body.get("mac")):
+            self.mac        = body.get("mac")
+
         if body.get("firewalls"):
             self.firewall_macs  = [x['mac'] for x in body.get("firewalls") if x.get("mac")]
         else:
@@ -120,11 +124,14 @@ class NetworkWorker(object):
         command = ["ovs-ofctl", "add-flow", addr, flow]
         _run_cmd(command)
 
-    def del_flow(self, flow):
+    def del_flow(self, flow, strict=None):
         # TODO: configure ovs remote access using
         # run ovs-vsctl set-controller xapi<number> pssl:port
         addr = self.switch_name.split(":")[1]
-        command = ["ovs-ofctl", "del-flows", addr, flow]
+        if (strict):
+            command = ["ovs-ofctl", "del-flows", addr, flow, "--strict"]
+        else:
+            command = ["ovs-ofctl", "del-flows", addr, flow]
         _run_cmd(command)
 
 #    def add_main_vif_gateway_flows(self, gateway_id):
@@ -154,12 +161,15 @@ class NetworkWorker(object):
 #                switch.remove_flow("dl_src=%s" % (gateway.mac), strict=False)
 
     def add(self, data):
+        ip_ids = []
         if self.vlan_id is not None and self.vlan_type == "dedicated_vlan":
             add_vlan(self.switch_name, self.vif, self.vlan_num)
         else:
             for ip in data['ips']:
                 if ip['subnet']['vlan']['type'] == "private_vlan":
-                    self.add_to_private_vlan(ip, data)
+                    self.add_to_private_vlan(ip['ip'], ip['subnet']['vlan']['vlan_num'], data['switch_id']['mac'])
+                    ip_ids.append(ip['id'])
+        return ip_ids
 
     def remove(self, data):
         if self.vlan_id is not None and self.vlan_type == "dedicated_vlan":
@@ -175,9 +185,7 @@ class NetworkWorker(object):
 #        switch = plugin_api.switch_get(switch_id)
 #        switch.remove_flow("", strict=False)
 
-    def add_to_private_vlan(self, ipdata, data):
-        ip = ipdata['ip']
-        subnet_vlan_num = ipdata['subnet']['vlan']['vlan_num']
+    def add_to_private_vlan(self, ip, subnet_vlan_num, switch_mac):
         ##### TABLE 0 #####
         rule = "table=0 dl_src=01:00:00:00:00:00/01:00:00:00:00:00 actions=drop" # multicast
         self.add_flow(rule)
@@ -188,7 +196,7 @@ class NetworkWorker(object):
         rule = "table=0 priority=0 actions=resubmit(,1)" # default
         self.add_flow(rule)
 
-        rule = "table=0 priority=100 dl_type=0x0806 actions=resubmit(,22)"
+        rule = "table=0 priority=100 arp actions=resubmit(,22)"
         self.add_flow(rule)
 
         ####
@@ -201,16 +209,16 @@ class NetworkWorker(object):
         #### TABLE 22 - ARP stuff
         ####
 
-        ##### TABLE 1 #####
+        ##### TABLE 1 ##### - MAC verification
         rule = "table=1 priority=0 actions=drop"
         self.add_flow(rule)
 
         for mac in self.firewall_macs:
-            rule = "table=1 priority=99 in_port=1 dl_src=%s actions=resubmit(,10)" % mac
+            rule = "table=1 priority=99 in_port=1 dl_src=%s actions=resubmit(,2)" % mac
             self.add_flow(rule)
             ##### TABLE 22 #####
             self.add_flow(rule)
-            rule = "table=22 priority=100 dl_type=0x0806 arp_sha=%s nw_dst=%s actions=resubmit(,10)" % (
+            rule = "table=22 priority=100 arp arp_sha=%s nw_dst=%s actions=resubmit(,10)" % (
                 mac, ip
             )
             self.add_flow(rule)
@@ -219,35 +227,60 @@ class NetworkWorker(object):
             )
             self.add_flow(rule)
 
-        rule = "table=1 priority=99 dl_type=0x0800 dl_dst=%s nw_dst=%s actions=resubmit(,10)" % (
-            self.mac, ip
-        )
-        self.add_flow(rule)
-
-        rule = "table=1 priority=99 in_port=%s dl_type=0x0800 dl_src=%s nw_src=%s actions=resubmit(,11)" % (
+        rule = "table=1 priority=99 in_port=%s ip dl_src=%s nw_src=%s actions=resubmit(,11)" % (
             self.ofport, self.mac, ip
         )
         self.add_flow(rule)
 
-        ##### TABLE 10 #####
+        ##### DEFAULT TABLE 2 ##### - INPUT policies
+        rule = "table=2 priority=1000 icmp actions=resubmit(,10)" # Accept all ICMP
+        self.add_flow(rule)
+
+        rule = "table=2 priority=1000 udp tp_src=53 actions=resubmit(,10)" # Accept all DNS
+        self.add_flow(rule)
+
+        rule = "table=2 priority=1000 udp tp_src=123 actions=resubmit(,10)" # Accept all NTP
+        self.add_flow(rule)
+
+        rule = "table=2 priority=1000 tcp tcp_flags=+syn+ack actions=resubmit(,10)"
+        self.add_flow(rule)
+
+        rule = "table=2 priority=1000 tcp tcp_flags=+ack actions=resubmit(,10)"
+        self.add_flow(rule)
+
+        rule = "table=2 priority=1000 tcp tcp_flags=+rst actions=resubmit(,10)"
+        self.add_flow(rule)
+
+        ##### TABLE 2 ##### - INPUT policies
+        #rule = "table=2 priority=99 ip dl_dst=%s nw_dst=%s actions=resubmit(,10)" % (
+        #    self.mac, ip
+        #) # Accept all INPUT
+        #self.add_flow(rule)
+
+        ##### TABLE 10 ##### - INPUT safe
         rule = "table=10 priority=99 dl_dst=%s actions=strip_vlan,%s" % (
             self.mac, self.ofport
-        )
-        self.add_flow(rule) # MAC based OUTPUT
+        ) # MAC based forwarding
+        self.add_flow(rule)
 
         rule = "table=10 priority=99 ip nw_dst=%s actions=strip_vlan,%s" % (
             ip, self.ofport
-        )
-        self.add_flow(rule) # IP based OUTPUT
+        ) # IP based forwarding
+        self.add_flow(rule)
 
-        ##### TABLE 11 #####
+        rule = "table=10 priority=99 arp nw_dst=%s actions=strip_vlan,%s" % (
+            ip, self.ofport
+        ) # IP based forwarding
+        self.add_flow(rule)
+
+        ##### TABLE 11 ##### - OUTPUT safe
         rule = "table=11 priority=99 dl_src=%s actions=mod_vlan_vid:%s,1" % (
             self.mac, subnet_vlan_num
-        )
+        ) # MAC based forwarding to the FW
         self.add_flow(rule)
 
         ##### TABLE 22 #####
-        rule = "table=22 priority=99 vlan_tci=0 in_port=%s dl_type=0x0806 dl_src=%s dl_dst=ff:ff:ff:ff:ff:ff actions=resubmit(,11)" % (
+        rule = "table=22 priority=99 vlan_tci=0 in_port=%s arp dl_src=%s dl_dst=ff:ff:ff:ff:ff:ff actions=resubmit(,11)" % (
             self.ofport, self.mac
         )
         self.add_flow(rule)
@@ -257,43 +290,96 @@ class NetworkWorker(object):
 
         dhcp_request = "priority=41000,udp,tp_src=68,tp_dst=67 "
         dhcp_request += "actions=mod_dl_dst:%s,local"
-        self.add_flow(dhcp_request % (data['switch_id']['mac']))
+        self.add_flow(dhcp_request % (switch_mac))
 
         dhcp_src = "priority=29000,arp,dl_src=%s actions=normal"
-        self.add_flow(dhcp_src % (data['switch_id']['mac']))
+        self.add_flow(dhcp_src % (switch_mac))
 
         dhcp_dst = "priority=41000,arp,dl_dst=%s actions=local"
-        self.add_flow(dhcp_dst % (data['switch_id']['mac']))
+        self.add_flow(dhcp_dst % (switch_mac))
 
         dhcp_reply = "priority=41000,udp,dl_src=%s,tp_src=67,"
         dhcp_reply += "tp_dst=68 actions=normal"
-        self.add_flow(dhcp_reply % (data['switch_id']['mac']))
+        self.add_flow(dhcp_reply % (switch_mac))
 
     def remove_from_private_vlan(self, ip):
         self.del_flow("dl_src=%s" % self.mac)
         self.del_flow("dl_dst=%s" % self.mac)
-        self.del_flow("dl_type=0x0806 arp_tpa=%s" % ip)
+        self.del_flow("ip,nw_dst=%s" % ip)
+        self.del_flow("arp arp_tpa=%s" % ip)
 
     def remove_ip_from_private_vlan(self, ip):
         self.del_flow("ip,dl_src=%s,nw_src=%s" % (self.mac, ip))
         self.del_flow("ip,dl_dst=%s,nw_dst=%s" % (self.mac, ip))
+        self.del_flow("ip,nw_dst=%s" % ip)
         self.del_flow("arp,arp_tpa=%s" % ip)
+
+    def offw_add(self, rule):
+        self.add_fw_rule(rule["proto"], rule["owner"], rule["dst_port"], rule["src"], rule["src_port"])
+        #{"action": "add_openflow_fw", "bridge": "xenbr5", "firewallrule": {"status": "PENDING", "owner": "191.252.0.8", "table": "FORWARD", "id": "4ae8d6ad-ad4b-4026-83f6-df8c3812d6f7", "src": "0.0.0.0/0", "src_port": "", "proto": "tcp", "dst": "", "dst_port": "5555", "policy": "ACCEPT", "owner_id": "8177468b-2d9e-42a4-94bf-278ca8c31e83"}}
+
+    def offw_remove(self, rule):
+        self.remove_fw_rule(rule["proto"], rule["owner"], rule["dst_port"], rule["src"], rule["src_port"])
+
+    def add_fw_rule(self, proto, ip, dst_port, src_ip=None, src_port=None):
+        if src_ip == "0.0.0.0/0":
+            src_ip = None
+        if (proto == "gre"):
+            rule = "table=2,ip,nw_proto=47,dl_dst=%s,nw_dst=%s" % (
+                self.mac, ip
+            )
+        else:
+            rule = "table=2,%s,tp_dst=%s,dl_dst=%s,nw_dst=%s" % (
+                proto, dst_port, self.mac, ip
+            )
+        if src_ip:
+            rule += ",nw_src=%s" % src_ip
+        if src_port:
+            rule += ",tp_src=%s" % src_port
+        rule += " actions=resubmit(,10)"
+        self.add_flow(rule)
+
+    def remove_fw_rule(self, proto, ip, dst_port, src_ip=None, src_port=None):
+        if src_ip == "0.0.0.0/0":
+            src_ip = None
+        if (proto == "gre"):
+            rule = "table=2,ip,nw_proto=47,dl_dst=%s,nw_dst=%s" % (
+                self.mac, ip
+            )
+        else:
+            rule = "table=2,%s,tp_dst=%s,dl_dst=%s,nw_dst=%s" % (
+                proto, dst_port, self.mac, ip
+            )
+        if src_ip:
+            rule += ",nw_src=%s" % src_ip
+        if src_port:
+            rule += ",tp_src=%s" % src_port
+        self.del_flow(rule, strict=True)
+
+def request_flows(channel, msg):
+    msg['action'] = "get_flows"
+    channel.basic_publish(exchange="simplenet",
+                     routing_key="openflow",
+                     body=json.dumps(msg),
+                     properties=pika.BasicProperties(content_type="application/json"))
 
 def on_message(channel, method_frame, header_frame, body):
     logger.debug("Processing message with body: %s" % (body))
+    ips = []
     try:
         body = json.loads(body)
         nw = NetworkWorker(body)
-        #self.ofport         = get_ofport(self.vif)
         if body.get("action"):
             if body["action"] == "plug" or body["action"] == "replug":
-                nw.add(body)
+                ips = nw.add(body)
             elif body["action"] == "unplug":
                 nw.remove(body)
             elif body["action"] == "removeip":
                 nw.remove_ip_from_private_vlan(body["ip"])
-            #elif body["action"] == "add_openflow_fw":
-            #    nw.add_of(body["firewallrule"], body["bridge"])
+            elif body["action"] == "add_openflow_fw":
+                nw.offw_add(body["firewallrule"])
+            elif body["action"] == "del_openflow_fw":
+                nw.offw_remove(body["firewallrule"])
         #elif body["action"] == "add_gw":
         #    nw.add_main_vif_gateway_flows(body["gateway_id"])
         #elif body["action"] == "del_gw":
@@ -304,8 +390,14 @@ def on_message(channel, method_frame, header_frame, body):
         else:
             logger.warn("Action not implemented: " + str(body))
         channel.basic_ack(delivery_tag=method_frame.delivery_tag)
+        if (ips != []):
+            if (body.get("switch_id")):
+                switch_name = body.get("switch_id").get("name")
+            for ip in ips:
+                request_flows(channel, {"owner": ip, "switch_name": switch_name, "mac": body.get("id")})
     except AgentException as inst:
         logger.error(inst)
+        #channel.basic_ack(delivery_tag=method_frame.delivery_tag)
 
 def help():
     print '%s::' % sys.argv[0]

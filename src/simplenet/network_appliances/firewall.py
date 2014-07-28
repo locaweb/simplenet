@@ -34,6 +34,9 @@ session = db_utils.get_database_session()
 
 class Net(SimpleNet):
 
+    def set_openflow(self, status):
+        self.send_openflow = status
+
     def _get_data_firewall_(self, id):
         logger.debug("Getting device data %s" % id)
         firewall = self.firewall_info(id)
@@ -178,7 +181,7 @@ class Net(SimpleNet):
 
         return device
 
-    def _enqueue_rules_(self, owner_type, owner_id, send_openflow, action, mod):
+    def _enqueue_rules_(self, owner_type, owner_id, action, mod):
         logger.debug("Getting rules from %s with id %s" % (owner_type, owner_id))
         policy_list = []
         _get_data = getattr(self, "_get_data_%s_" % owner_type)
@@ -191,15 +194,19 @@ class Net(SimpleNet):
         devices = self.firewall_list_by_zone(zone_id)
 
         self._enqueue_device_rules_(_data, devices, owner_type)
-        if (send_openflow and owner_type == "ip"):
+        if (self.send_openflow and owner_type == "ip"):
             ip = _get_data(owner_id)
             if (ip.get('switch_name')):
+                msg = {"action": None,
+                        "switch_name": ip['switch_name'],
+                        "mac": ip['mac'],
+                        "firewallrule": mod}
                 if action == "ADD":
-                    event.EventManager().raise_event(ip['switch_name'].split(":")[0], {"action": "add_openflow_fw",
-                        "bridge": ip['switch_name'].split(":")[1], "firewallrule": mod})
+                    msg['action'] = "add_openflow_fw"
+                    event.EventManager().raise_event(ip['switch_name'].split(":")[0], msg)
                 elif action == "DELETE":
-                    event.EventManager().raise_event(ip['switch_name'].split(":")[0], {"action": "del_openflow_fw",
-                        "bridge": ip['switch_name'].split(":")[1], "firewallrule": mod})
+                    msg['action'] = "del_openflow_fw"
+                    event.EventManager().raise_event(ip['switch_name'].split(":")[0], msg)
 
     def _enqueue_device_rules_(self, data, devices, owner_type):
         policy_list = []
@@ -258,7 +265,7 @@ class Net(SimpleNet):
     def policy_list(self, owner_type):
         return self._generic_list_("%sPolicy" % owner_type.capitalize())
 
-    def policy_create(self, owner_type, owner_id, send_openflow, data):
+    def policy_create(self, owner_type, owner_id, data):
         logger.debug("Creating rule on %s: %s using data: %s" %
             (owner_type, owner_id, data)
         )
@@ -282,10 +289,10 @@ class Net(SimpleNet):
         )
         pol = self.policy_info(owner_type, policy.id)
         try:
-            self._enqueue_rules_(owner_type, owner_id, send_openflow, "ADD", pol)
+            self._enqueue_rules_(owner_type, owner_id, "ADD", pol)
         except Exception, e:
-            raise
             logger.error("Policy created but firewall event failed %s" % str(e))
+            raise
 
         return pol
 
@@ -326,7 +333,7 @@ class Net(SimpleNet):
             raise Exception(e)
 
         logger.debug("Successful deletion of policy %s" % id)
-        self._enqueue_rules_(owner_type, owner_id, True, "DELETE", modified)
+        self._enqueue_rules_(owner_type, owner_id, "DELETE", modified)
         return True
 
     def policy_delete_by_owner(self, owner_type, id):
@@ -345,7 +352,7 @@ class Net(SimpleNet):
                 raise Exception(e)
 
             for modified in entries:
-                self._enqueue_rules_(owner_type, id, True, "DELETE", modified)
+                self._enqueue_rules_(owner_type, id, "DELETE", modified)
 
     def policy_list_by_owner(self, owner_type, id):
         return self._generic_list_by_something_(

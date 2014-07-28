@@ -1,1 +1,1 @@
-include simplenet-ovs-agent agents.cfg sn-ovs-agent
+include simplenet-ovs-agent sn-ovs-agent

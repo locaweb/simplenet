@@ -86,7 +86,8 @@ def policy_create(owner_type, id):
     if not data:
         abort(400, 'No data received')
     data = json.loads(data)
-    policy = manager.policy_create(owner_type, id, send_openflow, data)
+    manager.set_openflow(send_openflow)
+    policy = manager.policy_create(owner_type, id, data)
     location = "firewalls/policies/%s/%s" % (owner_type, policy['id'])
     response.set_header("Location", location)
     return policy
@@ -104,6 +105,7 @@ def policy_delete(owner_type, id):
     Deletes policy
     """
     manager = create_manager('firewall')
+    manager.set_openflow(send_openflow)
     return manager.policy_delete(owner_type, id)
 
 @get('/v1/firewalls/policies/by-type/<owner_type>')

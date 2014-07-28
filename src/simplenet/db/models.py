@@ -391,9 +391,10 @@ class Ip(Base):
 
     def _get_switch_name(self):
         sw = None
-        if (self.interface.switch):
-            if (self.interface.switch.name):
-                sw = self.interface.switch.name
+        try:
+            sw = self.interface.switch.name
+        except AttributeError:
+            pass
         return sw
 
     def to_dict(self):
@@ -414,6 +415,7 @@ class Ip(Base):
             'id': self.id,
             'ip': self.ip,
             'hostname': hostname,
+            'switch_name': self._get_switch_name(),
             'subnet': self.subnet.tree_dict()
         }
 

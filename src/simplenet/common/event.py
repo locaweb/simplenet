@@ -59,7 +59,7 @@ class EventManager(object):
 
             with conn.Producer(exchange=media_exchange, serializer="json",
                                routing_key=routing_key) as producer:
-                    logger.info("Publishing %s" % params)
+                    logger.debug("Publishing %s" % params)
                     producer.publish(params)
 
 
@@ -87,10 +87,10 @@ class EventManager(object):
 
             with conn.Producer(exchange=media_exchange, serializer="json",
                                routing_key=routing_key) as producer:
-                    logger.info("Publishing %s" % params)
+                    logger.debug("Publishing %s" % params)
                     producer.publish(params)
 
-    def listen_event(self, queue_name, callback):
+    def listen_event(self, queue_name, route_key, callback):
         with BrokerConnection(self.url) as conn:
             conn.ensure_connection()
 
@@ -103,8 +103,9 @@ class EventManager(object):
             queue = Queue(
                     queue_name,
                     exchange=media_exchange,
-                    routing_key=queue_name
+                    routing_key=route_key
             )
+            queue(conn.channel()).declare()
 
             logger.info("Listening for data...")
             with conn.Consumer([queue], callbacks=[callback]) as consumer:
