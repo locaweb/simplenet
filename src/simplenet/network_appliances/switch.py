@@ -18,7 +18,7 @@
 
 from simplenet.common import event
 from simplenet.common.config import get_logger
-from simplenet.db.models import Switch, Interface
+from simplenet.db.models import Switch, Interface, Router
 from simplenet.db import db_utils
 from simplenet.exceptions import (
     FeatureNotAvailable, EntityNotFound,
@@ -97,10 +97,10 @@ class Net(SimpleNet):
         for ip in _data['ips']:
             zones.add(ip['subnet']['vlan']['zone_id'])
 
-        _data['firewalls'] = []
+        _data['routers'] = []
         for zone in zones:
-            for fw in self.firewall_list_by_zone(zone):
-                _data['firewalls'].append(fw) if fw.get("mac") is not None else None
+            for router in self.router_list_by_zone(zone):
+                _data['routers'].append(fw) if router.get("mac") is not None else None
 
         event.EventManager().raise_event(_data['switch_id']['name'].split(":")[0], _data)
 

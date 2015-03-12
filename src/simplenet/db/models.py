@@ -178,6 +178,58 @@ class Firewall(Base):
             'status': self.status,
         }
 
+class Router(Base):
+
+    __tablename__ = 'routers'
+
+    id = Column(String(36), primary_key=True)
+    name = Column(String(255), unique=True)
+    status = Column(Boolean())
+    description = Column(String(255))
+    zone_id = Column(String(36), ForeignKey('zones.id'))
+    mac = Column(String(30))
+    address = Column(String(255))
+    zone = relationship('Zone')
+
+    def __init__(self, name, zone_id, mac, status, description=''):
+        self.id = str(uuid.uuid4())
+        self.name = name
+        self.zone_id = zone_id
+        self.description = description
+        self.mac = mac
+        self.status = status
+
+    def __repr__(self):
+       return "<Router('%s','%s')>" % (self.id, self.name)
+
+    def disable(self):
+        self.status = False
+
+    def enable(self):
+        self.status = True
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'name': self.name,
+            'zone': self.zone.name,
+            'zone_id': self.zone_id,
+            'mac': self.mac,
+            'address': self.address,
+            'status': self.status,
+        }
+
+    def tree_dict(self):
+        return {
+            'id': self.id,
+            'name': self.name,
+            'zone': self.zone.name,
+            'zone_id': self.zone_id,
+            'mac': self.mac,
+            'address': self.address,
+            'status': self.status,
+        }
+
 class Switch(Base):
 
     __tablename__ = 'switches'

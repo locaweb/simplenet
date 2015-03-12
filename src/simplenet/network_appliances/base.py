@@ -227,6 +227,11 @@ class SimpleNet(object):
             "Firewall", {'zone_id': zone_id}
         )
 
+    def router_list_by_zone(self, zone_id):
+        return self._generic_list_by_something_(
+            "Router", {'zone_id': zone_id}
+        )
+
     def datacenter_list(self):
         return self._generic_list_("Datacenter")
 

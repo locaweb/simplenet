@@ -230,6 +230,8 @@ run_test "dhcp vlan_detach dhcp01 vlan01" '"message": "Successful deletetion"'
 run_test "dhcp delete dhcp01" '"message": "Successful deletetion"'
 run_test "switch create sw01 --model_type openvswitch --address tcp:10.30.83.20:6640 --mac 10:1F:74:32:F7:49" '"name": "sw01"'
 run_test "switch int_attach sw01 --inter 84:2b:2b:00:96:22 --int_name vif0.1 --ofport 44" '"id": "84:2b:2b:00:96:22"'
+run_test "switch int_detach sw01 --inter 84:2b:2b:00:96:22 --int_name vif0.1 --ofport 44" '"message": "Successful deletetion"'
+run_test "switch int_attach sw01 --inter 84:2b:2b:00:96:22 --int_name vif0.1 --ofport 44" '"id": "84:2b:2b:00:96:22"'
 run_test "switch int_attach sw01 --inter 84:2b:2b:00:96:21 --int_name vif1.1 --ofport 55" '"error": "EntityNotFound"' 1
 run_test "ip delete 192.168.0.1" '"message": "Successful deletetion"'
 run_test "interface vlan_detach 84:2b:2b:00:96:20 --vlan vlan03" '"message": "Successful deletetion"'

@@ -273,6 +273,26 @@ def firewall_list():
         raise FeatureNotAvailable()
 
 
+@get('/v1/routers')
+@handle_auth
+@reply_json
+@cache()
+def router_list():
+    """
+    ::
+
+      GET /v1/routers
+
+    Retrieves all routers entries
+    """
+    manager = create_manager('router')
+    try:
+        _list = getattr(manager, 'router_list')
+        return _list()
+    except AttributeError:
+        raise FeatureNotAvailable()
+
+
 ## Generic Resource Info
 @get('/v1/<resource>/<resource_id>')
 @handle_auth
@@ -495,6 +515,30 @@ def firewall_create():
     return firewall
 
 
+@post('/v1/routers')
+@handle_auth
+@validate_input(name=str)
+@reply_json
+def router_create():
+    """
+    ::
+
+      POST /v1/routers
+
+    Create a new router device
+    """
+    manager = create_manager('router')
+    data = request.body.readline()
+    if not data:
+        abort(400, 'No data received')
+    data = json.loads(data)
+    router = manager.router_create(data=data)
+    location = "routers/%s" % (firewall['id'])
+    response.set_header("Location", location)
+    clear_cache()
+    return router
+
+
 @post('/v1/firewalls/enable')
 @handle_auth
 @reply_json
@@ -516,6 +560,29 @@ def firewall_enable():
     response.set_header("Location", location)
     return firewall
 
+
+@post('/v1/routers/enable')
+@handle_auth
+@reply_json
+def firewall_enable():
+    """
+    ::
+
+      POST /v1/routers/enable
+
+    Set router device to enabled
+    """
+    manager = create_manager('router')
+    data = request.body.readline()
+    if not data:
+        abort(400, 'No data received')
+    data = json.loads(data)
+    router = manager.router_enable(data=data)
+    location = "routers/%s" % (router['id'])
+    response.set_header("Location", location)
+    return router
+
+
 @post('/v1/firewalls/disable')
 @handle_auth
 @reply_json
@@ -536,6 +603,29 @@ def firewall_disable():
     location = "firewalls/%s" % (firewall['id'])
     response.set_header("Location", location)
     return firewall
+
+
+@post('/v1/routers/disable')
+@handle_auth
+@reply_json
+def router_disable():
+    """
+    ::
+
+      POST /v1/routers/disable
+
+    Set router device to disabled
+    """
+    manager = create_manager('router')
+    data = request.body.readline()
+    if not data:
+        abort(400, 'No data received')
+    data = json.loads(data)
+    router = manager.router_disable(data=data)
+    location = "routers/%s" % (firewall['id'])
+    response.set_header("Location", location)
+    return router
+
 
 @post('/v1/firewalls/sync')
 @handle_auth
