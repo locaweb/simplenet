@@ -95,7 +95,7 @@ def pretty_output(r):
 )
 def datacenter(action=None, name=None):
     """Manage the datacenter entity
-    
+
     simplenet-cli datacenter create --name dc01
     """
     base_url = '%s/datacenters' % (server)
@@ -122,7 +122,7 @@ def datacenter(action=None, name=None):
 )
 def pod(action=None, name=None, datacenter=None):
     """Manage a POD (zone) related to a datacenter
-    
+
     simplenet-cli pod create --name pod01 --datacenter dc01
     """
     base_url = '%s/zones' % (server)
@@ -160,7 +160,7 @@ def pod(action=None, name=None, datacenter=None):
 )
 def vlan(action=None, name=None, number=None, pod=None, type=None):
     """Manage a vlan related to a POD (zone)
-    
+
     simplenet-cli vlan create --name vlan01 --number 1 --pod pod01
     """
     base_url = '%s/vlans' % (server)
@@ -203,7 +203,7 @@ def vlan(action=None, name=None, number=None, pod=None, type=None):
 )
 def subnet(action=None, cidr=None, vlan=None):
     """Manage a subnet related to a vlan
-    
+
     simplenet-cli subnet create --cidr 192.168.0.0/24 --vlan vlan01
     """
     base_url = '%s/subnets' % (server)
@@ -239,7 +239,7 @@ def subnet(action=None, cidr=None, vlan=None):
 )
 def anycast(action=None, cidr=None):
     """Manage an anycast subnet
-    
+
     simplenet-cli anycast create --cidr 192.168.1.0/24
     """
     base_url = '%s/anycasts' % (server)
@@ -271,7 +271,7 @@ def anycast(action=None, cidr=None):
 )
 def ip(action=None, ip=None, subnet=None):
     """Manage an ip contained in a subnet
-    
+
     simplenet-cli ip create --ip 192.168.0.1 --subnet 192.168.0.0/24
     """
     base_url = '%s/ips' % (server)
@@ -319,7 +319,7 @@ def ip(action=None, ip=None, subnet=None):
 )
 def anycastip(action=None, ip=None, anycast=None):
     """Manage an ip contained in a anycast subnet
-    
+
     simplenet-cli anycastip create --ip 192.168.1.1 --anycast 192.168.1.0/24
     """
     base_url = '%s/anycastips' % (server)
@@ -359,7 +359,7 @@ def anycastip(action=None, ip=None, anycast=None):
 def firewall(action=None, name=None, pod=None,
              vlan=None, anycast=None, mac=None):
     """Manage a firewall device related to a zone
-    
+
     simplenet-cli firewall create --name firewall01 --pod zone01
     """
     base_url = '%s/firewalls' % (server)
@@ -428,14 +428,49 @@ def firewall(action=None, name=None, pod=None,
 
 
 @baker.command(
-    params={'action': ('<list all|create|delete|vlan_attach' 
+    params={'action': '<list all|info|create|delete>',
+            'name': 'router name',
+            'pod': 'zone name',
+            'mac': 'router mac address'}
+)
+def router(action=None, name=None, pod=None, mac=None):
+    """Manage router entity
+
+    simplenet-cli router create --name router01 --pod pod01
+    """
+    base_url = '%s/routers' % (server)
+    r = None
+    if action == 'list':
+        r = call('get', '%s' % base_url)
+    elif action == 'create':
+        if not pod:
+            print 'Missing pod to create'
+            sys.exit(1)
+        zone_id = fetch_id('zones', pod)
+        r = call('post', base_url, data=json.dumps(
+            {'name': name, 'zone_id': zone_id, 'mac': mac}
+        ))
+    elif action == 'delete':
+        r = call('delete', '%s/%s' %
+            (base_url, fetch_id('routers', name))
+        )
+    elif action == 'info':
+        r = call('get', '%s/by-name/%s' % (base_url, name))
+    else:
+        baker.usage(sys._getframe().f_code.co_name)
+        sys.exit(1)
+    pretty_output(r)
+
+
+@baker.command(
+    params={'action': ('<list all|create|delete|vlan_attach'
             '|vlan_list|vlan_detach>'),
             'name': 'dhcp device name',
             'vlan': 'vlan to attach vlans to devices'}
 )
 def dhcp(action=None, name=None, vlan=None):
     """Manage a dhcp server related to a vlan
-    
+
     simplenet-cli dhcp create --name firewall01 --vlan vlan01
     """
     base_url = '%s/dhcps' % (server)
@@ -618,7 +653,7 @@ def interface(action=None, mac=None, ip=None, vlan=None, hostname=None):
             'policy': 'policy to use <ACCEPT|REJECT|DROP>'}
 )
 def firewallrule(action=None, name=None, owner=None, in_iface=None,
-                out_iface=None, dst=None, src=None, dst_port=None, 
+                out_iface=None, dst=None, src=None, dst_port=None,
                 src_port=None, proto=None, table=None, policy=None):
     """Manage firewall rules
 

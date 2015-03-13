@@ -126,6 +126,18 @@ run_test "pod create pod01 --datacenter datacenter01" '"message": "Zone:pod01 al
 run_test "pod delete pod01" '"message": "Successful deletetion"'
 run_test "datacenter delete datacenter01" '"message": "Successful deletetion"'
 
+echo -e "\n::::: Starting Router Device Tests "
+run_test "datacenter create datacenter01" '"name": "datacenter01"'
+run_test "pod create pod01 --datacenter datacenter01" '"name": "pod01"'
+run_test "router create --name router01 --pod pod01 --mac 10:1F:74:32:F7:69" '"name": "router01"'
+run_test "router create --name router01 --pod pod01 --mac 10:1F:74:32:F7:69" '"message": "Router:router01 already exists Duplicated"' 1
+run_test "router list" '"name": "router01"'
+run_test "router info router01" '"name": "router01"'
+run_test "router delete router01" '"message": "Successful deletetion"'
+run_test "router delete router01" '"error": "EntityNotFound"' 1
+run_test "pod delete pod01" '"message": "Successful deletetion"'
+run_test "datacenter delete datacenter01" '"message": "Successful deletetion"'
+
 echo -e "\n::::: Starting Switch Device Tests "
 run_test "switch create sw01 --model_type openvswitch --address tcp:10.30.83.20:6640 --mac 10:1F:74:32:F7:49" '"name": "sw01"'
 run_test "switch create sw01 --model_type openvswitch --address tcp:10.30.83.20:6640 --mac 10:1F:74:32:F7:49" '"message": "Switch:sw01 already exists Duplicated"' 1

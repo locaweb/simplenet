@@ -32,23 +32,28 @@ from simplenet.exceptions import (
 
 logger = get_logger()
 
-resource_map = {"datacenters": "datacenter",
-                "zones": "zone",
-                "vlans": "vlan",
-                "subnets": "subnet",
-                "anycasts": "anycast",
-                "ips": "ip",
-                "anycastips": "anycastip",
-                "firewalls": "firewall",
-                "dhcps": "dhcp",
-                "switches": "switch",
-                "interfaces": "interface"}
+resource_map = {
+    "anycastips": "anycastip",
+    "anycasts": "anycast",
+    "datacenters": "datacenter",
+    "dhcps": "dhcp",
+    "firewalls": "firewall",
+    "interfaces": "interface",
+    "ips": "ip",
+    "routers": "router",
+    "subnets": "subnet",
+    "switches": "switch",
+    "vlans": "vlan",
+    "zones": "zone"}
+
 
 def generic_router(resource):
     if resource == 'firewalls':
         return 'firewall'
     elif resource == 'switches':
         return 'switch'
+    elif resource == 'routers':
+        return 'router'
     elif resource == 'dhcps':
         return 'dhcp'
     else:
