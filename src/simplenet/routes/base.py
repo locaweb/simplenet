@@ -533,7 +533,7 @@ def router_create():
         abort(400, 'No data received')
     data = json.loads(data)
     router = manager.router_create(data=data)
-    location = "routers/%s" % (firewall['id'])
+    location = "routers/%s" % (router['id'])
     response.set_header("Location", location)
     clear_cache()
     return router
