@@ -1,9 +1,14 @@
-## What is simplenet?
+What is simplenet?
+==================
+
 Simplenet is a framework for network automation. Using simplenet you can easily manage boxes from diferent verdors using an unique api and cli. The idea behind simplenet is to create an abstraction layer simplifying management and adoption of new network products.
 
-<img src="https://raw.github.com/locaweb/simplenet/master/simplenet.png">
+![simplenet infrastructure](https://raw.github.com/locaweb/simplenet/master/simplenet.png)
 
-## Configuration
+
+Configuration
+-------------
+
 ### simplenet.cfg
 
 	[server]
@@ -22,7 +27,7 @@ Simplenet is a framework for network automation. Using simplenet you can easily 
 	broker = amqp://guest:guest@localhost//    # amqp broker connection
 
 	[redis]
-	host = 127.0.0.1                           # redis hostname 
+	host = 127.0.0.1                           # redis hostname
 	port = 6379                                # redis port
 
 	[authentication]
@@ -36,16 +41,19 @@ Simplenet is a framework for network automation. Using simplenet you can easily 
 	iptables_file = /etc/iptables/rules        # iptables files
 	logging = debug                            # log level
 
-## Instalation
+
+Instalation
+-----------
+
 ### Debian / Ubuntu packaging
 
-    $ git clone https://github.com/locaweb/simplenet.git
-    $ cd simplenet
-    $ dpkg-buildpackage -us -uc -rfakeroot
-    $ ls ../simplenet*.deb
-    $ simplenet-cli_x.x.x-x_amd64.deb
-    $ simplenet-firewall-agent_x.x.x-x_amd64.deb
-    $ simplenet-server_x.x.x-x_amd64.deb
+        $ git clone https://github.com/locaweb/simplenet.git
+        $ cd simplenet
+        $ dpkg-buildpackage -us -uc -rfakeroot
+        $ ls ../simplenet*.deb
+        $ simplenet-cli_x.x.x-x_amd64.deb
+        $ simplenet-firewall-agent_x.x.x-x_amd64.deb
+        $ simplenet-server_x.x.x-x_amd64.deb
 
 ### Firewall
 
@@ -60,23 +68,43 @@ Simplenet is a framework for network automation. Using simplenet you can easily 
 ### Command line interface
 
 	$ dpkg -i simplenet-cli_x.x.x-x_amd64.deb
-	$ /usr/sbin/simplenet-cli 
+	$ /usr/sbin/simplenet-cli
 	Usage: /usr/sbin/simplenet-cli COMMAND <options>
 
-	Available commands:
-	 anycast       Manage anycast subnet
-	 anycastip     Manage ip contained in a anycast subnet
-	 datacenter    Manage datacenter entity
-	 firewall      Manage firewall device related to a zone
-	 firewallrule  Manage firewall rules
-	 ip            Manage ip contained in a subnet
-	 subnet        Manage subnet related to a vlan
-	 vlan          Manage vlan related to a zone
-	 zone          Manage zone related to a datacenter
+        Available commands:
+                anycast       Manage an anycast subnet
+                anycastip     Manage an ip contained in a anycast subnet
+                datacenter    Manage the datacenter entity
+                dhcp          Manage a dhcp server related to a vlan
+                firewall      Manage a firewall device related to a zone
+                firewallrule  Manage firewall rules
+                interface
+                ip            Manage an ip contained in a subnet
+                pod           Manage a POD (zone) related to a datacenter
+                router        Manage router entity
+                subnet        Manage a subnet related to a vlan
+                switch
+                vlan          Manage a vlan related to a POD (zone)
 
 	Use '/usr/sbin/simplenet-cli <command> --help' for individual command help.
 
-## Dependencies
+
+Tests
+-----
+
+Simplenet implements integration tests via CLI.
+In order to run the test suite on the development machine you need to have up and running:
+
+* redis
+* rabbitmq
+* mysql
+* simplenet server
+
+and then just run `try.sh` file on `try` directory.
+
+
+Dependencies
+------------
 
 * baker      - https://pypi.python.org/pypi/Baker
 * kombu      - https://pypi.python.org/pypi/kombu
@@ -84,3 +112,5 @@ Simplenet is a framework for network automation. Using simplenet you can easily 
 * ipaddr     - https://pypi.python.org/pypi/ipaddr
 * requests   - https://github.com/kennethreitz/requests
 * sqlalchemy - https://bitbucket.org/zzzeek/sqlalchemy
+
+For specific versions on development please refer to `pip_requires` file.
