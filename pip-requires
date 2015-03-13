@@ -1,0 +1,10 @@
+kombu==2.1.8
+sqlalchemy==0.7.8
+baker==1.2
+bottle==0.10.6
+MySQL-python==1.2.3
+gevent==0.13.6
+supay==0.0.8
+ipaddr==2.1.10
+redis==2.4.9
+requests==2.0.0
