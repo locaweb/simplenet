@@ -100,7 +100,7 @@ class Net(SimpleNet):
         _data['routers'] = []
         for zone in zones:
             for router in self.router_list_by_zone(zone):
-                _data['routers'].append(fw) if router.get("mac") is not None else None
+                _data['routers'].append(router) if router.get("mac") is not None else None
 
         event.EventManager().raise_event(_data['switch_id']['name'].split(":")[0], _data)
 
