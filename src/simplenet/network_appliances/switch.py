@@ -78,7 +78,7 @@ class Net(SimpleNet):
             raise EntityNotFound('Interface', data['interface_id'])
 
         if interface.switch_id:
-            raise Exception("Interface already attached to %s" % interface.switch_id)
+            self.switch_remove_interface(interface.switch_id, data['interface_id'])
 
         session.begin(subtransactions=True)
         try:
