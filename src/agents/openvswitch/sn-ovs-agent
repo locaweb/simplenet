@@ -199,9 +199,9 @@ class NetworkWorker(object):
         rule = "table=22 priority=0 actions=drop"
         self.add_flow(rule)
 
-        dhcp_request = "priority=41000,udp,dl_vlan=%s,tp_src=68,tp_dst=67 "
+        dhcp_request = "priority=41000,udp,in_port=%s,tp_src=68,tp_dst=67 "
         dhcp_request += "actions=mod_dl_dst:%s,3"
-        self.add_flow(dhcp_request % (subnet_vlan_num, data['switch_id']['mac']))
+        self.add_flow(dhcp_request % (self.ofport, data['switch_id']['mac']))
 
         dhcp_src = "priority=29000,arp,dl_vlan=%s,dl_src=%s actions=normal"
         self.add_flow(dhcp_src % (subnet_vlan_num, data['switch_id']['mac']))
@@ -209,9 +209,9 @@ class NetworkWorker(object):
         dhcp_dst = "priority=41000,arp,dl_vlan=%s,dl_dst=%s actions=3"
         self.add_flow(dhcp_dst % (subnet_vlan_num, data['switch_id']['mac']))
 
-        dhcp_reply = "priority=41000,udp,dl_vlan=%s,dl_src=%s,tp_src=67,"
+        dhcp_reply = "priority=41000,udp,dl_src=%s,tp_src=67,"
         dhcp_reply += "tp_dst=68 actions=normal"
-        self.add_flow(dhcp_reply % (subnet_vlan_num, data['switch_id']['mac']))
+        self.add_flow(dhcp_reply % (data['switch_id']['mac']))
 
     def remove_from_private_vlan(self, ip):
         self.del_flow("dl_src=%s" % self.mac)
