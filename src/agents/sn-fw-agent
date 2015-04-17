@@ -88,7 +88,7 @@ class Worker(object):
 
     def send_confirmation(self, channel, firewallrule_id):
         channel.basic_publish(exchange="simplenet",
-                         routing_key="simplenet",
+                         routing_key="firewall_ack",
                          body=json.dumps({'id': firewallrule_id, 'device': myname}),
                          properties=pika.BasicProperties(content_type="application/json"))
 
