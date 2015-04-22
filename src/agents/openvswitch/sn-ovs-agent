@@ -103,6 +103,7 @@ class NetworkWorker(object):
         self.vif            = body.get("name")
         self.mac            = body.get("id")
         self.ofport         = body.get("ofport")
+        self.bridgeport     = body.get("bridgeport")
 
         if body.get("routers"):
             self.router_macs  = [x['mac'] for x in body.get("routers") if x.get("mac")]
@@ -200,14 +201,14 @@ class NetworkWorker(object):
         self.add_flow(rule)
 
         dhcp_request = "priority=41000,udp,in_port=%s,tp_src=68,tp_dst=67 "
-        dhcp_request += "actions=mod_dl_dst:%s,3"
-        self.add_flow(dhcp_request % (self.ofport, data['switch_id']['mac']))
+        dhcp_request += "actions=mod_dl_dst:%s,%s"
+        self.add_flow(dhcp_request % (self.ofport, data['switch_id']['mac'], self.bridgeport))
 
         dhcp_src = "priority=29000,arp,dl_vlan=%s,dl_src=%s actions=normal"
         self.add_flow(dhcp_src % (subnet_vlan_num, data['switch_id']['mac']))
 
-        dhcp_dst = "priority=41000,arp,dl_vlan=%s,dl_dst=%s actions=3"
-        self.add_flow(dhcp_dst % (subnet_vlan_num, data['switch_id']['mac']))
+        dhcp_dst = "priority=41000,arp,dl_vlan=%s,dl_dst=%s actions=%s"
+        self.add_flow(dhcp_dst % (subnet_vlan_num, data['switch_id']['mac'], self.bridgeport))
 
         dhcp_reply = "priority=41000,udp,dl_src=%s,tp_src=67,"
         dhcp_reply += "tp_dst=68 actions=normal"

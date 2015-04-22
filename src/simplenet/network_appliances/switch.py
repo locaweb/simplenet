@@ -92,7 +92,8 @@ class Net(SimpleNet):
         _data = interface.tree_dict()
         logger.debug("Successful adding Interface to Switch status: %s" % _data)
         _data['action'] = "plug"
-        _data['ofport'] = data['ofport']
+        _data['ofport'] = data.get('ofport')
+        _data['bridgeport'] = data.get('bridgeport')
         zones = set()
         for ip in _data['ips']:
             zones.add(ip['subnet']['vlan']['zone_id'])
