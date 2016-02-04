@@ -87,7 +87,7 @@ class Net(SimpleNet):
             msg = e.message
             if msg.find("foreign key constraint failed") != -1:
                 forbidden_msg = "zone_id %s doesnt exist" % zone_id
-            elif msg.find("is not unique") != -1 or msg.find("Duplicate entry") != -1:
+            elif msg.find("is not unique") != -1 or msg.find("Duplicate entry") != -1 or msg.find("UNIQUE constraint failed") != -1:
                 raise DuplicatedEntryError('Firewall', "%s already exists" % data['name'])
             else:
                 forbidden_msg = "Unknown error"
@@ -162,7 +162,6 @@ class Net(SimpleNet):
     def firewall_sync(self, data):
         _data = {}
         device = None
-        _data['modified'] = None
 
         if data.get("name"):
             device = self.firewall_info_by_name(data.get("name"))
@@ -239,7 +238,7 @@ class Net(SimpleNet):
 
                 _data.update({'policy': policy_list})
                 logger.debug("Received rules: %s from %s with id %s and device %s" % (
-                    _data, owner_type, _data['modified']['id'], device['name'])
+                    _data, owner_type, _data.get('modified', {}).get('id'), device['name'])
                 )
                 if policy_list:
                     logger.info("Sending event to %s" % device['name'])
@@ -278,7 +277,6 @@ class Net(SimpleNet):
         except Exception, e:
             raise
             logger.error("Policy created but firewall event failed %s" % str(e))
-
         return pol
 
     def policy_ack(self, id):

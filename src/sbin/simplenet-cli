@@ -682,7 +682,8 @@ def firewallrule(action=None, name=None, owner=None, in_iface=None,
 
         data = {}
         for key in ['policy', 'dst', 'src', 'dst_port',
-                    'src_port', 'proto', 'table']:
+                    'src_port', 'proto', 'table', 'out_iface',
+                    'in_iface']:
             value = vars()[key]
             if key != None:
                 data.update({key: value})

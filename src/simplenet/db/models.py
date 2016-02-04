@@ -553,6 +553,8 @@ class Policy(Base):
         self.policy = kwargs['policy']
         self.owner_id = kwargs['owner_id']
         self.status = kwargs.get('status', 'PENDING')
+        self.in_iface = kwargs['in_iface']
+        self.out_iface = kwargs['out_iface']
 
 
 class DatacenterPolicy(Policy):
@@ -713,6 +715,8 @@ class IpPolicy(Policy):
                  'table': self.table,
                  'policy': self.policy,
                  'status': self.status,
+                 'in_iface': self.in_iface,
+                 'out_iface': self.out_iface,
                  'owner': self.ip.ip }
 
 

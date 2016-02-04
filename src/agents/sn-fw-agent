@@ -222,6 +222,7 @@ class Worker(object):
     def _add_rule_(self, rule):
         if rule not in self.iptables_save:
             #self.logger.debug(rule)
+            if rule.endswith("REJECT"): rule += " --reject-with icmp-port-unreachable"
             self.iptables_save.append(rule)
 
     @staticmethod
@@ -262,7 +263,7 @@ class Worker(object):
         if table and name and cidr and nextjump:
             self._add_rule_(":%s-%s - [0:0]" % (table, nextjump))
             jump = "-{action} {name} -{direction} {cidr} -j {table}-{nextjump}"
-            directions = { 'FORWARD': ['d'],
+            directions = { 'FORWARD': ['d', 's'],
                            'INPUT': ['d'],
                            'OUTPUT': ['s'] }
 
@@ -295,21 +296,15 @@ class Worker(object):
                 self.ack_queue.append(rule.get("id"))
             table = rule.get("table")
             proto = rule.get("proto", "").lower() if rule.get("proto") is not None else ""
-            src = rule.get("src") or "0.0.0.0/0"
+            src = rule.get("src")
             src_port = rule.get("src_port") or "any"
             src_full = "%s:%s" % (src, src_port)
-            dst = rule.get("dst") #or "0.0.0.0/0"
+            dst = rule.get("dst")
             dst_port = rule.get("dst_port") or "any"
             owner = rule.get("owner")
             policy = rule.get("policy") or "DROP"
             in_iface = rule.get("in_iface")
             out_iface = rule.get("out_iface")
-
-            if not dst:
-                if re.search("^(\d{1,3}\.){3}\d{1,3}$", rule.get("owner", "")):
-                    dst = rule.get("owner")
-                else:
-                    dst = "0.0.0.0/0"
 
             if get_chain(table, owner) not in st_rules:
                 st_rules[get_chain(table, owner)] = {}
@@ -324,11 +319,11 @@ class Worker(object):
                 st_rules_src[dst] = {}
             st_rules_dst = st_rules_src[dst]
             if policy not in st_rules_dst:
-                st_rules_dst[policy] = []
-            st_rules_pol = st_rules_dst[policy]
+                st_rules_dst[policy] = [in_iface, out_iface, []]
+            st_rules_pol = st_rules_dst[policy][2]
             if dst_port == "any":
                 if st_rules_pol != "any":
-                    st_rules_dst[policy] = "any"
+                    st_rules_dst[policy][2] = "any"
                     st_rules_pol = st_rules_dst[policy]
             else:
                 dst_port = dst_port.split(",")
@@ -344,11 +339,15 @@ class Worker(object):
                     src_addr, src_port = src.split(":", 1)
                     for dst_addr in rule_attrs[proto][src].iterkeys():
                         for policy in rule_attrs[proto][src][dst_addr].iterkeys():
-                            dst_ports = rule_attrs[proto][src][dst_addr][policy]
+                            in_iface, out_iface, dst_ports = rule_attrs[proto][src][dst_addr][policy]
                             ipt_rule = "-I %s" % table
                             if src_addr and src_addr != "0.0.0.0/0":
                                 ipt_rule += " -s %s" % src_addr
-                            if dst_addr and dst_addr != "0.0.0.0/0":
+                            if in_iface:
+                                ipt_rule += " -i %s" % in_iface
+                            if out_iface:
+                                ipt_rule += " -o %s" % out_iface
+                            if dst_addr or not dst_addr and not src_addr:
                                 ipt_rule += " -d %s" % dst_addr
                             if proto:
                                 if proto != "icmp" and proto != "gre":
@@ -385,7 +384,7 @@ class Worker(object):
             self._gen_jumps_(infos['table'], infos['vlan'], infos['cidr'], infos['cidr'])
 
         rule = {}
-        rule['table'] = 'FORWARD'
+        rule['table'] = data.get('modified', {}).get('table', 'FORWARD')
         for vlan in data['vlans']:
             for subnet in vlan['subnets']:
                 infos = {'table': rule['table'],

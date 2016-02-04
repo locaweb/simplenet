@@ -46,6 +46,7 @@ class StdOutAndErrWapper(object):
 def stdout_logger():
     global logger
     logger.addHandler(logging.StreamHandler())
+    logger.setLevel(LOGGING_LEVELS.get(config.get("logging", "level").lower()))
 
 def get_logger():
     global logger

@@ -23,7 +23,11 @@ from simplenet.exceptions import (
 )
 from simplenet.network_appliances.base import SimpleNet
 
-from sqlalchemy.exc import IntegrityError, FlushError
+from sqlalchemy.exc import IntegrityError
+try:
+    from sqlalchemy.exc import FlushError
+except ImportError:
+    from sqlalchemy.orm.exc import FlushError
 
 class Net(SimpleNet):
 
@@ -37,7 +41,7 @@ class Net(SimpleNet):
         except IntegrityError, e:
             self.session.rollback()
             msg = e.message
-            if msg.find("is not unique") != -1 or msg.find("Duplicate entry") != -1:
+            if msg.find("is not unique") != -1 or msg.find("Duplicate entry") != -1 or msg.find("UNIQUE constraint failed") != -1:
                 raise DuplicatedEntryError('Dhcp', "%s already exists" % data['name'])
             else:
                 forbidden_msg = "Unknown error"

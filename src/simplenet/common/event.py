@@ -52,14 +52,17 @@ class EventManager(object):
                     queue(conn.channel()).declare()
                     return
                 elif params['action'] == 'remove':
-                    queue(conn.channel()).unbind()
+                    try:
+                        queue(conn.channel()).unbind()
+                    except AttributeError:
+                        queue(conn.channel()).unbind_from(exchange=media_exchange, routing_key=event_type)
                     return
                 else:
                     routing_key = event_type
 
             with conn.Producer(exchange=media_exchange, serializer="json",
                                routing_key=routing_key) as producer:
-                    logger.info("Publishing %s" % params)
+                    logger.debug("Publishing %s" % params)
                     producer.publish(params)
 
 
@@ -87,7 +90,7 @@ class EventManager(object):
 
             with conn.Producer(exchange=media_exchange, serializer="json",
                                routing_key=routing_key) as producer:
-                    logger.info("Publishing %s" % params)
+                    logger.debug("Publishing %s" % params)
                     producer.publish(params)
 
     def listen_event(self, queue_name, callback):

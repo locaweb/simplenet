@@ -243,8 +243,8 @@ class SimpleNet(object):
             self.session.commit()
         except IntegrityError, e:
             self.session.rollback()
-            msg = e.message
-            if msg.find("is not unique") != -1  or msg.find("Duplicate entry") != -1:
+            msg = str(e)
+            if msg.find("is not unique") != -1  or msg.find("Duplicate entry") != -1 or msg.find("UNIQUE constraint failed") != -1:
                 raise DuplicatedEntryError('Datacenter', "%s already exists" % data['name'])
             else:
                 raise OperationNotPermited('Datacenter', "Unknown error")
@@ -289,10 +289,10 @@ class SimpleNet(object):
             self.session.commit()
         except IntegrityError, e:
             self.session.rollback()
-            msg = e.message
+            msg = str(e)
             if msg.find("foreign key constraint failed") != -1:
                 forbidden_msg = "datacenter_id %s doesnt exist" % datacenter_id
-            elif msg.find("is not unique") != -1 or msg.find("Duplicate entry") != -1:
+            elif msg.find("is not unique") != -1 or msg.find("Duplicate entry") != -1 or msg.find("UNIQUE constraint failed") != -1:
                 raise DuplicatedEntryError('Zone', "%s already exists" % data['name'])
             else:
                 forbidden_msg = "Unknown error"
@@ -350,10 +350,10 @@ class SimpleNet(object):
             self.session.commit()
         except IntegrityError, e:
             self.session.rollback()
-            msg = e.message
+            msg = str(e)
             if msg.find("foreign key constraint failed") != -1:
                 forbidden_msg = "zone_id %s doesnt exist" % zone_id
-            elif msg.find("is not unique") != -1 or msg.find("Duplicate entry") != -1:
+            elif msg.find("is not unique") != -1 or msg.find("Duplicate entry") != -1 or msg.find("UNIQUE constraint failed") != -1:
                 raise DuplicatedEntryError('Vlan', "%s already exists" % data['name'])
             else:
                 forbidden_msg = "Unknown error"
@@ -406,10 +406,10 @@ class SimpleNet(object):
             self.session.commit()
         except IntegrityError, e:
             self.session.rollback()
-            msg = e.message
+            msg = str(e)
             if msg.find("foreign key constraint failed") != -1:
                 forbidden_msg = "vlan_id %s doesnt exist" % vlan_id
-            elif msg.find("is not unique") != -1 or msg.find("Duplicate entry") != -1:
+            elif msg.find("is not unique") != -1 or msg.find("Duplicate entry") != -1 or msg.find("UNIQUE constraint failed") != -1:
                 raise DuplicatedEntryError('Subnet', "%s already exists" % data['cidr'])
             else:
                 forbidden_msg = "Unknown error -- %s" % msg
@@ -429,8 +429,8 @@ class SimpleNet(object):
             self.session.commit()
         except IntegrityError, e:
             self.session.rollback()
-            msg = e.message
-            if msg.find("is not unique") != -1 or msg.find("Duplicate entry") != -1:
+            msg = str(e)
+            if msg.find("is not unique") != -1 or msg.find("Duplicate entry") != -1 or msg.find("UNIQUE constraint failed") != -1:
                 raise DuplicatedEntryError('Anycast', "%s already exists" % data['cidr'])
             else:
                 forbidden_msg = "Unknown error"
@@ -512,10 +512,10 @@ class SimpleNet(object):
             self.session.commit()
         except IntegrityError, e:
             self.session.rollback()
-            msg = e.message
+            msg = str(e)
             if msg.find("foreign key constraint failed") != -1:
                 forbidden_msg = "subnet_id %s doesnt exist" % subnet_id
-            elif msg.find("is not unique") != -1 or msg.find("Duplicate entry") != -1:
+            elif msg.find("is not unique") != -1 or msg.find("Duplicate entry") != -1 or msg.find("UNIQUE constraint failed") != -1:
                 raise DuplicatedEntryError('Ip', "%s already exists" % data['ip'])
             else:
                 forbidden_msg = "Unknown error"
@@ -548,10 +548,10 @@ class SimpleNet(object):
             self.session.commit()
         except IntegrityError, e:
             self.session.rollback()
-            msg = e.message
+            msg = str(e)
             if msg.find("foreign key constraint failed") != -1:
                 forbidden_msg = "anycast_id %s doesnt exist" % anycast_id
-            elif msg.find("is not unique") != -1 or msg.find("Duplicate entry") != -1:
+            elif msg.find("is not unique") != -1 or msg.find("Duplicate entry") != -1 or msg.find("UNIQUE constraint failed") != -1:
                 raise DuplicatedEntryError('Anycastip', "%s already exists" % data['ip'])
             else:
                 forbidden_msg = "Unknown error"
@@ -633,8 +633,8 @@ class SimpleNet(object):
             self.session.commit()
         except IntegrityError, e:
             self.session.rollback()
-            msg = e.message
-            if msg.find("is not unique") != -1 or msg.find("Duplicate entry") != -1:
+            msg = str(e)
+            if msg.find("is not unique") != -1 or msg.find("Duplicate entry") != -1 or msg.find("UNIQUE constraint failed") != -1:
                 raise DuplicatedEntryError('Interface', "%s already exists" % data['mac'])
             else:
                 forbidden_msg = "Unknown error -- %s" % msg
