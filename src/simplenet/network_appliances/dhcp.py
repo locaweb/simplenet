@@ -40,7 +40,7 @@ class Net(SimpleNet):
             self.session.commit()
         except IntegrityError, e:
             self.session.rollback()
-            msg = e.message
+            msg = str(e)
             if msg.find("is not unique") != -1 or msg.find("Duplicate entry") != -1 or msg.find("UNIQUE constraint failed") != -1:
                 raise DuplicatedEntryError('Dhcp', "%s already exists" % data['name'])
             else:
