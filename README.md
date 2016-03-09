@@ -1,7 +1,7 @@
 What is simplenet?
 ==================
 
-Simplenet is a framework for network automation. Using simplenet you can easily manage boxes from diferent verdors using an unique api and cli. The idea behind simplenet is to create an abstraction layer simplifying management and adoption of new network products.
+Simplenet is a framework for network automation. Using simplenet you can easily manage boxes from different vendors using an unique api and cli. The idea behind simplenet is to create an abstraction layer simplifying management and adoption of new network products.
 
 ![simplenet infrastructure](https://raw.github.com/locaweb/simplenet/master/simplenet.png)
 
@@ -10,6 +10,9 @@ Configuration
 -------------
 
 ### simplenet.cfg
+	[logging]
+	level = INFO
+	file = /var/log/simplenet-server.log
 
 	[server]
 	port = 8081                                # port to bind the api
