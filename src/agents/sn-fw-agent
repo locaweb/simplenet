@@ -356,6 +356,7 @@ class Worker(object):
                                     ipt_rule += " -p %s" % proto
                             if src_port and src_port != "any":
                                 ipt_rule += " -m multiport --sports %s" % src_port
+                            ipt_rule = ipt_rule.replace("-o !", "! -o ")
                             if proto == "gre":
                                 self._add_rule_("%s -j %s" % (ipt_rule, policy))
                                 continue
