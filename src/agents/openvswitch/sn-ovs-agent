@@ -25,13 +25,17 @@ import getopt, sys
 
 from supay import Daemon
 from datetime import datetime
+from time import sleep
 
 import hashlib
 import os
+import socket
 import sys
 import json
 import fcntl
 import ConfigParser
+import httplib
+import thread
 
 from ipaddr import IPv4Network, IPv4Address, IPv6Network, IPv6Address, IPNetwork, IPAddress
 
@@ -51,9 +55,40 @@ LOGGING_LEVELS = {'critical': logging.CRITICAL,
 
 myname = os.uname()[1]
 logger = None
+data = {}
+grouter_macs = []
+cli = None
 
 class AgentException(Exception):
     pass
+
+class Simplenet(object):
+    def __init__(self, host, port, ver, sockfile):
+        self.host = host
+        self.port = port
+        self.ver = ver
+        self.sockfile = sockfile
+
+    def do_request(self, method, path, body):
+        path = "/" + str(self.ver) + path
+        headers = {"Content-Type": "application/json"}
+        conn = httplib.HTTPConnection(self.host, self.port)
+        conn.request(method, path, json.dumps(body), headers)
+        response = conn.getresponse()
+        status = response.status
+        data = response.read() or "{}"
+        return json.loads(data)
+
+    def online(self, **kwargs):
+        url = "/switches/%s/interfaces" % (kwargs['switch'])
+        kwargs.update({"action": "plug"})
+        print self.do_request("POST", url, kwargs)
+
+    def offline(self, **kwargs):
+        kwargs.update({"action": "unplug"})
+        iface = kwargs.get("id") or kwargs.get("interface_id")
+        url = "/switches/%s/interfaces/%s" % (kwargs["switch"], iface)
+        print self.do_request("DELETE", url, kwargs)
 
 def _run_cmd(args):
     logger.warn("Running command: %s" % (" ".join(args)))
@@ -93,58 +128,95 @@ def _natural_sort_(l):
 
 class NetworkWorker(object):
 
-    def __init__(self, body):
-        self.switch_name    = None
-        if (body.get("switch_id")):
-            self.switch_name    = body.get("switch_id").get("name")
-        self.vlan_id        = body.get("vlan_id")
+    def __init__(self, data):
+        self.body           = json.loads(data)
+        self.action         = self.body.get("action")
+        self.switch_name    = self.body.get("switch_id", {}).get("name") or self.body.get("switch")
+        self.vlanname       = self.body.get("vlanname")
+        self.vlan_id        = self.body.get("vlan_id")
         self.vlan_type      = self.vlan_id.get("type") if self.vlan_id is not None else None
         self.vlan_num       = self.vlan_id.get("vlan_num", {}) if self.vlan_id is not None else None
-        self.vif            = body.get("name")
-        self.mac            = body.get("id")
-        self.ofport         = body.get("ofport")
-        self.bridgeport     = body.get("bridgeport")
+        self.vif            = self.body.get("name")
+        self.mac            = self.body.get("id") or self.body.get("interface_id")
+        self.ofport         = self.body.get("ofport")
+        self.bridgeport     = self.body.get("bridgeport")
+        self.bridgemac      = self.body.get("bridgemac") or self.body.get("switch_id", {}).get("mac")
+        self.router_macs    = self.body.get("routers", [])
+        self.rawips         = self.body.get("ips", [])
+        self.ips            = []
+        self.notify         = None
 
-        if body.get("routers"):
-            self.router_macs  = [x['mac'] for x in body.get("routers") if x.get("mac")]
+    def _notify(self):
+        self.body.update({"ack": self.notify, "switch": self.switch_name})
+        if self.action and self.notify:
+            if self.action == "plug" or self.action == "replug":
+                cli.online(**self.body)
+            elif self.action == "unplug":
+                cli.offline(**self.body)
+
+    def run(self, ips=[]):
+        try:
+            self.update_routers()
+            self.load_ips(ips)
+            if self.action:
+                if self.action == "plug" or self.action == "replug":
+                    self.add()
+                    self._notify()
+                elif self.action == "unplug":
+                    self.remove()
+                    self._notify()
+                elif self.action == "removeip":
+                    self.remove_ip_from_private_vlan(self.body["ip"])
+            else:
+                logger.warn("Action not implemented: " + str(body))
+        except AgentException:
+            logger.error("Agent cached run failed -- IP")
+            self._notify()
+        except:
+            logger.exception("Unknown agent error")
+
+    def load_ips(self, ips=[]):
+        if ips:
+            [self.ips.append((ip, "private_vlan", vlan)) for ip, vlan in ips]
+        elif self.rawips:
+            [self.ips.append((ip['ip'], ip['subnet']['vlan']['type'], ip['subnet']['vlan']['vlan_num'])) for ip in self.rawips]
         else:
-            self.router_macs = []
+            raise AgentException("No IPs found")
+
+    def update_routers(self):
+        global grouter_macs
+        macs = [x['mac'] for x in self.router_macs if x.get("mac")]
+        if macs and len(macs) > len(grouter_macs):
+            grouter_macs = macs
+        self.router_macs = grouter_macs
 
     def add_flow(self, flow):
-        # TODO: configure ovs remote access using
-        # run ovs-vsctl set-controller xapi<number> pssl:port
         addr = self.switch_name.split(":")[1]
         command = ["ovs-ofctl", "add-flow", addr, flow]
         _run_cmd(command)
 
     def del_flow(self, flow):
-        # TODO: configure ovs remote access using
-        # run ovs-vsctl set-controller xapi<number> pssl:port
         addr = self.switch_name.split(":")[1]
         command = ["ovs-ofctl", "del-flows", addr, flow]
         _run_cmd(command)
 
-    def add(self, data):
+    def add(self):
         if self.vlan_id is not None and self.vlan_type == "dedicated_vlan":
             add_vlan(self.switch_name, self.vlan_num, self.ofport)
         else:
-            for ip in data['ips']:
-                if ip['subnet']['vlan']['type'] == "private_vlan":
-                    self.add_to_private_vlan(ip, data)
+            for ip, _type, vlan in self.ips:
+                if _type == "private_vlan":
+                    self.add_to_private_vlan(ip, vlan)
 
-    def remove(self, data):
+    def remove(self):
         if self.vlan_id is not None and self.vlan_type == "dedicated_vlan":
             remove_vlan(self.switch_name, self.ofport)
         else:
-            for ip in data['ips']:
-                if ip['subnet']['vlan']['type'] == "private_vlan":
-                    self.remove_from_private_vlan(ip['ip'])
-                else:
-                    logger.info("Unknown type. Ignoring...")
+            for ip, _type, vlan in self.ips:
+                if _type == "private_vlan":
+                    self.remove_from_private_vlan(ip)
 
-    def add_to_private_vlan(self, ipdata, data):
-        ip = ipdata['ip']
-        subnet_vlan_num = ipdata['subnet']['vlan']['vlan_num']
+    def add_to_private_vlan(self, ip, subnet_vlan_num):
         ##### TABLE 0 #####
         rule = "table=0 dl_src=01:00:00:00:00:00/01:00:00:00:00:00 actions=drop" # multicast
         self.add_flow(rule)
@@ -202,17 +274,17 @@ class NetworkWorker(object):
 
         dhcp_request = "priority=41000,udp,in_port=%s,tp_src=68,tp_dst=67 "
         dhcp_request += "actions=mod_dl_dst:%s,%s"
-        self.add_flow(dhcp_request % (self.ofport, data['switch_id']['mac'], self.bridgeport))
+        self.add_flow(dhcp_request % (self.ofport, self.bridgemac, self.bridgeport))
 
         dhcp_src = "priority=29000,arp,dl_vlan=%s,dl_src=%s actions=normal"
-        self.add_flow(dhcp_src % (subnet_vlan_num, data['switch_id']['mac']))
+        self.add_flow(dhcp_src % (subnet_vlan_num, self.bridgemac))
 
         dhcp_dst = "priority=41000,arp,dl_vlan=%s,dl_dst=%s actions=%s"
-        self.add_flow(dhcp_dst % (subnet_vlan_num, data['switch_id']['mac'], self.bridgeport))
+        self.add_flow(dhcp_dst % (subnet_vlan_num, self.bridgemac, self.bridgeport))
 
         dhcp_reply = "priority=41000,udp,dl_src=%s,tp_src=67,"
         dhcp_reply += "tp_dst=68 actions=normal"
-        self.add_flow(dhcp_reply % (data['switch_id']['mac']))
+        self.add_flow(dhcp_reply % (self.bridgemac))
 
     def remove_from_private_vlan(self, ip):
         self.del_flow("dl_src=%s" % self.mac)
@@ -225,19 +297,11 @@ class NetworkWorker(object):
         self.del_flow("arp,arp_tpa=%s" % ip)
 
 def on_message(channel, method_frame, header_frame, body):
-    logger.debug("Processing message with body: %s" % (body))
+    logger.info("Processing message with body: %s" % (body))
     try:
-        body = json.loads(body)
         nw = NetworkWorker(body)
-        if body.get("action"):
-            if body["action"] == "plug" or body["action"] == "replug":
-                nw.add(body)
-            elif body["action"] == "unplug":
-                nw.remove(body)
-            elif body["action"] == "removeip":
-                nw.remove_ip_from_private_vlan(body["ip"])
-        else:
-            logger.warn("Action not implemented: " + str(body))
+        nw.notify = False
+        nw.run()
         channel.basic_ack(delivery_tag=method_frame.delivery_tag)
     except AgentException as inst:
         channel.basic_ack(delivery_tag=method_frame.delivery_tag)
@@ -250,8 +314,57 @@ def help():
     print '   -c config </etc/simplenet/agents.cfg>'
 
 
+def _read_cache(f):
+    global data
+    try:
+        d = open(f)
+        tmp = json.load(d)
+        if len(tmp) > len(data):
+            logger.info("Replacing cache [%s] to [%s]" % (len(data), len(tmp)))
+            data = tmp
+    finally:
+        d.close()
+
+def read_cache(f):
+    while True:
+        _read_cache(f)
+        sleep(60)
+
+def get_cache(mac):
+    r = []
+    for _,i in data.iteritems():
+        r += [x['ip'] for x in i['ips'] if x['mac'] and x['mac'].lower() == mac.lower()]
+    return r
+
+def listen(f):
+    try:
+        os.unlink(f)
+    except OSError:
+        if os.path.exists(f):
+            raise
+
+    sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+    sock.bind(f)
+    sock.listen(1)
+
+    while True:
+        conn, _ = sock.accept()
+        data = ""
+        try:
+            while True:
+                ret = conn.recv(65535)
+                if ret:
+                    data += ret
+                else:
+                    break
+        finally:
+            conn.close()
+        nw = NetworkWorker(data)
+        nw.notify = True
+        nw.run([(ip, re.sub("[^0-9]", "", nw.vlanname)) for ip in get_cache(nw.mac)])
+
 def main(user, action, config_file):
-    global logger
+    global logger, grouter_macs, cli
     config = ConfigParser.ConfigParser()
     config.read(config_file)
 
@@ -262,6 +375,20 @@ def main(user, action, config_file):
     logger = create_logger(config)
     if action == 'foreground':
         logger.addHandler(logging.StreamHandler())
+
+    cli = Simplenet(config.get("simplenet", "address"),
+                    config.getint("simplenet", "port"),
+                    config.get("simplenet", "version"),
+                    config.get("ovs", "sockfile"))
+
+    grouter_macs = json.loads(config.get('ovs', 'fallback'))
+    _read_cache(config.get('ovs', 'cachefile'))
+
+    try:
+        thread.start_new_thread(read_cache, (config.get('ovs', 'cachefile'),) )
+        thread.start_new_thread(listen, (config.get('ovs', 'sockfile'),) )
+    except:
+        logger.exception("Error: unable to start thread")
 
     cred = pika.PlainCredentials(config.get('ovs','broker_user'),config.get('ovs','broker_pass'))
 
