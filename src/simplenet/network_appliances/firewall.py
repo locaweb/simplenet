@@ -177,6 +177,22 @@ class Net(SimpleNet):
 
         return device
 
+    def firewall_zone_sync(self, data):
+        _data = {}
+        devices = None
+
+        if data.get("name"):
+            devices = self.firewall_list_by_zone(data.get("name")) #TODO Use fanout queue
+        else:
+            raise EntityNotFound("Zone", "Missing id")
+
+        if devices is None:
+            raise EntityNotFound("Zone", "not found with %s" % data)
+
+        self._enqueue_device_rules_(_data, devices, "FW Reload")
+
+        return devices
+
     def _enqueue_rules_(self, owner_type, owner_id, mod):
         logger.debug("Getting rules from %s with id %s" % (owner_type, owner_id))
         policy_list = []
@@ -271,12 +287,6 @@ class Net(SimpleNet):
             (policy.id, owner_type, owner_id, data)
         )
         pol = self.policy_info(owner_type, policy.id)
-
-        try:
-            self._enqueue_rules_(owner_type, owner_id, pol)
-        except Exception, e:
-            raise
-            logger.error("Policy created but firewall event failed %s" % str(e))
         return pol
 
     def policy_ack(self, id):
@@ -316,7 +326,7 @@ class Net(SimpleNet):
             raise Exception(e)
 
         logger.debug("Successful deletion of policy %s" % id)
-        self._enqueue_rules_(owner_type, owner_id, modified)
+
         return True
 
     def policy_delete_by_owner(self, owner_type, id):

@@ -654,6 +654,27 @@ def firewall_sync():
         response.set_header("Location", location)
         return firewall
 
+
+@post('/v1/firewalls/zonesync')
+@handle_auth
+@reply_json
+def firewall_zone_sync():
+    """
+    ::
+
+      POST /v1/firewalls/zonesync
+
+    Reload firewall rules by zone
+    """
+    manager = create_manager('firewall')
+    data = request.body.readline()
+    if not data:
+        abort(400, 'No data received')
+    data = json.loads(data)
+    firewall = manager.firewall_zone_sync(data=data)
+    return firewall
+
+
 @post('/v1/vlans')
 @handle_auth
 @validate_input(name=str, zone_id=str, type=str, vlan_num=str)
